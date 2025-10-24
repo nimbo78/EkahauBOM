@@ -29,6 +29,11 @@ class TagProcessor:
 
         # Parse tag keys
         for tag_key_data in tag_keys_data.get("tagKeys", []):
+            # Skip malformed entries
+            if not isinstance(tag_key_data, dict):
+                logger.warning(f"Skipping malformed tag key data: {tag_key_data}")
+                continue
+
             tag_key = TagKey(
                 id=tag_key_data.get("id", ""),
                 key=tag_key_data.get("key", "Unknown")

@@ -328,7 +328,7 @@ class TestJSONExporter:
         )
 
         exporter = JSONExporter(tmp_path)
-        files = exporter.export(sample_project_data)
+        files = exporter.export(project_data)  # Use project_data instead of sample_project_data
 
         with open(files[0], 'r', encoding='utf-8') as f:
             data = json.load(f)

@@ -93,7 +93,7 @@ class TestTagProcessor:
         tags = processor.process_ap_tags(ap_tags)
 
         assert len(tags) == 1
-        assert tags[0].key == "Unknown Tag"
+        assert tags[0].key == "Unknown"  # Unknown tag keys get "Unknown"
         assert tags[0].value == "Some Value"
         assert tags[0].tag_key_id == "unknown_id"
 

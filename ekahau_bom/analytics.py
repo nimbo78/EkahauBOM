@@ -493,7 +493,7 @@ class MountingAnalytics:
                 ranges["2.5-3.5m"] += 1
             elif ap.mounting_height < 4.5:
                 ranges["3.5-4.5m"] += 1
-            elif ap.mounting_height < 6.0:
+            elif ap.mounting_height <= 6.0:  # Include 6.0 in this range
                 ranges["4.5-6.0m"] += 1
             else:
                 ranges["> 6.0m"] += 1

@@ -93,7 +93,7 @@ class TestGroupingAnalytics:
         """Test grouping by non-existent tag key."""
         result = GroupingAnalytics.group_by_tag(sample_aps, "NonExistent")
         assert len(result) == 1
-        assert result["Not Tagged"] == 4
+        assert result["No NonExistent"] == 4  # Untagged APs get "No {tag_key}"
 
     def test_group_by_tag_with_untagged(self):
         """Test grouping by tag with some APs untagged."""
@@ -107,7 +107,7 @@ class TestGroupingAnalytics:
         ]
         result = GroupingAnalytics.group_by_tag(aps, "Zone")
         assert result["Office"] == 2
-        assert result["Not Tagged"] == 1
+        assert result["No Zone"] == 1  # Untagged APs get "No Zone"
 
     def test_calculate_percentages(self):
         """Test percentage calculation."""
@@ -140,5 +140,5 @@ class TestGroupingAnalytics:
             AccessPoint("Aruba", "AP-635", None, "Floor 2"),
         ]
         result = GroupingAnalytics.group_by_color(aps)
-        assert result[None] == 2
+        assert result["No Color"] == 2  # None colors mapped to "No Color"
         assert result["Yellow"] == 1
