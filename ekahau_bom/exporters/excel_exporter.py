@@ -15,7 +15,7 @@ from openpyxl.chart import PieChart, BarChart, Reference
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics
+from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,10 @@ class ExcelExporter(BaseExporter):
         self._create_access_points_sheet(wb, project_data.access_points, project_data.project_name)
         self._create_antennas_sheet(wb, project_data.antennas, project_data.project_name)
         self._create_grouped_sheets(wb, project_data.access_points)
+
+        # Create analytics sheet if data available
+        if any(ap.mounting_height is not None for ap in project_data.access_points):
+            self._create_analytics_sheet(wb, project_data.access_points)
 
         # Save workbook
         try:
@@ -417,3 +421,159 @@ class ExcelExporter(BaseExporter):
         self._create_grouped_sheet(wb, "By Model", model_data, "Model")
 
         logger.info("Created 4 grouped sheets with charts")
+
+    def _create_analytics_sheet(self, wb: Workbook, access_points: list[AccessPoint]):
+        """Create analytics sheet with mounting and coverage metrics.
+
+        Args:
+            wb: Workbook to add sheet to
+            access_points: List of access points
+        """
+        ws = wb.create_sheet("Analytics")
+        logger.info("Creating Analytics sheet")
+
+        # Calculate metrics
+        mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+        height_distribution = MountingAnalytics.group_by_height_range(access_points)
+        installation_summary = MountingAnalytics.get_installation_summary(access_points)
+
+        row = 1
+
+        # Title
+        ws.cell(row, 1, "INSTALLATION & MOUNTING ANALYTICS")
+        ws.cell(row, 1).font = Font(bold=True, size=14, color="366092")
+        row += 2
+
+        # Mounting Metrics Section
+        ws.cell(row, 1, "Mounting Metrics")
+        ws.cell(row, 1).font = self.SECTION_FONT
+        row += 1
+
+        ws.cell(row, 1, "Metric")
+        ws.cell(row, 2, "Value")
+        ws.cell(row, 3, "Unit")
+        self._apply_header_style(ws, row)
+        row += 1
+
+        if mounting_metrics.avg_height is not None:
+            ws.cell(row, 1, "Average Mounting Height")
+            ws.cell(row, 2, round(mounting_metrics.avg_height, 2))
+            ws.cell(row, 3, "meters")
+            row += 1
+
+            ws.cell(row, 1, "Minimum Height")
+            ws.cell(row, 2, round(mounting_metrics.min_height, 2))
+            ws.cell(row, 3, "meters")
+            row += 1
+
+            ws.cell(row, 1, "Maximum Height")
+            ws.cell(row, 2, round(mounting_metrics.max_height, 2))
+            ws.cell(row, 3, "meters")
+            row += 1
+
+            ws.cell(row, 1, "Height Variance")
+            ws.cell(row, 2, round(mounting_metrics.height_variance, 4))
+            ws.cell(row, 3, "m²")
+            row += 1
+
+        ws.cell(row, 1, "APs with Height Data")
+        ws.cell(row, 2, mounting_metrics.aps_with_height)
+        ws.cell(row, 3, "count")
+        row += 1
+
+        if mounting_metrics.avg_azimuth is not None:
+            ws.cell(row, 1, "Average Azimuth")
+            ws.cell(row, 2, round(mounting_metrics.avg_azimuth, 1))
+            ws.cell(row, 3, "degrees")
+            row += 1
+
+        if mounting_metrics.avg_tilt is not None:
+            ws.cell(row, 1, "Average Tilt")
+            ws.cell(row, 2, round(mounting_metrics.avg_tilt, 1))
+            ws.cell(row, 3, "degrees")
+            row += 1
+
+        # Apply borders to metrics table
+        self._apply_borders(ws, row - 7, row - 1, 1, 3)
+        row += 1
+
+        # Height Distribution Section
+        ws.cell(row, 1, "Height Distribution")
+        ws.cell(row, 1).font = self.SECTION_FONT
+        row += 1
+
+        ws.cell(row, 1, "Height Range")
+        ws.cell(row, 2, "AP Count")
+        self._apply_header_style(ws, row)
+        dist_start_row = row + 1
+        row += 1
+
+        for range_name in ["< 2.5m", "2.5-3.5m", "3.5-4.5m", "4.5-6.0m", "> 6.0m", "Unknown"]:
+            count = height_distribution.get(range_name, 0)
+            if count > 0:
+                ws.cell(row, 1, range_name)
+                ws.cell(row, 2, count)
+                row += 1
+
+        dist_end_row = row - 1
+
+        # Apply borders to distribution table
+        self._apply_borders(ws, dist_start_row - 1, dist_end_row, 1, 2)
+
+        # Add chart for height distribution
+        if dist_end_row >= dist_start_row:
+            chart = BarChart()
+            chart.title = "Height Distribution"
+            chart.y_axis.title = "Number of APs"
+            chart.x_axis.title = "Height Range"
+
+            # Data references
+            data = Reference(ws, min_col=2, min_row=dist_start_row-1, max_row=dist_end_row)
+            categories = Reference(ws, min_col=1, min_row=dist_start_row, max_row=dist_end_row)
+
+            chart.add_data(data, titles_from_data=True)
+            chart.set_categories(categories)
+            chart.height = 10
+            chart.width = 20
+
+            ws.add_chart(chart, f"E{dist_start_row}")
+
+        row += 1
+
+        # Installation Summary Section
+        ws.cell(row, 1, "Installation Summary")
+        ws.cell(row, 1).font = self.SECTION_FONT
+        row += 1
+
+        ws.cell(row, 1, "Metric")
+        ws.cell(row, 2, "Value")
+        self._apply_header_style(ws, row)
+        row += 1
+
+        summary_start_row = row
+        ws.cell(row, 1, "Total APs")
+        ws.cell(row, 2, installation_summary["total_aps"])
+        row += 1
+
+        ws.cell(row, 1, "APs with Tilt Data")
+        ws.cell(row, 2, installation_summary["aps_with_tilt"])
+        row += 1
+
+        ws.cell(row, 1, "APs with Azimuth Data")
+        ws.cell(row, 2, installation_summary["aps_with_azimuth"])
+        row += 1
+
+        ws.cell(row, 1, "APs Requiring Height Adjustment")
+        ws.cell(row, 2, installation_summary["aps_requiring_height_adjustment"])
+        # Highlight if there are APs requiring adjustment
+        if installation_summary["aps_requiring_height_adjustment"] > 0:
+            ws.cell(row, 2).fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+        row += 1
+
+        # Apply borders to summary table
+        self._apply_borders(ws, summary_start_row - 1, row - 1, 1, 2)
+
+        # Auto-size columns
+        self._auto_size_columns(ws)
+
+        logger.info("Analytics sheet created with mounting metrics and charts")

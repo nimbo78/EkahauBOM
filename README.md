@@ -11,6 +11,16 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 - **Filter access points** by floor, color, vendor, model, or tags
 - **Group and analyze** by floor, color, vendor, model, or tag key
 - **Tag support** for Ekahau v10.2+ projects
+- **Advanced Analytics** for Wi-Fi engineers and installation teams:
+  - **Mounting analytics**: Height, azimuth, tilt statistics
+  - **Coverage metrics**: AP density, area calculations
+  - **Installation summary**: Equipment requiring adjustments
+  - Integrated into all export formats (CSV, Excel, HTML, JSON)
+- **Cost calculation** with volume discounts:
+  - Equipment pricing database
+  - Vendor and floor-level cost breakdown
+  - Volume discount tiers (5%-25%)
+  - Custom discount support
 - **Multi-format export:**
   - **CSV**: Simple, universally compatible format
   - **Excel**: Professional reports with multiple sheets, charts, and formatting

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics
+from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,7 @@ class HTMLExporter(BaseExporter):
         aps_table_html = self._generate_aps_table(project_data.access_points)
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
         grouping_html = self._generate_grouping_section(project_data.access_points)
+        analytics_html = self._generate_analytics_section(project_data.access_points)
 
         # Assemble complete HTML
         html_doc = f"""<!DOCTYPE html>
@@ -105,6 +106,7 @@ class HTMLExporter(BaseExporter):
 
         {summary_html}
         {grouping_html}
+        {analytics_html}
         {aps_table_html}
         {antennas_table_html}
 
@@ -538,6 +540,75 @@ class HTMLExporter(BaseExporter):
             .chart-container {
                 height: 300px;
             }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-table {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Analytics Section Styles */
+        .analytics-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .analytics-section h3 {
+            color: #667eea;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .analytics-card h4 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .metrics-table th,
+        .metrics-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .metrics-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .metrics-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .metrics-table tr:hover {
+            background: #f9f9f9;
         }
     </style>"""
 
@@ -728,3 +799,187 @@ class HTMLExporter(BaseExporter):
             }
         });
     </script>"""
+
+    def _generate_analytics_section(self, access_points: list[AccessPoint]) -> str:
+        """Generate analytics section with mounting metrics.
+
+        Args:
+            access_points: List of access points
+
+        Returns:
+            HTML string for analytics section
+        """
+        # Check if there's any analytics data
+        has_height_data = any(ap.mounting_height is not None for ap in access_points)
+
+        if not has_height_data:
+            return ""  # No analytics data available
+
+        # Calculate metrics
+        mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+        height_distribution = MountingAnalytics.group_by_height_range(access_points)
+        installation_summary = MountingAnalytics.get_installation_summary(access_points)
+
+        # Prepare height distribution data for Chart.js
+        height_labels = []
+        height_counts = []
+        for range_name in ["< 2.5m", "2.5-3.5m", "3.5-4.5m", "4.5-6.0m", "> 6.0m", "Unknown"]:
+            count = height_distribution.get(range_name, 0)
+            if count > 0:
+                height_labels.append(range_name)
+                height_counts.append(count)
+
+        height_labels_json = str(height_labels).replace("'", '"')
+        height_counts_json = str(height_counts)
+
+        html_content = f"""
+        <section class="analytics-section">
+            <h3>Installation & Mounting Analytics</h3>
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4>Mounting Metrics</h4>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>"""
+
+        if mounting_metrics.avg_height is not None:
+            html_content += f"""
+                            <tr>
+                                <td>Average Mounting Height</td>
+                                <td>{mounting_metrics.avg_height:.2f}</td>
+                                <td>meters</td>
+                            </tr>
+                            <tr>
+                                <td>Minimum Height</td>
+                                <td>{mounting_metrics.min_height:.2f}</td>
+                                <td>meters</td>
+                            </tr>
+                            <tr>
+                                <td>Maximum Height</td>
+                                <td>{mounting_metrics.max_height:.2f}</td>
+                                <td>meters</td>
+                            </tr>
+                            <tr>
+                                <td>Height Variance</td>
+                                <td>{mounting_metrics.height_variance:.4f}</td>
+                                <td>m²</td>
+                            </tr>"""
+
+        html_content += f"""
+                            <tr>
+                                <td>APs with Height Data</td>
+                                <td>{mounting_metrics.aps_with_height}</td>
+                                <td>count</td>
+                            </tr>"""
+
+        if mounting_metrics.avg_azimuth is not None:
+            html_content += f"""
+                            <tr>
+                                <td>Average Azimuth</td>
+                                <td>{mounting_metrics.avg_azimuth:.1f}</td>
+                                <td>degrees</td>
+                            </tr>"""
+
+        if mounting_metrics.avg_tilt is not None:
+            html_content += f"""
+                            <tr>
+                                <td>Average Tilt</td>
+                                <td>{mounting_metrics.avg_tilt:.1f}</td>
+                                <td>degrees</td>
+                            </tr>"""
+
+        html_content += """
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Height Distribution</h4>
+                    <canvas id="heightDistributionChart"></canvas>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Installation Summary</h4>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total APs</td>
+                                <td>{installation_summary['total_aps']}</td>
+                            </tr>
+                            <tr>
+                                <td>APs with Tilt Data</td>
+                                <td>{installation_summary['aps_with_tilt']}</td>
+                            </tr>
+                            <tr>
+                                <td>APs with Azimuth Data</td>
+                                <td>{installation_summary['aps_with_azimuth']}</td>
+                            </tr>"""
+
+        # Highlight if there are APs requiring adjustment
+        adjustment_style = 'style="color: #d32f2f; font-weight: bold;"' if installation_summary['aps_requiring_height_adjustment'] > 0 else ''
+
+        html_content += f"""
+                            <tr>
+                                <td>APs Requiring Height Adjustment</td>
+                                <td {adjustment_style}>{installation_summary['aps_requiring_height_adjustment']}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            // Height Distribution Chart
+            if (document.getElementById('heightDistributionChart')) {{
+                const ctxHeight = document.getElementById('heightDistributionChart').getContext('2d');
+                new Chart(ctxHeight, {{
+                    type: 'bar',
+                    data: {{
+                        labels: {height_labels_json},
+                        datasets: [{{
+                            label: 'Number of APs',
+                            data: {height_counts_json},
+                            backgroundColor: 'rgba(54, 96, 146, 0.7)',
+                            borderColor: 'rgba(54, 96, 146, 1)',
+                            borderWidth: 1
+                        }}]
+                    }},
+                    options: {{
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {{
+                            legend: {{
+                                display: false
+                            }},
+                            title: {{
+                                display: false
+                            }}
+                        }},
+                        scales: {{
+                            y: {{
+                                beginAtZero: true,
+                                ticks: {{
+                                    stepSize: 1
+                                }}
+                            }}
+                        }}
+                    }}
+                }});
+            }}
+        </script>
+"""
+
+        return html_content
