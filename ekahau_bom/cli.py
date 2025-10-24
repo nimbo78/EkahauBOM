@@ -76,7 +76,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         '--format',
         type=str,
         default='csv',
-        help='Export format(s): csv, excel, or csv,excel (default: csv)'
+        help='Export format(s): csv, excel, html, json, or combinations like csv,excel,html,json (default: csv)'
     )
 
     # Filtering options
@@ -171,7 +171,7 @@ def process_project(
         esx_file: Path to .esx file
         output_dir: Output directory for exports
         colors_config: Optional path to colors configuration
-        export_formats: List of export formats (csv, excel)
+        export_formats: List of export formats (csv, excel, html, json)
         filter_floors: List of floors to include
         filter_colors: List of colors to include
         filter_vendors: List of vendors to include
@@ -281,10 +281,14 @@ def process_project(
 
             # Export to requested formats
             from .exporters.excel_exporter import ExcelExporter
+            from .exporters.html_exporter import HTMLExporter
+            from .exporters.json_exporter import JSONExporter
 
             exporters = {
                 'csv': CSVExporter(output_dir),
-                'excel': ExcelExporter(output_dir)
+                'excel': ExcelExporter(output_dir),
+                'html': HTMLExporter(output_dir),
+                'json': JSONExporter(output_dir)
             }
 
             exported_files = []

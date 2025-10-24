@@ -11,13 +11,16 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 - **Filter access points** by floor, color, vendor, model, or tags
 - **Group and analyze** by floor, color, vendor, model, or tag key
 - **Tag support** for Ekahau v10.2+ projects
-- **Export to CSV** with tags support
-- **Export to Excel** with multiple sheets, charts, and professional formatting
+- **Multi-format export:**
+  - **CSV**: Simple, universally compatible format
+  - **Excel**: Professional reports with multiple sheets, charts, and formatting
+  - **HTML**: Interactive web reports with Chart.js visualizations
+  - **JSON**: Machine-readable format for integrations and APIs
 - Configurable color database
 - Optimized performance for large projects
 - Comprehensive error handling and logging
 - Type-safe with full type hints
-- Extensible architecture for future export formats (HTML, JSON, PDF)
+- Extensible architecture for future formats (PDF, Web UI)
 
 ## Installation
 
@@ -76,7 +79,7 @@ ekahau-bom project.esx --output-dir reports/ --verbose
 
 ### Export formats
 
-Choose export format (CSV, Excel, or both):
+Choose from multiple export formats: CSV, Excel, HTML, JSON, or any combination:
 
 ```bash
 # Export to CSV (default)
@@ -85,9 +88,20 @@ python EkahauBOM.py project.esx
 # Export to Excel
 python EkahauBOM.py project.esx --format excel
 
-# Export to both CSV and Excel
-python EkahauBOM.py project.esx --format csv,excel
+# Export to HTML (interactive web report)
+python EkahauBOM.py project.esx --format html
+
+# Export to JSON (machine-readable format)
+python EkahauBOM.py project.esx --format json
+
+# Export to multiple formats at once
+python EkahauBOM.py project.esx --format csv,excel,html,json
 ```
+
+**CSV export:**
+- Simple, universally compatible format
+- Includes tags, grouping, and all metadata
+- Easy to import into spreadsheets or databases
 
 **Excel export features:**
 - Multiple sheets (Summary, Access Points, Antennas, By Floor, By Color, By Vendor, By Model)
@@ -95,6 +109,21 @@ python EkahauBOM.py project.esx --format csv,excel
 - Charts and visualizations (pie charts, bar charts)
 - Frozen header rows and auto-filters
 - Tags included in Access Points sheet
+
+**HTML export features:**
+- Interactive web-based report with responsive design
+- Modern, professional styling with gradients and shadows
+- Chart.js visualizations (pie and bar charts)
+- Sortable, filterable tables
+- Standalone file - no external dependencies needed
+- Perfect for presentations and sharing
+
+**JSON export features:**
+- Structured, machine-readable format
+- Complete project data with metadata
+- Analytics and grouping information included
+- Ideal for API integrations and data pipelines
+- Pretty-printed for readability
 
 ### Advanced usage: Filtering
 

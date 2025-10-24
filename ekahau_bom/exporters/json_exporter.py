@@ -1,0 +1,230 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""JSON exporter for machine-readable output and integrations."""
+
+import json
+import logging
+from collections import Counter
+from pathlib import Path
+
+from .base import BaseExporter
+from ..models import ProjectData, AccessPoint, Antenna, Tag, Floor
+from ..analytics import GroupingAnalytics
+
+logger = logging.getLogger(__name__)
+
+
+class JSONExporter(BaseExporter):
+    """Export project data to structured JSON format.
+
+    Creates JSON output suitable for:
+    - API integrations
+    - Data processing pipelines
+    - Import into other systems
+    - Programmatic analysis
+
+    Includes both raw data and analytics/grouping information.
+    """
+
+    def __init__(self, output_dir: Path, indent: int = 2):
+        """Initialize JSON exporter.
+
+        Args:
+            output_dir: Directory where export files will be saved
+            indent: Number of spaces for JSON indentation (None for compact)
+        """
+        super().__init__(output_dir)
+        self.indent = indent
+
+    @property
+    def format_name(self) -> str:
+        """Human-readable name of the export format."""
+        return "JSON"
+
+    def export(self, project_data: ProjectData) -> list[Path]:
+        """Export project data to JSON file.
+
+        Args:
+            project_data: Processed project data to export
+
+        Returns:
+            List containing path to the created JSON file
+        """
+        output_file = self._get_output_filename(
+            project_data.project_name,
+            "data.json"
+        )
+
+        # Generate JSON structure
+        json_data = self._generate_json_structure(project_data)
+
+        # Write to file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, indent=self.indent, ensure_ascii=False)
+
+        files = [output_file]
+        self.log_export_success(files)
+        return files
+
+    def _generate_json_structure(self, project_data: ProjectData) -> dict:
+        """Generate complete JSON structure.
+
+        Args:
+            project_data: Project data to export
+
+        Returns:
+            Dictionary suitable for JSON serialization
+        """
+        # Count access points for BOM
+        ap_counts = Counter()
+        for ap in project_data.access_points:
+            tags_tuple = tuple(sorted((tag.key, tag.value) for tag in ap.tags))
+            key = (ap.vendor, ap.model, ap.floor_name, ap.color or "", tags_tuple)
+            ap_counts[key] += 1
+
+        # Count antennas
+        antenna_counts = Counter(antenna.name for antenna in project_data.antennas)
+
+        # Generate analytics
+        analytics = GroupingAnalytics()
+        by_vendor = analytics.group_by_dimension(project_data.access_points, "vendor")
+        by_floor = analytics.group_by_dimension(project_data.access_points, "floor")
+        by_color = analytics.group_by_dimension(project_data.access_points, "color")
+        by_model = analytics.group_by_dimension(project_data.access_points, "model")
+
+        # Build JSON structure
+        json_structure = {
+            "metadata": {
+                "project_name": project_data.project_name,
+                "export_format": "json",
+                "version": "2.3.0"
+            },
+            "summary": {
+                "total_access_points": len(project_data.access_points),
+                "total_antennas": len(project_data.antennas),
+                "unique_vendors": len(set(ap.vendor for ap in project_data.access_points)),
+                "unique_floors": len(set(ap.floor_name for ap in project_data.access_points)),
+                "unique_colors": len(set(ap.color for ap in project_data.access_points if ap.color)),
+                "unique_models": len(set(ap.model for ap in project_data.access_points))
+            },
+            "floors": [
+                {
+                    "id": floor.id,
+                    "name": floor.name
+                }
+                for floor in project_data.floors.values()
+            ],
+            "access_points": {
+                "bill_of_materials": [
+                    {
+                        "vendor": vendor,
+                        "model": model,
+                        "floor": floor,
+                        "color": color if color else None,
+                        "tags": [
+                            {"key": key, "value": value}
+                            for key, value in sorted(tags_tuple)
+                        ] if tags_tuple else [],
+                        "quantity": count
+                    }
+                    for (vendor, model, floor, color, tags_tuple), count in sorted(
+                        ap_counts.items(),
+                        key=lambda x: (x[0][0], x[0][1], x[0][2])  # Sort by vendor, model, floor
+                    )
+                ],
+                "details": [
+                    {
+                        "vendor": ap.vendor,
+                        "model": ap.model,
+                        "floor": ap.floor_name,
+                        "floor_id": ap.floor_id,
+                        "color": ap.color,
+                        "mine": ap.mine,
+                        "tags": [
+                            {
+                                "key": tag.key,
+                                "value": tag.value,
+                                "tag_key_id": tag.tag_key_id
+                            }
+                            for tag in ap.tags
+                        ]
+                    }
+                    for ap in project_data.access_points
+                ]
+            },
+            "antennas": {
+                "bill_of_materials": [
+                    {
+                        "name": name,
+                        "quantity": count
+                    }
+                    for name, count in sorted(antenna_counts.items())
+                ],
+                "details": [
+                    {
+                        "name": antenna.name,
+                        "antenna_type_id": antenna.antenna_type_id
+                    }
+                    for antenna in project_data.antennas
+                ]
+            },
+            "analytics": {
+                "by_vendor": self._format_grouping(by_vendor),
+                "by_floor": self._format_grouping(by_floor),
+                "by_color": self._format_grouping(by_color),
+                "by_model": self._format_grouping(by_model)
+            }
+        }
+
+        return json_structure
+
+    def _format_grouping(self, grouped_data: dict) -> dict:
+        """Format grouped data for JSON output.
+
+        Args:
+            grouped_data: Dictionary of {label: count}
+
+        Returns:
+            Dictionary with counts and percentages
+        """
+        total = sum(grouped_data.values())
+
+        return {
+            "total": total,
+            "groups": [
+                {
+                    "name": str(label),
+                    "count": count,
+                    "percentage": round((count / total * 100) if total > 0 else 0, 2)
+                }
+                for label, count in sorted(
+                    grouped_data.items(),
+                    key=lambda x: x[1],
+                    reverse=True
+                )
+            ]
+        }
+
+
+class CompactJSONExporter(JSONExporter):
+    """JSON exporter with compact (minified) output.
+
+    Useful for:
+    - Minimizing file size
+    - Network transfers
+    - Embedded systems
+    """
+
+    def __init__(self, output_dir: Path):
+        """Initialize compact JSON exporter.
+
+        Args:
+            output_dir: Directory where export files will be saved
+        """
+        super().__init__(output_dir, indent=None)
+
+    @property
+    def format_name(self) -> str:
+        """Human-readable name of the export format."""
+        return "JSON (Compact)"
