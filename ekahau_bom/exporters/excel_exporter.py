@@ -1,0 +1,419 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Excel exporter with advanced formatting and charts."""
+
+import logging
+from pathlib import Path
+from collections import Counter
+from typing import Any
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from openpyxl.chart import PieChart, BarChart, Reference
+
+from .base import BaseExporter
+from ..models import ProjectData, AccessPoint, Antenna
+from ..analytics import GroupingAnalytics
+
+logger = logging.getLogger(__name__)
+
+
+class ExcelExporter(BaseExporter):
+    """Export project data to Excel files with formatting and charts.
+
+    Creates Excel workbook with multiple sheets:
+    - Summary: Project overview and statistics
+    - Access Points: Detailed AP list with tags
+    - Antennas: Antenna list
+    - By Floor: Grouped by floor with chart
+    - By Color: Grouped by color with chart
+    - By Vendor: Grouped by vendor with chart
+    - By Model: Grouped by model with chart
+    """
+
+    # Styles for headers
+    HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
+    HEADER_FILL = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    HEADER_ALIGNMENT = Alignment(horizontal="center", vertical="center")
+
+    # Styles for summary section headers
+    SECTION_FONT = Font(bold=True, size=12, color="366092")
+
+    # Borders
+    THIN_BORDER = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+
+    @property
+    def format_name(self) -> str:
+        """Human-readable name of the export format."""
+        return "Excel"
+
+    def export(self, project_data: ProjectData) -> list[Path]:
+        """Export project data to Excel file.
+
+        Args:
+            project_data: Processed project data to export
+
+        Returns:
+            List with single Excel file path
+
+        Raises:
+            IOError: If file writing fails
+        """
+        output_file = self._get_output_filename(
+            project_data.project_name,
+            f"{project_data.project_name}.xlsx"
+        )
+
+        logger.info(f"Creating Excel file: {output_file}")
+
+        # Create workbook
+        wb = Workbook()
+
+        # Remove default sheet
+        if 'Sheet' in wb.sheetnames:
+            wb.remove(wb['Sheet'])
+
+        # Create sheets in order
+        self._create_summary_sheet(wb, project_data)
+        self._create_access_points_sheet(wb, project_data.access_points, project_data.project_name)
+        self._create_antennas_sheet(wb, project_data.antennas, project_data.project_name)
+        self._create_grouped_sheets(wb, project_data.access_points)
+
+        # Save workbook
+        try:
+            wb.save(output_file)
+            logger.info(f"Excel file created successfully: {output_file}")
+        except Exception as e:
+            logger.error(f"Failed to save Excel file: {e}")
+            raise IOError(f"Failed to save Excel file: {e}")
+
+        self.log_export_success([output_file])
+
+        return [output_file]
+
+    def _apply_header_style(self, ws, row: int = 1):
+        """Apply header style to specified row.
+
+        Args:
+            ws: Worksheet
+            row: Row number (1-indexed)
+        """
+        for cell in ws[row]:
+            cell.font = self.HEADER_FONT
+            cell.fill = self.HEADER_FILL
+            cell.alignment = self.HEADER_ALIGNMENT
+            cell.border = self.THIN_BORDER
+
+    def _auto_size_columns(self, ws):
+        """Auto-size all columns based on content.
+
+        Args:
+            ws: Worksheet
+        """
+        for column in ws.columns:
+            max_length = 0
+            column_letter = get_column_letter(column[0].column)
+
+            for cell in column:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+
+            # Set width with min 10, max 50 characters
+            adjusted_width = min(max(max_length + 2, 10), 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+    def _apply_autofilter(self, ws):
+        """Apply autofilter to the sheet.
+
+        Args:
+            ws: Worksheet
+        """
+        if ws.max_row > 1:  # Only if there's data
+            ws.auto_filter.ref = ws.dimensions
+
+    def _freeze_header(self, ws, row: int = 2):
+        """Freeze header row.
+
+        Args:
+            ws: Worksheet
+            row: Row number to freeze (all rows above will be frozen)
+        """
+        ws.freeze_panes = ws[f'A{row}']
+
+    def _apply_borders(self, ws, min_row: int = 1, max_row: int = None, min_col: int = 1, max_col: int = None):
+        """Apply borders to range of cells.
+
+        Args:
+            ws: Worksheet
+            min_row: Starting row (1-indexed)
+            max_row: Ending row (None for all)
+            min_col: Starting column (1-indexed)
+            max_col: Ending column (None for all)
+        """
+        if max_row is None:
+            max_row = ws.max_row
+        if max_col is None:
+            max_col = ws.max_column
+
+        for row in ws.iter_rows(min_row=min_row, max_row=max_row,
+                                min_col=min_col, max_col=max_col):
+            for cell in row:
+                cell.border = self.THIN_BORDER
+
+    def _create_summary_sheet(self, wb: Workbook, project_data: ProjectData):
+        """Create summary sheet with project statistics.
+
+        Args:
+            wb: Workbook
+            project_data: Project data
+        """
+        ws = wb.create_sheet("Summary", 0)
+
+        # Title
+        ws['A1'] = "Project Summary"
+        ws['A1'].font = Font(bold=True, size=14, color="366092")
+        ws.merge_cells('A1:B1')
+
+        # Project info
+        row = 3
+        ws[f'A{row}'] = "Project Name:"
+        ws[f'B{row}'] = project_data.project_name
+        ws[f'A{row}'].font = Font(bold=True)
+
+        row += 1
+        ws[f'A{row}'] = "Total Access Points:"
+        ws[f'B{row}'] = len(project_data.access_points)
+        ws[f'A{row}'].font = Font(bold=True)
+
+        row += 1
+        ws[f'A{row}'] = "Total Antennas:"
+        ws[f'B{row}'] = len(project_data.antennas)
+        ws[f'A{row}'].font = Font(bold=True)
+
+        row += 1
+        ws[f'A{row}'] = "Unique AP Models:"
+        unique_models = len(set(ap.model for ap in project_data.access_points))
+        ws[f'B{row}'] = unique_models
+        ws[f'A{row}'].font = Font(bold=True)
+
+        # Statistics by vendor
+        row += 2
+        ws[f'A{row}'] = "Distribution by Vendor"
+        ws[f'A{row}'].font = self.SECTION_FONT
+
+        row += 1
+        vendor_counts = Counter(ap.vendor for ap in project_data.access_points)
+        ws[f'A{row}'] = "Vendor"
+        ws[f'B{row}'] = "Count"
+        ws[f'C{row}'] = "Percentage"
+        self._apply_header_style(ws, row)
+
+        total_aps = len(project_data.access_points)
+        for vendor, count in sorted(vendor_counts.items(), key=lambda x: x[1], reverse=True):
+            row += 1
+            percentage = (count / total_aps * 100) if total_aps > 0 else 0
+            ws[f'A{row}'] = vendor
+            ws[f'B{row}'] = count
+            ws[f'C{row}'] = f"{percentage:.1f}%"
+
+        # Statistics by floor
+        row += 2
+        ws[f'A{row}'] = "Distribution by Floor"
+        ws[f'A{row}'].font = self.SECTION_FONT
+
+        row += 1
+        floor_counts = Counter(ap.floor_name for ap in project_data.access_points)
+        ws[f'A{row}'] = "Floor"
+        ws[f'B{row}'] = "Count"
+        ws[f'C{row}'] = "Percentage"
+        self._apply_header_style(ws, row)
+
+        for floor, count in sorted(floor_counts.items(), key=lambda x: x[1], reverse=True):
+            row += 1
+            percentage = (count / total_aps * 100) if total_aps > 0 else 0
+            ws[f'A{row}'] = floor
+            ws[f'B{row}'] = count
+            ws[f'C{row}'] = f"{percentage:.1f}%"
+
+        # Auto-size columns
+        self._auto_size_columns(ws)
+
+    def _create_access_points_sheet(self, wb: Workbook, access_points: list[AccessPoint], project_name: str):
+        """Create detailed access points sheet.
+
+        Args:
+            wb: Workbook
+            access_points: List of access points
+            project_name: Project name
+        """
+        ws = wb.create_sheet("Access Points")
+
+        # Headers
+        headers = ["Vendor", "Model", "Floor", "Color", "Tags", "Quantity"]
+        ws.append(headers)
+        self._apply_header_style(ws)
+
+        # Group and count APs
+        ap_tuples = [
+            (ap.vendor, ap.model, ap.floor_name, ap.color,
+             frozenset(str(tag) for tag in ap.tags))
+            for ap in access_points
+        ]
+        ap_counts = Counter(ap_tuples)
+
+        logger.info(f"Exporting {len(access_points)} access points ({len(ap_counts)} unique) to Excel")
+
+        # Write data
+        for (vendor, model, floor, color, tags), count in sorted(ap_counts.items()):
+            tags_str = "; ".join(sorted(tags)) if tags else ""
+            ws.append([vendor, model, floor, color or "", tags_str, count])
+
+        # Apply formatting
+        self._auto_size_columns(ws)
+        self._apply_autofilter(ws)
+        self._freeze_header(ws)
+        self._apply_borders(ws)
+
+    def _create_antennas_sheet(self, wb: Workbook, antennas: list[Antenna], project_name: str):
+        """Create antennas sheet.
+
+        Args:
+            wb: Workbook
+            antennas: List of antennas
+            project_name: Project name
+        """
+        ws = wb.create_sheet("Antennas")
+
+        # Headers
+        headers = ["Antenna Model", "Quantity"]
+        ws.append(headers)
+        self._apply_header_style(ws)
+
+        # Count antennas
+        antenna_names = [antenna.name for antenna in antennas]
+        antenna_counts = Counter(antenna_names)
+
+        logger.info(f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique) to Excel")
+
+        # Write data
+        for antenna_name, count in sorted(antenna_counts.items()):
+            ws.append([antenna_name, count])
+
+        # Apply formatting
+        self._auto_size_columns(ws)
+        self._apply_autofilter(ws)
+        self._freeze_header(ws)
+        self._apply_borders(ws)
+
+    def _create_grouped_sheet(
+        self,
+        wb: Workbook,
+        sheet_name: str,
+        grouped_data: dict[str, int],
+        dimension_name: str,
+        add_chart: bool = True
+    ):
+        """Create a grouped sheet with counts, percentages, and optional chart.
+
+        Args:
+            wb: Workbook
+            sheet_name: Name of the sheet
+            grouped_data: Dictionary with counts by dimension
+            dimension_name: Name of the dimension (e.g., "Floor", "Vendor")
+            add_chart: Whether to add a chart
+        """
+        ws = wb.create_sheet(sheet_name)
+
+        # Headers
+        headers = [dimension_name, "Count", "Percentage"]
+        ws.append(headers)
+        self._apply_header_style(ws)
+
+        # Calculate total
+        total = sum(grouped_data.values())
+
+        # Write data sorted by count (descending)
+        for key, count in sorted(grouped_data.items(), key=lambda x: x[1], reverse=True):
+            percentage = (count / total * 100) if total > 0 else 0
+            ws.append([str(key), count, f"{percentage:.1f}%"])
+
+        # Apply formatting
+        self._auto_size_columns(ws)
+        self._apply_autofilter(ws)
+        self._freeze_header(ws)
+        self._apply_borders(ws)
+
+        # Add chart if requested and there's data
+        if add_chart and len(grouped_data) > 0:
+            self._add_chart(ws, dimension_name)
+
+    def _add_chart(self, ws, dimension_name: str):
+        """Add appropriate chart to worksheet.
+
+        Args:
+            ws: Worksheet
+            dimension_name: Name of the dimension
+        """
+        # Use pie chart for vendors, bar chart for others
+        if dimension_name == "Vendor":
+            chart = PieChart()
+            chart.title = f"Distribution by {dimension_name}"
+            chart.style = 10
+            chart.height = 10
+            chart.width = 15
+        else:
+            chart = BarChart()
+            chart.type = "col"  # Column chart
+            chart.title = f"Count by {dimension_name}"
+            chart.style = 10
+            chart.height = 10
+            chart.width = 15
+            chart.y_axis.title = "Count"
+            chart.x_axis.title = dimension_name
+
+        # Data for chart
+        labels = Reference(ws, min_col=1, min_row=2, max_row=ws.max_row)
+        data = Reference(ws, min_col=2, min_row=1, max_row=ws.max_row)
+
+        chart.add_data(data, titles_from_data=True)
+        chart.set_categories(labels)
+
+        # Position chart to the right of data
+        ws.add_chart(chart, "E2")
+
+    def _create_grouped_sheets(self, wb: Workbook, access_points: list[AccessPoint]):
+        """Create all grouped sheets.
+
+        Args:
+            wb: Workbook
+            access_points: List of access points
+        """
+        analytics = GroupingAnalytics()
+
+        # By Floor
+        floor_data = analytics.group_by_floor(access_points)
+        self._create_grouped_sheet(wb, "By Floor", floor_data, "Floor")
+
+        # By Color
+        color_data = analytics.group_by_color(access_points)
+        self._create_grouped_sheet(wb, "By Color", color_data, "Color")
+
+        # By Vendor
+        vendor_data = analytics.group_by_vendor(access_points)
+        self._create_grouped_sheet(wb, "By Vendor", vendor_data, "Vendor")
+
+        # By Model
+        model_data = analytics.group_by_model(access_points)
+        self._create_grouped_sheet(wb, "By Model", model_data, "Model")
+
+        logger.info("Created 4 grouped sheets with charts")

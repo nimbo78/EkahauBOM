@@ -72,6 +72,13 @@ def create_argument_parser() -> argparse.ArgumentParser:
         version=f'%(prog)s {__version__}'
     )
 
+    parser.add_argument(
+        '--format',
+        type=str,
+        default='csv',
+        help='Export format(s): csv, excel, or csv,excel (default: csv)'
+    )
+
     # Filtering options
     filter_group = parser.add_argument_group('filtering options')
 
@@ -146,6 +153,7 @@ def process_project(
     esx_file: Path,
     output_dir: Path,
     colors_config: Path | None = None,
+    export_formats: list[str] | None = None,
     filter_floors: list[str] | None = None,
     filter_colors: list[str] | None = None,
     filter_vendors: list[str] | None = None,
@@ -163,6 +171,7 @@ def process_project(
         esx_file: Path to .esx file
         output_dir: Output directory for exports
         colors_config: Optional path to colors configuration
+        export_formats: List of export formats (csv, excel)
         filter_floors: List of floors to include
         filter_colors: List of colors to include
         filter_vendors: List of vendors to include
@@ -266,9 +275,27 @@ def process_project(
                 project_name=esx_file.stem
             )
 
-            # Export to CSV
-            exporter = CSVExporter(output_dir)
-            exported_files = exporter.export(project_data)
+            # Default to CSV if no format specified
+            if not export_formats:
+                export_formats = ['csv']
+
+            # Export to requested formats
+            from .exporters.excel_exporter import ExcelExporter
+
+            exporters = {
+                'csv': CSVExporter(output_dir),
+                'excel': ExcelExporter(output_dir)
+            }
+
+            exported_files = []
+            for format_name in export_formats:
+                if format_name in exporters:
+                    logger.info(f"Exporting to {format_name.upper()}...")
+                    exporter = exporters[format_name]
+                    files = exporter.export(project_data)
+                    exported_files.extend(files)
+                else:
+                    logger.warning(f"Unknown export format: {format_name}")
 
             # Summary
             logger.info("=" * 60)
@@ -345,11 +372,15 @@ def main(args: list[str] | None = None) -> int:
             else:
                 logger.warning(f"Invalid tag filter format (expected 'Key:Value'): {tag_filter}")
 
+    # Parse export formats
+    export_formats = [f.strip().lower() for f in parsed_args.format.split(',')]
+
     # Process project
     return process_project(
         esx_file=parsed_args.esx_file,
         output_dir=parsed_args.output_dir,
         colors_config=parsed_args.colors_config,
+        export_formats=export_formats,
         filter_floors=filter_floors,
         filter_colors=filter_colors,
         filter_vendors=filter_vendors,

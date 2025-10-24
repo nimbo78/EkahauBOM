@@ -3,3 +3,6 @@
 
 # YAML support for configuration files
 PyYAML>=6.0
+
+# Excel export support
+openpyxl>=3.1.0

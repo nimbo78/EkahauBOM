@@ -11,12 +11,13 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 - **Filter access points** by floor, color, vendor, model, or tags
 - **Group and analyze** by floor, color, vendor, model, or tag key
 - **Tag support** for Ekahau v10.2+ projects
-- Export to CSV format with tags
+- **Export to CSV** with tags support
+- **Export to Excel** with multiple sheets, charts, and professional formatting
 - Configurable color database
 - Optimized performance for large projects
 - Comprehensive error handling and logging
 - Type-safe with full type hints
-- Extensible architecture for future export formats (Excel, HTML, JSON, PDF)
+- Extensible architecture for future export formats (HTML, JSON, PDF)
 
 ## Installation
 
@@ -72,6 +73,28 @@ python EkahauBOM.py project.esx --log-file ekahau_bom.log
 ekahau-bom project.esx
 ekahau-bom project.esx --output-dir reports/ --verbose
 ```
+
+### Export formats
+
+Choose export format (CSV, Excel, or both):
+
+```bash
+# Export to CSV (default)
+python EkahauBOM.py project.esx
+
+# Export to Excel
+python EkahauBOM.py project.esx --format excel
+
+# Export to both CSV and Excel
+python EkahauBOM.py project.esx --format csv,excel
+```
+
+**Excel export features:**
+- Multiple sheets (Summary, Access Points, Antennas, By Floor, By Color, By Vendor, By Model)
+- Professional formatting with headers, borders, and auto-sized columns
+- Charts and visualizations (pie charts, bar charts)
+- Frozen header rows and auto-filters
+- Tags included in Access Points sheet
 
 ### Advanced usage: Filtering
 
@@ -131,10 +154,28 @@ python EkahauBOM.py project.esx \
 
 ## Output
 
+### CSV Export (default)
+
 The script generates two CSV files in the output directory:
 
 - `{project_name}_access_points.csv`: Access points with vendor, model, floor, color, tags, and quantity
 - `{project_name}_antennas.csv`: Antennas with model and quantity
+
+### Excel Export (--format excel)
+
+The script generates one Excel file with multiple sheets:
+
+- **Summary**: Project overview with statistics by vendor and floor
+- **Access Points**: Detailed AP list with tags and quantities
+- **Antennas**: Antenna list with quantities
+- **By Floor**: Access points grouped by floor with chart
+- **By Color**: Access points grouped by color with chart
+- **By Vendor**: Access points grouped by vendor with pie chart
+- **By Model**: Access points grouped by model with chart
+
+All Excel sheets include professional formatting, auto-filters, frozen headers, and charts.
+
+### Grouping Output
 
 When using `--group-by`, statistics are displayed in the console showing the distribution of access points by the selected dimension.
 
