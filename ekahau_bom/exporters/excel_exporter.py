@@ -15,7 +15,7 @@ from openpyxl.chart import PieChart, BarChart, Reference
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics
+from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -87,8 +87,10 @@ class ExcelExporter(BaseExporter):
         self._create_grouped_sheets(wb, project_data.access_points)
 
         # Create analytics sheet if data available
-        if any(ap.mounting_height is not None for ap in project_data.access_points):
-            self._create_analytics_sheet(wb, project_data.access_points)
+        has_mounting_data = any(ap.mounting_height is not None for ap in project_data.access_points)
+        has_radio_data = len(project_data.radios) > 0
+        if has_mounting_data or has_radio_data:
+            self._create_analytics_sheet(wb, project_data.access_points, project_data.radios)
 
         # Save workbook
         try:
@@ -422,20 +424,26 @@ class ExcelExporter(BaseExporter):
 
         logger.info("Created 4 grouped sheets with charts")
 
-    def _create_analytics_sheet(self, wb: Workbook, access_points: list[AccessPoint]):
-        """Create analytics sheet with mounting and coverage metrics.
+    def _create_analytics_sheet(self, wb: Workbook, access_points: list[AccessPoint], radios: list):
+        """Create analytics sheet with mounting, coverage and radio metrics.
 
         Args:
             wb: Workbook to add sheet to
             access_points: List of access points
+            radios: List of radios
         """
         ws = wb.create_sheet("Analytics")
         logger.info("Creating Analytics sheet")
 
-        # Calculate metrics
+        # Calculate mounting metrics
         mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
         height_distribution = MountingAnalytics.group_by_height_range(access_points)
         installation_summary = MountingAnalytics.get_installation_summary(access_points)
+
+        # Calculate radio metrics
+        radio_metrics = None
+        if radios:
+            radio_metrics = RadioAnalytics.calculate_radio_metrics(radios)
 
         row = 1
 
@@ -573,7 +581,147 @@ class ExcelExporter(BaseExporter):
         # Apply borders to summary table
         self._apply_borders(ws, summary_start_row - 1, row - 1, 1, 2)
 
+        # Radio Analytics Section
+        if radio_metrics:
+            row += 2
+
+            # Radio Configuration Title
+            ws.cell(row, 1, "RADIO CONFIGURATION ANALYTICS")
+            ws.cell(row, 1).font = Font(bold=True, size=14, color="366092")
+            row += 2
+
+            # Radio Metrics Summary
+            ws.cell(row, 1, "Radio Metrics")
+            ws.cell(row, 1).font = self.SECTION_FONT
+            row += 1
+
+            ws.cell(row, 1, "Metric")
+            ws.cell(row, 2, "Value")
+            ws.cell(row, 3, "Unit")
+            self._apply_header_style(ws, row)
+            row += 1
+
+            radio_summary_start = row
+            ws.cell(row, 1, "Total Radios")
+            ws.cell(row, 2, radio_metrics.total_radios)
+            ws.cell(row, 3, "count")
+            row += 1
+
+            if radio_metrics.avg_tx_power:
+                ws.cell(row, 1, "Average TX Power")
+                ws.cell(row, 2, round(radio_metrics.avg_tx_power, 1))
+                ws.cell(row, 3, "dBm")
+                row += 1
+
+                ws.cell(row, 1, "Min TX Power")
+                ws.cell(row, 2, round(radio_metrics.min_tx_power, 1))
+                ws.cell(row, 3, "dBm")
+                row += 1
+
+                ws.cell(row, 1, "Max TX Power")
+                ws.cell(row, 2, round(radio_metrics.max_tx_power, 1))
+                ws.cell(row, 3, "dBm")
+                row += 1
+
+            self._apply_borders(ws, radio_summary_start - 1, row - 1, 1, 3)
+            row += 1
+
+            # Frequency Bands Section
+            if radio_metrics.band_distribution:
+                ws.cell(row, 1, "Frequency Bands")
+                ws.cell(row, 1).font = self.SECTION_FONT
+                row += 1
+
+                ws.cell(row, 1, "Band")
+                ws.cell(row, 2, "Count")
+                ws.cell(row, 3, "Percentage")
+                self._apply_header_style(ws, row)
+                band_start_row = row + 1
+                row += 1
+
+                for band, count in sorted(radio_metrics.band_distribution.items()):
+                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    ws.cell(row, 1, band)
+                    ws.cell(row, 2, count)
+                    ws.cell(row, 3, f"{percentage:.1f}%")
+                    row += 1
+
+                band_end_row = row - 1
+                self._apply_borders(ws, band_start_row - 1, band_end_row, 1, 3)
+
+                # Add Pie Chart for frequency bands
+                if band_end_row >= band_start_row:
+                    chart = PieChart()
+                    chart.title = "Frequency Band Distribution"
+                    data = Reference(ws, min_col=2, min_row=band_start_row-1, max_row=band_end_row)
+                    labels = Reference(ws, min_col=1, min_row=band_start_row, max_row=band_end_row)
+                    chart.add_data(data, titles_from_data=True)
+                    chart.set_categories(labels)
+                    chart.height = 10
+                    chart.width = 15
+                    ws.add_chart(chart, f"E{band_start_row}")
+
+                row += 1
+
+            # Wi-Fi Standards Section
+            if radio_metrics.standard_distribution:
+                ws.cell(row, 1, "Wi-Fi Standards")
+                ws.cell(row, 1).font = self.SECTION_FONT
+                row += 1
+
+                ws.cell(row, 1, "Standard")
+                ws.cell(row, 2, "Count")
+                ws.cell(row, 3, "Percentage")
+                self._apply_header_style(ws, row)
+                standard_start_row = row + 1
+                row += 1
+
+                for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    ws.cell(row, 1, standard)
+                    ws.cell(row, 2, count)
+                    ws.cell(row, 3, f"{percentage:.1f}%")
+                    row += 1
+
+                standard_end_row = row - 1
+                self._apply_borders(ws, standard_start_row - 1, standard_end_row, 1, 3)
+
+                # Add Bar Chart for Wi-Fi standards
+                if standard_end_row >= standard_start_row:
+                    chart = BarChart()
+                    chart.title = "Wi-Fi Standards Distribution"
+                    chart.y_axis.title = "Number of Radios"
+                    data = Reference(ws, min_col=2, min_row=standard_start_row-1, max_row=standard_end_row)
+                    categories = Reference(ws, min_col=1, min_row=standard_start_row, max_row=standard_end_row)
+                    chart.add_data(data, titles_from_data=True)
+                    chart.set_categories(categories)
+                    chart.height = 10
+                    chart.width = 15
+                    ws.add_chart(chart, f"E{standard_start_row + 12}")
+
+                row += 1
+
+            # Channel Widths Section
+            if radio_metrics.channel_width_distribution:
+                ws.cell(row, 1, "Channel Widths")
+                ws.cell(row, 1).font = self.SECTION_FONT
+                row += 1
+
+                ws.cell(row, 1, "Width (MHz)")
+                ws.cell(row, 2, "Count")
+                self._apply_header_style(ws, row)
+                width_start_row = row + 1
+                row += 1
+
+                for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+                    ws.cell(row, 1, f"{width} MHz")
+                    ws.cell(row, 2, count)
+                    row += 1
+
+                width_end_row = row - 1
+                self._apply_borders(ws, width_start_row - 1, width_end_row, 1, 2)
+
         # Auto-size columns
         self._auto_size_columns(ws)
 
-        logger.info("Analytics sheet created with mounting metrics and charts")
+        logger.info("Analytics sheet created with mounting and radio metrics and charts")

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics
+from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class HTMLExporter(BaseExporter):
         aps_table_html = self._generate_aps_table(project_data.access_points)
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
         grouping_html = self._generate_grouping_section(project_data.access_points)
-        analytics_html = self._generate_analytics_section(project_data.access_points)
+        analytics_html = self._generate_analytics_section(project_data.access_points, project_data.radios)
 
         # Assemble complete HTML
         html_doc = f"""<!DOCTYPE html>
@@ -800,39 +800,54 @@ class HTMLExporter(BaseExporter):
         });
     </script>"""
 
-    def _generate_analytics_section(self, access_points: list[AccessPoint]) -> str:
-        """Generate analytics section with mounting metrics.
+    def _generate_analytics_section(self, access_points: list[AccessPoint], radios: list) -> str:
+        """Generate analytics section with mounting and radio metrics.
 
         Args:
             access_points: List of access points
+            radios: List of radios
 
         Returns:
             HTML string for analytics section
         """
         # Check if there's any analytics data
         has_height_data = any(ap.mounting_height is not None for ap in access_points)
+        has_radio_data = len(radios) > 0
 
-        if not has_height_data:
+        if not has_height_data and not has_radio_data:
             return ""  # No analytics data available
 
-        # Calculate metrics
-        mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
-        height_distribution = MountingAnalytics.group_by_height_range(access_points)
-        installation_summary = MountingAnalytics.get_installation_summary(access_points)
+        html_sections = []
 
-        # Prepare height distribution data for Chart.js
-        height_labels = []
-        height_counts = []
-        for range_name in ["< 2.5m", "2.5-3.5m", "3.5-4.5m", "4.5-6.0m", "> 6.0m", "Unknown"]:
-            count = height_distribution.get(range_name, 0)
-            if count > 0:
-                height_labels.append(range_name)
-                height_counts.append(count)
+        # Calculate mounting metrics
+        mounting_metrics = None
+        height_distribution = None
+        installation_summary = None
+        if has_height_data:
+            mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+            height_distribution = MountingAnalytics.group_by_height_range(access_points)
+            installation_summary = MountingAnalytics.get_installation_summary(access_points)
 
-        height_labels_json = str(height_labels).replace("'", '"')
-        height_counts_json = str(height_counts)
+        # Calculate radio metrics
+        radio_metrics = None
+        if has_radio_data:
+            radio_metrics = RadioAnalytics.calculate_radio_metrics(radios)
 
-        html_content = f"""
+        # Generate mounting analytics section if data available
+        if has_height_data:
+            # Prepare height distribution data for Chart.js
+            height_labels = []
+            height_counts = []
+            for range_name in ["< 2.5m", "2.5-3.5m", "3.5-4.5m", "4.5-6.0m", "> 6.0m", "Unknown"]:
+                count = height_distribution.get(range_name, 0)
+                if count > 0:
+                    height_labels.append(range_name)
+                    height_counts.append(count)
+
+            height_labels_json = str(height_labels).replace("'", '"')
+            height_counts_json = str(height_counts)
+
+            mounting_html = f"""
         <section class="analytics-section">
             <h3>Installation & Mounting Analytics</h3>
             <div class="analytics-grid">
@@ -848,8 +863,8 @@ class HTMLExporter(BaseExporter):
                         </thead>
                         <tbody>"""
 
-        if mounting_metrics.avg_height is not None:
-            html_content += f"""
+            if mounting_metrics.avg_height is not None:
+                mounting_html += f"""
                             <tr>
                                 <td>Average Mounting Height</td>
                                 <td>{mounting_metrics.avg_height:.2f}</td>
@@ -871,30 +886,30 @@ class HTMLExporter(BaseExporter):
                                 <td>m²</td>
                             </tr>"""
 
-        html_content += f"""
+            mounting_html += f"""
                             <tr>
                                 <td>APs with Height Data</td>
                                 <td>{mounting_metrics.aps_with_height}</td>
                                 <td>count</td>
                             </tr>"""
 
-        if mounting_metrics.avg_azimuth is not None:
-            html_content += f"""
+            if mounting_metrics.avg_azimuth is not None:
+                mounting_html += f"""
                             <tr>
                                 <td>Average Azimuth</td>
                                 <td>{mounting_metrics.avg_azimuth:.1f}</td>
                                 <td>degrees</td>
                             </tr>"""
 
-        if mounting_metrics.avg_tilt is not None:
-            html_content += f"""
+            if mounting_metrics.avg_tilt is not None:
+                mounting_html += f"""
                             <tr>
                                 <td>Average Tilt</td>
                                 <td>{mounting_metrics.avg_tilt:.1f}</td>
                                 <td>degrees</td>
                             </tr>"""
 
-        html_content += """
+            mounting_html += """
                         </tbody>
                     </table>
                 </div>
@@ -927,10 +942,10 @@ class HTMLExporter(BaseExporter):
                                 <td>{installation_summary['aps_with_azimuth']}</td>
                             </tr>"""
 
-        # Highlight if there are APs requiring adjustment
-        adjustment_style = 'style="color: #d32f2f; font-weight: bold;"' if installation_summary['aps_requiring_height_adjustment'] > 0 else ''
+            # Highlight if there are APs requiring adjustment
+            adjustment_style = 'style="color: #d32f2f; font-weight: bold;"' if installation_summary['aps_requiring_height_adjustment'] > 0 else ''
 
-        html_content += f"""
+            mounting_html += f"""
                             <tr>
                                 <td>APs Requiring Height Adjustment</td>
                                 <td {adjustment_style}>{installation_summary['aps_requiring_height_adjustment']}</td>
@@ -981,5 +996,249 @@ class HTMLExporter(BaseExporter):
             }}
         </script>
 """
+            html_sections.append(mounting_html)
 
-        return html_content
+        # Generate radio analytics section if data available
+        if has_radio_data:
+            import json
+
+            # Prepare frequency band data
+            band_labels = []
+            band_counts = []
+            for band, count in sorted(radio_metrics.band_distribution.items()):
+                band_labels.append(band if band else "Unknown")
+                band_counts.append(count)
+
+            band_labels_json = json.dumps(band_labels)
+            band_counts_json = json.dumps(band_counts)
+
+            # Prepare Wi-Fi standards data
+            standard_labels = []
+            standard_counts = []
+            for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                standard_labels.append(standard if standard else "Unknown")
+                standard_counts.append(count)
+
+            standard_labels_json = json.dumps(standard_labels)
+            standard_counts_json = json.dumps(standard_counts)
+
+            # Prepare channel width data
+            width_labels = []
+            width_counts = []
+            for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+                width_labels.append(f"{width} MHz" if width else "Unknown")
+                width_counts.append(count)
+
+            width_labels_json = json.dumps(width_labels)
+            width_counts_json = json.dumps(width_counts)
+
+            # Prepare TX power distribution
+            tx_power_dist = RadioAnalytics.get_tx_power_distribution(radios)
+            tx_power_labels = []
+            tx_power_counts = []
+            for range_name in ["< 10 dBm", "10-15 dBm", "15-20 dBm", "20-25 dBm", "> 25 dBm"]:
+                count = tx_power_dist.get(range_name, 0)
+                if count > 0:
+                    tx_power_labels.append(range_name)
+                    tx_power_counts.append(count)
+
+            tx_power_labels_json = json.dumps(tx_power_labels)
+            tx_power_counts_json = json.dumps(tx_power_counts)
+
+            radio_html = f"""
+        <section class="analytics-section">
+            <h3>Radio & Wi-Fi Configuration Analytics</h3>
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4>Radio Configuration Summary</h4>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Radios</td>
+                                <td>{radio_metrics.total_radios}</td>
+                                <td>count</td>
+                            </tr>"""
+
+            if radio_metrics.avg_tx_power is not None:
+                radio_html += f"""
+                            <tr>
+                                <td>Average TX Power</td>
+                                <td>{radio_metrics.avg_tx_power:.2f}</td>
+                                <td>dBm</td>
+                            </tr>
+                            <tr>
+                                <td>Minimum TX Power</td>
+                                <td>{radio_metrics.min_tx_power:.2f}</td>
+                                <td>dBm</td>
+                            </tr>
+                            <tr>
+                                <td>Maximum TX Power</td>
+                                <td>{radio_metrics.max_tx_power:.2f}</td>
+                                <td>dBm</td>
+                            </tr>"""
+
+            radio_html += """
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Frequency Band Distribution</h4>
+                    <canvas id="bandDistributionChart"></canvas>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Wi-Fi Standards</h4>
+                    <canvas id="standardDistributionChart"></canvas>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>Channel Width Distribution</h4>
+                    <table class="metrics-table">
+                        <thead>
+                            <tr>
+                                <th>Channel Width</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>"""
+
+            for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+                percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                width_str = f"{width} MHz" if width else "Unknown"
+                radio_html += f"""
+                            <tr>
+                                <td>{width_str}</td>
+                                <td>{count}</td>
+                                <td>{percentage:.1f}%</td>
+                            </tr>"""
+
+            radio_html += """
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="analytics-card">
+                    <h4>TX Power Distribution</h4>
+                    <canvas id="txPowerDistributionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            // Frequency Band Distribution Chart
+            if (document.getElementById('bandDistributionChart')) {{
+                const ctxBand = document.getElementById('bandDistributionChart').getContext('2d');
+                new Chart(ctxBand, {{
+                    type: 'pie',
+                    data: {{
+                        labels: {band_labels_json},
+                        datasets: [{{
+                            data: {band_counts_json},
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(153, 102, 255, 0.7)',
+                                'rgba(201, 203, 207, 0.7)'
+                            ],
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        }}]
+                    }},
+                    options: {{
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {{
+                            legend: {{
+                                position: 'bottom',
+                                labels: {{
+                                    padding: 10
+                                }}
+                            }}
+                        }}
+                    }}
+                }});
+            }}
+
+            // Wi-Fi Standards Distribution Chart
+            if (document.getElementById('standardDistributionChart')) {{
+                const ctxStandard = document.getElementById('standardDistributionChart').getContext('2d');
+                new Chart(ctxStandard, {{
+                    type: 'bar',
+                    data: {{
+                        labels: {standard_labels_json},
+                        datasets: [{{
+                            label: 'Number of Radios',
+                            data: {standard_counts_json},
+                            backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 1
+                        }}]
+                    }},
+                    options: {{
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {{
+                            legend: {{
+                                display: false
+                            }}
+                        }},
+                        scales: {{
+                            y: {{
+                                beginAtZero: true,
+                                ticks: {{
+                                    stepSize: 1
+                                }}
+                            }}
+                        }}
+                    }}
+                }});
+            }}
+
+            // TX Power Distribution Chart
+            if (document.getElementById('txPowerDistributionChart')) {{
+                const ctxTxPower = document.getElementById('txPowerDistributionChart').getContext('2d');
+                new Chart(ctxTxPower, {{
+                    type: 'bar',
+                    data: {{
+                        labels: {tx_power_labels_json},
+                        datasets: [{{
+                            label: 'Number of Radios',
+                            data: {tx_power_counts_json},
+                            backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 1
+                        }}]
+                    }},
+                    options: {{
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {{
+                            legend: {{
+                                display: false
+                            }}
+                        }},
+                        scales: {{
+                            y: {{
+                                beginAtZero: true,
+                                ticks: {{
+                                    stepSize: 1
+                                }}
+                            }}
+                        }}
+                    }}
+                }});
+            }}
+        </script>
+"""
+            html_sections.append(radio_html)
+
+        return "".join(html_sections)
