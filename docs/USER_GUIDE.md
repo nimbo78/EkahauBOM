@@ -2,6 +2,8 @@
 
 Complete guide for using EkahauBOM to generate Bill of Materials from Ekahau projects.
 
+**English** | [Русский](USER_GUIDE.ru.md)
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)

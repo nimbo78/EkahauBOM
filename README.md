@@ -9,6 +9,8 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 [![Code Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](tests/)
 [![Tests](https://img.shields.io/badge/tests-258%20passing-brightgreen.svg)](tests/)
 
+**English** | [Русский](README.ru.md)
+
 ---
 
 ## 🌟 Key Features
@@ -568,9 +570,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 👤 Author
 
-**Pavel Semenischev**
+**Pavel Semenischev @htechno**
 
 - GitHub: [@nimbo78](https://github.com/nimbo78)
+- Telegram: [@htechno](https://t.me/htechno)
 
 ---
 
@@ -584,8 +587,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📚 Documentation
 
-- **[User Guide](docs/USER_GUIDE.md)** - Detailed usage examples and scenarios
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing and architecture
+- **[User Guide](docs/USER_GUIDE.md)** - Detailed usage examples and scenarios ([Русский](docs/USER_GUIDE.ru.md))
+- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing and architecture ([Русский](docs/DEVELOPER_GUIDE.ru.md))
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ---

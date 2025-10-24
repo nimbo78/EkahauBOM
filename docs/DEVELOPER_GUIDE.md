@@ -2,6 +2,8 @@
 
 Guide for contributors and developers working on EkahauBOM.
 
+**English** | [Русский](DEVELOPER_GUIDE.ru.md)
+
 ## Table of Contents
 
 - [Getting Started](#getting-started)
