@@ -18,7 +18,7 @@ class CSVExporter(BaseExporter):
     """Export project data to CSV files.
 
     Creates two CSV files:
-    - {project_name}_access_points.csv: Access points with vendor, model, floor, color, quantity
+    - {project_name}_access_points.csv: Access points with vendor, model, floor, color, tags, quantity
     - {project_name}_antennas.csv: Antennas with model and quantity
     """
 
@@ -75,9 +75,11 @@ class CSVExporter(BaseExporter):
         output_file = self._get_output_filename(project_name, "access_points.csv")
 
         # Count occurrences of each unique AP configuration
-        # Create tuples for counting: (vendor, model, floor, color)
+        # Create tuples for counting: (vendor, model, floor, color, tags)
+        # Tags are converted to frozenset for hashability
         ap_tuples = [
-            (ap.vendor, ap.model, ap.floor_name, ap.color)
+            (ap.vendor, ap.model, ap.floor_name, ap.color,
+             frozenset(str(tag) for tag in ap.tags))
             for ap in access_points
         ]
         ap_counts = Counter(ap_tuples)
@@ -88,11 +90,13 @@ class CSVExporter(BaseExporter):
             writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
 
             # Write header
-            writer.writerow(["Vendor", "Model", "Floor", "Color", "Quantity"])
+            writer.writerow(["Vendor", "Model", "Floor", "Color", "Tags", "Quantity"])
 
             # Write data rows
-            for (vendor, model, floor, color), count in ap_counts.items():
-                writer.writerow([vendor, model, floor, color or "", count])
+            for (vendor, model, floor, color, tags), count in ap_counts.items():
+                # Format tags as "Key1:Value1; Key2:Value2"
+                tags_str = "; ".join(sorted(tags)) if tags else ""
+                writer.writerow([vendor, model, floor, color or "", tags_str, count])
 
         logger.debug(f"Access points exported to {output_file}")
         return output_file

@@ -14,6 +14,7 @@ from .processors.access_points import AccessPointProcessor
 from .processors.antennas import AntennaProcessor
 from .processors.tags import TagProcessor
 from .filters import APFilter
+from .analytics import GroupingAnalytics
 from .exporters.csv_exporter import CSVExporter
 from .models import Floor, ProjectData
 from .constants import DEFAULT_OUTPUT_DIR
@@ -122,6 +123,22 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help='Exclude vendors (comma-separated)'
     )
 
+    # Grouping options
+    group_group = parser.add_argument_group('grouping options')
+
+    group_group.add_argument(
+        '--group-by',
+        type=str,
+        choices=['floor', 'color', 'vendor', 'model', 'tag'],
+        help='Group results by specified dimension and display statistics'
+    )
+
+    group_group.add_argument(
+        '--tag-key',
+        type=str,
+        help='Tag key name to use when --group-by tag is selected'
+    )
+
     return parser
 
 
@@ -136,7 +153,9 @@ def process_project(
     filter_tags: dict[str, list[str]] | None = None,
     exclude_floors: list[str] | None = None,
     exclude_colors: list[str] | None = None,
-    exclude_vendors: list[str] | None = None
+    exclude_vendors: list[str] | None = None,
+    group_by: str | None = None,
+    tag_key: str | None = None
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -152,6 +171,8 @@ def process_project(
         exclude_floors: List of floors to exclude
         exclude_colors: List of colors to exclude
         exclude_vendors: List of vendors to exclude
+        group_by: Dimension to group by (floor, color, vendor, model, tag)
+        tag_key: Tag key name (required when group_by='tag')
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -204,6 +225,33 @@ def process_project(
                     exclude_floors=exclude_floors,
                     exclude_colors=exclude_colors,
                     exclude_vendors=exclude_vendors
+                )
+
+            # Apply grouping if specified
+            if group_by:
+                logger.info(f"Grouping {len(access_points)} access points by: {group_by}")
+
+                if group_by == 'floor':
+                    grouped = GroupingAnalytics.group_by_floor(access_points)
+                elif group_by == 'color':
+                    grouped = GroupingAnalytics.group_by_color(access_points)
+                elif group_by == 'vendor':
+                    grouped = GroupingAnalytics.group_by_vendor(access_points)
+                elif group_by == 'model':
+                    grouped = GroupingAnalytics.group_by_model(access_points)
+                elif group_by == 'tag':
+                    if not tag_key:
+                        logger.error("--tag-key is required when using --group-by tag")
+                        return 1
+                    grouped = GroupingAnalytics.group_by_tag(access_points, tag_key)
+                else:
+                    logger.error(f"Unknown group-by dimension: {group_by}")
+                    return 1
+
+                # Display grouped results
+                GroupingAnalytics.print_grouped_results(
+                    grouped,
+                    title=f"Access Points Grouped by {group_by.capitalize()}"
                 )
 
             # Process antennas
@@ -309,7 +357,9 @@ def main(args: list[str] | None = None) -> int:
         filter_tags=filter_tags,
         exclude_floors=exclude_floors,
         exclude_colors=exclude_colors,
-        exclude_vendors=exclude_vendors
+        exclude_vendors=exclude_vendors,
+        group_by=parsed_args.group_by,
+        tag_key=parsed_args.tag_key
     )
 
 

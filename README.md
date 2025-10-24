@@ -6,9 +6,12 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 
 ## Features
 
-- Extract access points data (vendor, model, floor, color, quantity)
+- Extract access points data (vendor, model, floor, color, tags, quantity)
 - Extract antennas data with quantities
-- Export to CSV format
+- **Filter access points** by floor, color, vendor, model, or tags
+- **Group and analyze** by floor, color, vendor, model, or tag key
+- **Tag support** for Ekahau v10.2+ projects
+- Export to CSV format with tags
 - Configurable color database
 - Optimized performance for large projects
 - Comprehensive error handling and logging
@@ -70,12 +73,70 @@ ekahau-bom project.esx
 ekahau-bom project.esx --output-dir reports/ --verbose
 ```
 
+### Advanced usage: Filtering
+
+Filter access points by various criteria:
+
+```bash
+# Filter by floor
+python EkahauBOM.py project.esx --filter-floor "Floor 1,Floor 2"
+
+# Filter by color
+python EkahauBOM.py project.esx --filter-color "Yellow,Red"
+
+# Filter by vendor
+python EkahauBOM.py project.esx --filter-vendor "Cisco,Aruba"
+
+# Filter by model
+python EkahauBOM.py project.esx --filter-model "AP-515,AP-635"
+
+# Filter by tags (can use multiple times)
+python EkahauBOM.py project.esx --filter-tag "Location:Building A" --filter-tag "Zone:Office"
+
+# Exclude specific items
+python EkahauBOM.py project.esx --exclude-floor "Basement" --exclude-color "Gray"
+
+# Combine multiple filters (AND logic)
+python EkahauBOM.py project.esx \
+  --filter-floor "Floor 1,Floor 2" \
+  --filter-color "Yellow" \
+  --filter-vendor "Cisco"
+```
+
+### Advanced usage: Grouping and Analytics
+
+Group access points and display statistics:
+
+```bash
+# Group by floor
+python EkahauBOM.py project.esx --group-by floor
+
+# Group by color
+python EkahauBOM.py project.esx --group-by color
+
+# Group by vendor
+python EkahauBOM.py project.esx --group-by vendor
+
+# Group by model
+python EkahauBOM.py project.esx --group-by model
+
+# Group by specific tag key
+python EkahauBOM.py project.esx --group-by tag --tag-key "Location"
+
+# Combine filtering and grouping
+python EkahauBOM.py project.esx \
+  --filter-vendor "Cisco" \
+  --group-by floor
+```
+
 ## Output
 
 The script generates two CSV files in the output directory:
 
-- `{project_name}_access_points.csv`: Access points with vendor, model, floor, color, and quantity
+- `{project_name}_access_points.csv`: Access points with vendor, model, floor, color, tags, and quantity
 - `{project_name}_antennas.csv`: Antennas with model and quantity
+
+When using `--group-by`, statistics are displayed in the console showing the distribution of access points by the selected dimension.
 
 ## Configuration
 
@@ -105,12 +166,15 @@ EkahauBOM/
 ├── ekahau_bom/           # Main package
 │   ├── cli.py            # Command-line interface
 │   ├── parser.py         # .esx file parser
-│   ├── models.py         # Data models
+│   ├── models.py         # Data models (AccessPoint, Tag, etc.)
 │   ├── constants.py      # Constants and defaults
 │   ├── utils.py          # Utility functions
+│   ├── filters.py        # Filtering logic
+│   ├── analytics.py      # Grouping and analytics
 │   ├── processors/       # Data processors
 │   │   ├── access_points.py
-│   │   └── antennas.py
+│   │   ├── antennas.py
+│   │   └── tags.py       # Tag processing
 │   └── exporters/        # Export formats
 │       ├── base.py
 │       └── csv_exporter.py
