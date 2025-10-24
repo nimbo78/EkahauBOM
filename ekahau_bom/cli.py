@@ -146,6 +146,34 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help='Tag key name to use when --group-by tag is selected'
     )
 
+    # Pricing options
+    pricing_group = parser.add_argument_group('pricing options')
+
+    pricing_group.add_argument(
+        '--enable-pricing',
+        action='store_true',
+        help='Enable cost calculations and include pricing in reports'
+    )
+
+    pricing_group.add_argument(
+        '--pricing-file',
+        type=Path,
+        help='Path to custom pricing database (YAML file)'
+    )
+
+    pricing_group.add_argument(
+        '--discount',
+        type=float,
+        default=0.0,
+        help='Additional discount percentage to apply (0-100, default: 0)'
+    )
+
+    pricing_group.add_argument(
+        '--no-volume-discounts',
+        action='store_true',
+        help='Disable automatic volume-based discounts'
+    )
+
     return parser
 
 
@@ -163,7 +191,11 @@ def process_project(
     exclude_colors: list[str] | None = None,
     exclude_vendors: list[str] | None = None,
     group_by: str | None = None,
-    tag_key: str | None = None
+    tag_key: str | None = None,
+    enable_pricing: bool = False,
+    pricing_file: Path | None = None,
+    discount: float = 0.0,
+    no_volume_discounts: bool = False
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -182,6 +214,10 @@ def process_project(
         exclude_vendors: List of vendors to exclude
         group_by: Dimension to group by (floor, color, vendor, model, tag)
         tag_key: Tag key name (required when group_by='tag')
+        enable_pricing: Enable cost calculations
+        pricing_file: Custom pricing database file
+        discount: Additional discount percentage (0-100)
+        no_volume_discounts: Disable volume-based discounts
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -274,6 +310,32 @@ def process_project(
                 floors=floors,
                 project_name=esx_file.stem
             )
+
+            # Calculate costs if enabled
+            cost_summary = None
+            if enable_pricing:
+                from .pricing import PricingDatabase, CostCalculator
+
+                logger.info("Calculating project costs...")
+                pricing_db = PricingDatabase(pricing_file)
+                calculator = CostCalculator(
+                    pricing_db,
+                    custom_discount=discount,
+                    apply_volume_discounts=not no_volume_discounts
+                )
+
+                ap_costs, antenna_costs, total_costs = calculator.calculate_total_cost(
+                    access_points, antennas
+                )
+
+                logger.info(f"Cost Summary:")
+                logger.info(f"  Access Points: ${ap_costs.grand_total:,.2f}")
+                logger.info(f"  Antennas: ${antenna_costs.grand_total:,.2f}")
+                logger.info(f"  Total: ${total_costs.grand_total:,.2f} {total_costs.currency}")
+                if total_costs.total_discount > 0:
+                    logger.info(f"  Total Savings: ${total_costs.total_discount:,.2f}")
+
+                cost_summary = total_costs
 
             # Default to CSV if no format specified
             if not export_formats:
@@ -394,7 +456,11 @@ def main(args: list[str] | None = None) -> int:
         exclude_colors=exclude_colors,
         exclude_vendors=exclude_vendors,
         group_by=parsed_args.group_by,
-        tag_key=parsed_args.tag_key
+        tag_key=parsed_args.tag_key,
+        enable_pricing=parsed_args.enable_pricing,
+        pricing_file=parsed_args.pricing_file,
+        discount=parsed_args.discount,
+        no_volume_discounts=parsed_args.no_volume_discounts
     )
 
 

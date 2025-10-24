@@ -1,0 +1,156 @@
+# Equipment Pricing Database
+# Currency: USD
+# Prices are average market prices (as of 2024)
+#
+# Structure:
+#   vendor:
+#     model: price_in_usd
+#
+# Note: Prices are approximate and should be updated based on actual vendor quotes
+
+# Cisco Access Points
+Cisco:
+  # Catalyst 9100 Series
+  C9105AXI-B: 895
+  C9105AXI-E: 1095
+  C9105AXI-H: 1195
+  C9115AXI-B: 1195
+  C9115AXI-E: 1395
+  C9115AXI-H: 1595
+  C9120AXI-B: 1395
+  C9120AXI-E: 1695
+  C9120AXI-H: 1895
+  C9130AXI-B: 1795
+  C9130AXI-E: 2095
+  C9130AXI-H: 2395
+
+  # Legacy Models (still in use)
+  AIR-AP1562I-B-K9: 695
+  AIR-AP1562E-B-K9: 895
+  AIR-AP2802I-B-K9: 795
+  AIR-AP2802E-B-K9: 995
+  AIR-AP3802I-B-K9: 1095
+  AIR-AP3802E-B-K9: 1295
+
+  # Meraki (Cloud-managed)
+  MR36: 895
+  MR46: 1195
+  MR56: 1695
+
+# Huawei Access Points
+Huawei:
+  # AirEngine Series (Wi-Fi 6)
+  AirEngine5760-10: 495
+  AirEngine5760-51: 695
+  AirEngine6760-X1: 895
+  AirEngine6760-X1E: 1095
+  AirEngine8760-X1-PRO: 1495
+
+  # Legacy Models
+  AP5030DN: 395
+  AP6050DN: 495
+  AP6150DN: 595
+  AP7060DN: 695
+
+# MikroTik Access Points
+MikroTik:
+  # cAP Series
+  cAP: 49
+  cAP-ac: 79
+  cAP-XL-ac: 149
+
+  # Audience
+  Audience: 189
+
+  # wAP Series
+  wAP-ac: 69
+  wAP-LTE-kit: 129
+
+  # BaseBox Series
+  BaseBox-2: 59
+  BaseBox-5: 69
+
+# Ubiquiti Access Points
+Ubiquiti:
+  # UniFi 6 Series (Wi-Fi 6)
+  U6-Lite: 99
+  U6-LR: 179
+  U6-Pro: 189
+  U6-Enterprise: 349
+  U6-Mesh: 199
+
+  # UniFi AC Series
+  UAP-AC-Lite: 79
+  UAP-AC-LR: 109
+  UAP-AC-Pro: 149
+  UAP-AC-HD: 349
+  UAP-AC-SHD: 549
+
+  # UniFi 7 Series (Wi-Fi 7)
+  U7-Pro: 279
+
+# Ruckus Access Points
+Ruckus:
+  # R Series (Wi-Fi 6E)
+  R770: 2495
+  R760: 1895
+  R750: 1395
+  R730: 995
+  R720: 795
+
+  # Legacy Models
+  R610: 695
+  R650: 1195
+  R710: 895
+  T710: 1495
+
+# Antennas (Common across vendors)
+Antennas:
+  # Generic names
+  Internal: 0  # Integrated antennas
+  ANT-2513P4M-N-R: 149
+  ANT-20: 99
+  AIR-ANT2566P4W-R: 195
+  AIR-ANT2535SDW-R: 249
+
+  # MikroTik Antennas
+  mANTBox-15s: 89
+  SXT-5HPnD: 69
+
+  # Ubiquiti Antennas
+  AMO-5G13: 79
+  AMO-2G10: 59
+
+# Volume Discount Tiers
+# Applied based on total quantity
+discounts:
+  volume:
+    - min_quantity: 1
+      max_quantity: 9
+      discount_percent: 0
+    - min_quantity: 10
+      max_quantity: 49
+      discount_percent: 5
+    - min_quantity: 50
+      max_quantity: 99
+      discount_percent: 10
+    - min_quantity: 100
+      max_quantity: 249
+      discount_percent: 15
+    - min_quantity: 250
+      max_quantity: 499
+      discount_percent: 20
+    - min_quantity: 500
+      max_quantity: null  # null means infinity
+      discount_percent: 25
+
+# Currency
+currency: USD
+
+# Metadata
+version: "1.0"
+last_updated: "2024-10-24"
+notes: |
+  Prices are approximate average market prices and should be verified
+  with actual vendor quotes. Educational/government pricing may differ.
+  Prices do not include support/maintenance contracts.
