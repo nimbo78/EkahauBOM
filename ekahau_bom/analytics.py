@@ -8,7 +8,7 @@ from collections import Counter, defaultdict
 from typing import Any, Optional
 from dataclasses import dataclass
 
-from .models import AccessPoint
+from .models import AccessPoint, Radio
 
 logger = logging.getLogger(__name__)
 
@@ -523,4 +523,226 @@ class MountingAnalytics:
             ),
             "aps_with_tilt": sum(1 for ap in access_points if ap.tilt is not None),
             "aps_with_azimuth": sum(1 for ap in access_points if ap.azimuth is not None)
+        }
+
+
+@dataclass
+class RadioMetrics:
+    """Radio configuration metrics.
+
+    Attributes:
+        total_radios: Total number of radios
+        band_distribution: Distribution by frequency band
+        channel_distribution: Distribution by channel number
+        channel_width_distribution: Distribution by channel width
+        standard_distribution: Distribution by Wi-Fi standard
+        avg_tx_power: Average transmit power in dBm
+        min_tx_power: Minimum transmit power
+        max_tx_power: Maximum transmit power
+    """
+    total_radios: int
+    band_distribution: dict[str, int]
+    channel_distribution: dict[int, int]
+    channel_width_distribution: dict[int, int]
+    standard_distribution: dict[str, int]
+    avg_tx_power: Optional[float]
+    min_tx_power: Optional[float]
+    max_tx_power: Optional[float]
+
+
+class RadioAnalytics:
+    """Analytics for radio configurations.
+
+    Provides metrics for Wi-Fi engineers to analyze:
+    - Frequency band distribution (2.4/5/6 GHz)
+    - Channel allocation and distribution
+    - Channel width usage (20/40/80/160 MHz)
+    - Wi-Fi standards (802.11a/b/g/n/ac/ax/be)
+    - Transmit power analysis
+    """
+
+    @staticmethod
+    def calculate_radio_metrics(radios: list[Radio]) -> RadioMetrics:
+        """Calculate radio configuration statistics.
+
+        Args:
+            radios: List of radios
+
+        Returns:
+            RadioMetrics object with calculated values
+        """
+        total_radios = len(radios)
+
+        # Band distribution
+        band_counts = Counter(r.frequency_band for r in radios if r.frequency_band)
+
+        # Channel distribution
+        channel_counts = Counter(r.channel for r in radios if r.channel)
+
+        # Channel width distribution
+        width_counts = Counter(r.channel_width for r in radios if r.channel_width)
+
+        # Standard distribution
+        standard_counts = Counter(r.standard for r in radios if r.standard)
+
+        # Tx Power statistics
+        tx_powers = [r.tx_power for r in radios if r.tx_power is not None]
+        avg_tx_power = sum(tx_powers) / len(tx_powers) if tx_powers else None
+        min_tx_power = min(tx_powers) if tx_powers else None
+        max_tx_power = max(tx_powers) if tx_powers else None
+
+        logger.info(f"Radio metrics: {total_radios} radios analyzed")
+        logger.info(f"Band distribution: {dict(band_counts)}")
+        logger.info(f"Standards: {dict(standard_counts)}")
+
+        return RadioMetrics(
+            total_radios=total_radios,
+            band_distribution=dict(band_counts),
+            channel_distribution=dict(channel_counts),
+            channel_width_distribution=dict(width_counts),
+            standard_distribution=dict(standard_counts),
+            avg_tx_power=avg_tx_power,
+            min_tx_power=min_tx_power,
+            max_tx_power=max_tx_power
+        )
+
+    @staticmethod
+    def group_by_frequency_band(radios: list[Radio]) -> dict[str, int]:
+        """Group radios by frequency band.
+
+        Args:
+            radios: List of radios
+
+        Returns:
+            Dictionary mapping frequency band to count
+        """
+        bands = Counter(r.frequency_band for r in radios if r.frequency_band)
+        return dict(bands)
+
+    @staticmethod
+    def group_by_channel_width(radios: list[Radio]) -> dict[str, int]:
+        """Group radios by channel width.
+
+        Args:
+            radios: List of radios
+
+        Returns:
+            Dictionary mapping channel width to count
+        """
+        widths = {}
+        for radio in radios:
+            if radio.channel_width:
+                key = f"{radio.channel_width} MHz"
+                widths[key] = widths.get(key, 0) + 1
+
+        return widths
+
+    @staticmethod
+    def group_by_wifi_standard(radios: list[Radio]) -> dict[str, int]:
+        """Group radios by Wi-Fi standard.
+
+        Args:
+            radios: List of radios
+
+        Returns:
+            Dictionary mapping Wi-Fi standard to count
+        """
+        standards = Counter(r.standard for r in radios if r.standard)
+        return dict(standards)
+
+    @staticmethod
+    def analyze_channel_usage(radios: list[Radio], band: Optional[str] = None) -> dict[str, Any]:
+        """Analyze channel usage for specific band or all bands.
+
+        Args:
+            radios: List of radios
+            band: Optional frequency band to filter (e.g., "2.4GHz", "5GHz")
+
+        Returns:
+            Dictionary with channel usage analysis
+        """
+        # Filter by band if specified
+        if band:
+            radios = [r for r in radios if r.frequency_band == band]
+
+        channel_counts = Counter(r.channel for r in radios if r.channel)
+        total_radios = len([r for r in radios if r.channel])
+
+        # Find most used and least used channels
+        most_common = channel_counts.most_common(3) if channel_counts else []
+        least_common = channel_counts.most_common()[:-4:-1] if len(channel_counts) > 3 else []
+
+        # Calculate channel distribution statistics
+        unique_channels = len(channel_counts)
+        avg_radios_per_channel = total_radios / unique_channels if unique_channels > 0 else 0
+
+        return {
+            "total_radios": total_radios,
+            "unique_channels": unique_channels,
+            "avg_radios_per_channel": avg_radios_per_channel,
+            "most_used_channels": most_common,
+            "least_used_channels": least_common,
+            "channel_distribution": dict(channel_counts)
+        }
+
+    @staticmethod
+    def get_tx_power_distribution(radios: list[Radio]) -> dict[str, int]:
+        """Group radios by transmit power ranges.
+
+        Args:
+            radios: List of radios
+
+        Returns:
+            Dictionary mapping power range to count
+        """
+        ranges = {
+            "< 10 dBm": 0,
+            "10-15 dBm": 0,
+            "15-20 dBm": 0,
+            "20-25 dBm": 0,
+            "> 25 dBm": 0,
+            "Unknown": 0
+        }
+
+        for radio in radios:
+            if radio.tx_power is None:
+                ranges["Unknown"] += 1
+            elif radio.tx_power < 10:
+                ranges["< 10 dBm"] += 1
+            elif radio.tx_power < 15:
+                ranges["10-15 dBm"] += 1
+            elif radio.tx_power < 20:
+                ranges["15-20 dBm"] += 1
+            elif radio.tx_power < 25:
+                ranges["20-25 dBm"] += 1
+            else:
+                ranges["> 25 dBm"] += 1
+
+        return ranges
+
+    @staticmethod
+    def get_radio_summary(radios: list[Radio]) -> dict[str, Any]:
+        """Get comprehensive radio summary.
+
+        Args:
+            radios: List of radios
+
+        Returns:
+            Dictionary with radio summary metrics
+        """
+        metrics = RadioAnalytics.calculate_radio_metrics(radios)
+        band_dist = RadioAnalytics.group_by_frequency_band(radios)
+        width_dist = RadioAnalytics.group_by_channel_width(radios)
+        standard_dist = RadioAnalytics.group_by_wifi_standard(radios)
+        power_dist = RadioAnalytics.get_tx_power_distribution(radios)
+
+        return {
+            "total_radios": metrics.total_radios,
+            "frequency_bands": band_dist,
+            "channel_widths": width_dist,
+            "wifi_standards": standard_dist,
+            "tx_power_ranges": power_dist,
+            "avg_tx_power": metrics.avg_tx_power,
+            "min_tx_power": metrics.min_tx_power,
+            "max_tx_power": metrics.max_tx_power
         }

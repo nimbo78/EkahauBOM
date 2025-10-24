@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna, Tag, Floor
-from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics
+from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,11 @@ class JSONExporter(BaseExporter):
         # Calculate mounting metrics
         mounting_metrics = MountingAnalytics.calculate_mounting_metrics(project_data.access_points)
         height_distribution = MountingAnalytics.group_by_height_range(project_data.access_points)
+
+        # Calculate radio metrics
+        radio_metrics = None
+        if project_data.radios:
+            radio_metrics = RadioAnalytics.calculate_radio_metrics(project_data.radios)
 
         # Build JSON structure
         json_structure = {
@@ -190,6 +195,18 @@ class JSONExporter(BaseExporter):
                         {"range": range_name, "count": count}
                         for range_name, count in sorted(height_distribution.items())
                     ]
+                },
+                "radio": {
+                    "total_radios": radio_metrics.total_radios if radio_metrics else 0,
+                    "frequency_bands": radio_metrics.band_distribution if radio_metrics else {},
+                    "channel_distribution": {str(k): v for k, v in radio_metrics.channel_distribution.items()} if radio_metrics else {},
+                    "channel_widths": {str(k): v for k, v in radio_metrics.channel_width_distribution.items()} if radio_metrics else {},
+                    "wifi_standards": radio_metrics.standard_distribution if radio_metrics else {},
+                    "tx_power": {
+                        "avg_dbm": radio_metrics.avg_tx_power,
+                        "min_dbm": radio_metrics.min_tx_power,
+                        "max_dbm": radio_metrics.max_tx_power
+                    } if radio_metrics and radio_metrics.avg_tx_power else None
                 }
             }
         }

@@ -13,6 +13,7 @@ from .parser import EkahauParser
 from .processors.access_points import AccessPointProcessor
 from .processors.antennas import AntennaProcessor
 from .processors.tags import TagProcessor
+from .processors.radios import RadioProcessor
 from .filters import APFilter
 from .analytics import GroupingAnalytics
 from .exporters.csv_exporter import CSVExporter
@@ -303,16 +304,21 @@ def process_project(
             antenna_processor = AntennaProcessor()
             antennas = antenna_processor.process(simulated_radios_data, antenna_types_data)
 
+            # Process radios
+            radio_processor = RadioProcessor()
+            radios = radio_processor.process(simulated_radios_data)
+
             # Create project data container
             project_data = ProjectData(
                 access_points=access_points,
                 antennas=antennas,
                 floors=floors,
-                project_name=esx_file.stem
+                project_name=esx_file.stem,
+                radios=radios
             )
 
             # Display advanced analytics
-            from .analytics import CoverageAnalytics, MountingAnalytics
+            from .analytics import CoverageAnalytics, MountingAnalytics, RadioAnalytics
 
             # Coverage analytics
             try:
@@ -340,6 +346,38 @@ def process_project(
                 for range_label, count in sorted(height_dist.items()):
                     if count > 0:
                         logger.info(f"  {range_label}: {count} APs")
+
+            # Radio analytics
+            if radios:
+                logger.info("=" * 60)
+                logger.info("Radio & Wi-Fi Configuration Analytics")
+                logger.info("=" * 60)
+                radio_metrics = RadioAnalytics.calculate_radio_metrics(radios)
+
+                # Frequency bands
+                logger.info("Frequency Band Distribution:")
+                for band, count in sorted(radio_metrics.band_distribution.items()):
+                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    logger.info(f"  {band}: {count} radios ({percentage:.1f}%)")
+
+                # Wi-Fi standards
+                if radio_metrics.standard_distribution:
+                    logger.info("Wi-Fi Standards:")
+                    for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                        percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                        logger.info(f"  {standard}: {count} radios ({percentage:.1f}%)")
+
+                # Channel widths
+                if radio_metrics.channel_width_distribution:
+                    logger.info("Channel Width Distribution:")
+                    for width, count in sorted(radio_metrics.channel_width_distribution.items(), key=lambda x: x[0] if x[0] else 0):
+                        logger.info(f"  {width} MHz: {count} radios")
+
+                # TX Power
+                if radio_metrics.avg_tx_power:
+                    logger.info(f"TX Power: avg={radio_metrics.avg_tx_power:.1f} dBm, " +
+                               f"min={radio_metrics.min_tx_power:.1f} dBm, " +
+                               f"max={radio_metrics.max_tx_power:.1f} dBm")
 
             # Calculate costs if enabled
             cost_summary = None

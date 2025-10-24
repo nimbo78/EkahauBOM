@@ -57,6 +57,34 @@ class Floor:
 
 
 @dataclass
+class Radio:
+    """Represents a radio configuration in Ekahau project.
+
+    Attributes:
+        id: Unique identifier for the radio
+        access_point_id: ID of the access point this radio belongs to
+        frequency_band: Frequency band (2.4GHz, 5GHz, 6GHz)
+        channel: Channel number
+        channel_width: Channel width in MHz (20, 40, 80, 160)
+        tx_power: Transmit power in dBm
+        antenna_type_id: ID of the antenna type used
+        standard: Wi-Fi standard (802.11a/b/g/n/ac/ax/be)
+    """
+    id: str
+    access_point_id: str
+    frequency_band: Optional[str] = None
+    channel: Optional[int] = None
+    channel_width: Optional[int] = None
+    tx_power: Optional[float] = None
+    antenna_type_id: Optional[str] = None
+    standard: Optional[str] = None
+
+    def __hash__(self):
+        """Make Radio hashable."""
+        return hash(self.id)
+
+
+@dataclass
 class AccessPoint:
     """Represents an access point in Ekahau project.
 
@@ -150,8 +178,10 @@ class ProjectData:
         antennas: List of antennas used in the project
         floors: Dictionary mapping floor IDs to Floor objects
         project_name: Name of the project file
+        radios: List of radio configurations in the project
     """
     access_points: list[AccessPoint]
     antennas: list[Antenna]
     floors: dict[str, Floor]
     project_name: str
+    radios: list[Radio] = field(default_factory=list)
