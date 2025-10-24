@@ -77,7 +77,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         '--format',
         type=str,
         default='csv',
-        help='Export format(s): csv, excel, html, json, or combinations like csv,excel,html,json (default: csv)'
+        help='Export format(s): csv, excel, html, json, pdf, or combinations like csv,excel,html,json,pdf (default: csv)'
     )
 
     # Filtering options
@@ -413,12 +413,14 @@ def process_project(
             from .exporters.excel_exporter import ExcelExporter
             from .exporters.html_exporter import HTMLExporter
             from .exporters.json_exporter import JSONExporter
+            from .exporters.pdf_exporter import PDFExporter
 
             exporters = {
                 'csv': CSVExporter(output_dir),
                 'excel': ExcelExporter(output_dir),
                 'html': HTMLExporter(output_dir),
-                'json': JSONExporter(output_dir)
+                'json': JSONExporter(output_dir),
+                'pdf': PDFExporter(output_dir)
             }
 
             exported_files = []

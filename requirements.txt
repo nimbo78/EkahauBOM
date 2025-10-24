@@ -6,3 +6,6 @@ PyYAML>=6.0
 
 # Excel export support
 openpyxl>=3.1.0
+
+# PDF export support
+WeasyPrint>=60.0

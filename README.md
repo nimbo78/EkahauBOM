@@ -20,6 +20,7 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 - **Excel**: Professional reports with multiple sheets, charts, formulas, and formatting
 - **HTML**: Interactive web reports with Chart.js visualizations and responsive design
 - **JSON**: Machine-readable format with complete metadata for API integrations
+- **PDF**: Print-ready professional reports with tables and statistics (requires WeasyPrint)
 
 ### 📡 **Advanced Radio Analytics**
 - **Frequency band distribution** (2.4 GHz / 5 GHz / 6 GHz)
@@ -136,8 +137,11 @@ ekahau-bom project.esx --format excel
 # Export to HTML (interactive web report)
 ekahau-bom project.esx --format html
 
+# Export to PDF (print-ready report)
+ekahau-bom project.esx --format pdf
+
 # Export to all formats at once
-ekahau-bom project.esx --format csv,excel,html,json
+ekahau-bom project.esx --format csv,excel,html,json,pdf
 ```
 
 ### With Options
@@ -354,6 +358,28 @@ Ideal for:
 - Automated workflows
 - Custom reporting tools
 
+### PDF Export
+
+Professional print-ready PDF document with:
+
+- **Print-optimized layout** (A4 page size with proper margins)
+- **Professional styling** with tables and statistics
+- **Summary statistics** (totals, distributions)
+- **Grouping tables** (by vendor, floor, color, model)
+- **Analytics sections** (mounting, radio configuration)
+- **Access points tables** (aggregated and detailed installation params)
+- **Page breaks** optimized for printing
+- **No external dependencies** (fully self-contained)
+
+Perfect for:
+- Client presentations and deliverables
+- Project documentation archives
+- Printed reports for field teams
+- Professional proposals
+- Stakeholder reviews
+
+**Note**: Requires WeasyPrint library (`pip install WeasyPrint>=60.0`)
+
 ---
 
 ## ⚙️ Configuration
@@ -550,6 +576,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution guid
 - **Python** 3.7+
 - **PyYAML** >= 6.0
 - **openpyxl** >= 3.0.0 (for Excel export)
+- **WeasyPrint** >= 60.0 (for PDF export, optional)
 
 ### Development
 - **pytest** >= 7.0.0
