@@ -986,7 +986,7 @@ python EkahauBOM.py project.esx \
 
 ### ⏳ Итерация 5 (Production Ready): В ПРОЦЕССЕ
 **Фокус:** Качество, тестирование, документация, публикация
-**Статус:** Phase 1 ✅ ЗАВЕРШЕНА, Phase 2 ✅ ЗАВЕРШЕНА, Phase 4 ✅ ЗАВЕРШЕНА
+**Статус:** Phase 1 ✅ ЗАВЕРШЕНА, Phase 2 ✅ ЗАВЕРШЕНА, Phase 3 ✅ ЗАВЕРШЕНА, Phase 4 ✅ ЗАВЕРШЕНА
 
 **Phase 1: Тестирование (Testing)** ✅ ЗАВЕРШЕНО
 1. ✅ Настройка pytest-cov
@@ -1027,8 +1027,17 @@ python EkahauBOM.py project.esx \
    - ✅ Detailed feature lists for each release
 5. ⏸️ Примеры использования (docs/examples/) - отложено
 
-**Phase 3: PDF экспорт** 🔴 НЕ НАЧАТО
-1. Фаза 4.4: PDFExporter с WeasyPrint
+**Phase 3: PDF экспорт** ✅ ЗАВЕРШЕНО
+1. ✅ Фаза 4.4: PDFExporter с WeasyPrint
+   - ✅ Added WeasyPrint>=60.0 dependency
+   - ✅ Created PDFExporter (ekahau_bom/exporters/pdf_exporter.py - 546 lines)
+   - ✅ HTML to PDF conversion with print-optimized layout (A4, 2cm margins)
+   - ✅ All sections included: Summary, Distribution, Analytics, AP tables
+   - ✅ Grouping statistics (vendor, floor, color, model)
+   - ✅ Radio and mounting analytics integration
+   - ✅ 14 unit tests in test_pdf_exporter.py (all passing)
+   - ✅ CLI argument --format pdf support
+   - ✅ Updated README.md and README.ru.md with PDF examples
 
 **Phase 4: Интерактивный CLI** ✅ ЗАВЕРШЕНО
 1. ✅ Фаза 6.2: Rich library integration
