@@ -144,12 +144,24 @@ class JSONExporter(BaseExporter):
                 ],
                 "details": [
                     {
+                        "name": ap.name,
                         "vendor": ap.vendor,
                         "model": ap.model,
                         "floor": ap.floor_name,
                         "floor_id": ap.floor_id,
+                        "location": {
+                            "x": ap.location_x,
+                            "y": ap.location_y
+                        } if ap.location_x is not None and ap.location_y is not None else None,
+                        "installation": {
+                            "mounting_height": ap.mounting_height,
+                            "azimuth": ap.azimuth,
+                            "tilt": ap.tilt,
+                            "antenna_height": ap.antenna_height
+                        },
                         "color": ap.color,
                         "mine": ap.mine,
+                        "enabled": ap.enabled,
                         "tags": [
                             {
                                 "key": tag.key,
