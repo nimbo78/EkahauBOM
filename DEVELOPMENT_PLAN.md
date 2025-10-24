@@ -986,7 +986,7 @@ python EkahauBOM.py project.esx \
 
 ### ⏳ Итерация 5 (Production Ready): В ПРОЦЕССЕ
 **Фокус:** Качество, тестирование, документация, публикация
-**Статус:** Phase 1 ✅ ЗАВЕРШЕНА, Phase 2 ✅ ЗАВЕРШЕНА, Phase 3 ✅ ЗАВЕРШЕНА, Phase 4 ✅ ЗАВЕРШЕНА
+**Статус:** Phase 1 ✅ ЗАВЕРШЕНА, Phase 2 ✅ ЗАВЕРШЕНА, Phase 3 ✅ ЗАВЕРШЕНА, Phase 4 ✅ ЗАВЕРШЕНА, Phase 5 ✅ ЗАВЕРШЕНА
 
 **Phase 1: Тестирование (Testing)** ✅ ЗАВЕРШЕНО
 1. ✅ Настройка pytest-cov
@@ -1049,8 +1049,16 @@ python EkahauBOM.py project.esx \
    - ✅ Graceful degradation if Rich not installed
    - ✅ Updated README.md and README.ru.md with Rich examples
 
-**Phase 5: Batch обработка** 🔴 НЕ НАЧАТО
-1. Фаза 6.3: Batch processing
+**Phase 5: Batch обработка** ✅ ЗАВЕРШЕНО
+1. ✅ Фаза 6.3: Batch processing
+   - ✅ Added --batch and --recursive CLI arguments
+   - ✅ Implemented find_esx_files() function with recursive search support
+   - ✅ Updated main() to handle batch mode processing
+   - ✅ Rich library integration for batch progress display
+   - ✅ Batch summary table showing successful/failed files
+   - ✅ Error handling for individual file failures
+   - ✅ All tests passing
+   - ✅ Updated README.md and README.ru.md with batch processing examples
 
 **Phase 6: Публикация** 🔴 НЕ НАЧАТО
 1. setup.py/pyproject.toml

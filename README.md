@@ -255,6 +255,28 @@ ekahau-bom project.esx --calculate-cost --discount 15
 ekahau-bom project.esx --calculate-cost --no-volume-discounts
 ```
 
+### 8. Batch Processing
+
+Process multiple .esx files at once:
+
+```bash
+# Process all .esx files in a directory
+ekahau-bom --batch /path/to/projects/
+
+# Process recursively (including subdirectories)
+ekahau-bom --batch /path/to/projects/ --recursive
+
+# Batch processing with export format
+ekahau-bom --batch ./projects/ --format excel,pdf
+
+# Batch processing with filters
+ekahau-bom --batch ./projects/ \
+  --filter-vendor "Cisco" \
+  --format csv,excel
+```
+
+**Note:** When using batch mode, each project will be processed independently and outputs will be saved in the same directory structure or the specified `--output-dir`.
+
 ---
 
 ## 📁 Output Files

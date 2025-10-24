@@ -52,7 +52,8 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         'esx_file',
         type=Path,
-        help='Path to Ekahau .esx project file'
+        nargs='?',
+        help='Path to Ekahau .esx project file (optional if --batch is used)'
     )
 
     parser.add_argument(
@@ -188,6 +189,21 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help='Disable automatic volume-based discounts'
     )
 
+    # Batch processing options
+    batch_group = parser.add_argument_group('batch processing options')
+
+    batch_group.add_argument(
+        '--batch',
+        type=Path,
+        help='Process all .esx files in the specified directory'
+    )
+
+    batch_group.add_argument(
+        '--recursive',
+        action='store_true',
+        help='Search for .esx files recursively in subdirectories (use with --batch)'
+    )
+
     return parser
 
 
@@ -293,6 +309,41 @@ def print_export_summary(exported_files):
 
     console.print(table)
     console.print(f"\n[bold green]✓[/bold green] Reports saved to: [cyan]{exported_files[0].parent if exported_files else 'output/'}[/cyan]")
+
+
+def find_esx_files(directory: Path, recursive: bool = False) -> list[Path]:
+    """Find all .esx files in the specified directory.
+
+    Args:
+        directory: Directory to search for .esx files
+        recursive: If True, search recursively in subdirectories
+
+    Returns:
+        List of paths to .esx files
+
+    Raises:
+        FileNotFoundError: If directory doesn't exist
+        NotADirectoryError: If path is not a directory
+    """
+    if not directory.exists():
+        raise FileNotFoundError(f"Directory not found: {directory}")
+
+    if not directory.is_dir():
+        raise NotADirectoryError(f"Path is not a directory: {directory}")
+
+    if recursive:
+        # Recursive search using rglob
+        esx_files = list(directory.rglob("*.esx"))
+    else:
+        # Non-recursive search using glob
+        esx_files = list(directory.glob("*.esx"))
+
+    # Sort files by name for consistent processing order
+    esx_files.sort()
+
+    logger.info(f"Found {len(esx_files)} .esx file(s) in {directory}" + (" (recursive)" if recursive else ""))
+
+    return esx_files
 
 
 def process_project(
@@ -689,27 +740,112 @@ def main(args: list[str] | None = None) -> int:
     # Parse export formats
     export_formats = [f.strip().lower() for f in parsed_args.format.split(',')]
 
-    # Process project
-    return process_project(
-        esx_file=parsed_args.esx_file,
-        output_dir=parsed_args.output_dir,
-        colors_config=parsed_args.colors_config,
-        export_formats=export_formats,
-        filter_floors=filter_floors,
-        filter_colors=filter_colors,
-        filter_vendors=filter_vendors,
-        filter_models=filter_models,
-        filter_tags=filter_tags,
-        exclude_floors=exclude_floors,
-        exclude_colors=exclude_colors,
-        exclude_vendors=exclude_vendors,
-        group_by=parsed_args.group_by,
-        tag_key=parsed_args.tag_key,
-        enable_pricing=parsed_args.enable_pricing,
-        pricing_file=parsed_args.pricing_file,
-        discount=parsed_args.discount,
-        no_volume_discounts=parsed_args.no_volume_discounts
-    )
+    # Determine files to process
+    files_to_process = []
+
+    if parsed_args.batch:
+        # Batch mode: find all .esx files in directory
+        try:
+            files_to_process = find_esx_files(parsed_args.batch, parsed_args.recursive)
+            if not files_to_process:
+                logger.error(f"No .esx files found in {parsed_args.batch}")
+                return 1
+
+            if RICH_AVAILABLE and console:
+                console.print(f"\n[bold cyan]Batch Processing Mode[/bold cyan]")
+                console.print(f"Found [bold green]{len(files_to_process)}[/bold green] project file(s)")
+                console.print(f"Directory: [cyan]{parsed_args.batch}[/cyan]")
+                if parsed_args.recursive:
+                    console.print("[yellow]Recursive search enabled[/yellow]")
+                console.print()
+            else:
+                logger.info(f"Batch mode: Processing {len(files_to_process)} file(s)")
+        except (FileNotFoundError, NotADirectoryError) as e:
+            if RICH_AVAILABLE and console:
+                console.print(f"[bold red]✗ Error:[/bold red] {e}")
+            else:
+                logger.error(str(e))
+            return 1
+    else:
+        # Single file mode
+        if not parsed_args.esx_file:
+            logger.error("Either provide an .esx file or use --batch option")
+            if RICH_AVAILABLE and console:
+                console.print("[bold red]✗ Error:[/bold red] Either provide an .esx file or use --batch option")
+            return 1
+        files_to_process = [parsed_args.esx_file]
+
+    # Process all files
+    total_files = len(files_to_process)
+    failed_files = []
+
+    for idx, esx_file in enumerate(files_to_process, 1):
+        if total_files > 1:
+            if RICH_AVAILABLE and console:
+                console.print(f"\n[bold blue]{'='*60}[/bold blue]")
+                console.print(f"[bold cyan]Processing file {idx}/{total_files}:[/bold cyan] [yellow]{esx_file.name}[/yellow]")
+                console.print(f"[bold blue]{'='*60}[/bold blue]\n")
+            else:
+                logger.info(f"Processing file {idx}/{total_files}: {esx_file.name}")
+
+        try:
+            exit_code = process_project(
+                esx_file=esx_file,
+                output_dir=parsed_args.output_dir,
+                colors_config=parsed_args.colors_config,
+                export_formats=export_formats,
+                filter_floors=filter_floors,
+                filter_colors=filter_colors,
+                filter_vendors=filter_vendors,
+                filter_models=filter_models,
+                filter_tags=filter_tags,
+                exclude_floors=exclude_floors,
+                exclude_colors=exclude_colors,
+                exclude_vendors=exclude_vendors,
+                group_by=parsed_args.group_by,
+                tag_key=parsed_args.tag_key,
+                enable_pricing=parsed_args.enable_pricing,
+                pricing_file=parsed_args.pricing_file,
+                discount=parsed_args.discount,
+                no_volume_discounts=parsed_args.no_volume_discounts
+            )
+
+            if exit_code != 0:
+                failed_files.append(esx_file.name)
+        except Exception as e:
+            logger.error(f"Failed to process {esx_file.name}: {e}")
+            if RICH_AVAILABLE and console:
+                console.print(f"[bold red]✗ Failed to process {esx_file.name}:[/bold red] {e}")
+            failed_files.append(esx_file.name)
+
+    # Print summary for batch mode
+    if total_files > 1:
+        if RICH_AVAILABLE and console:
+            console.print(f"\n[bold blue]{'='*60}[/bold blue]")
+            console.print(f"[bold cyan]Batch Processing Summary[/bold cyan]")
+            console.print(f"[bold blue]{'='*60}[/bold blue]\n")
+
+            table = Table(title="Results", box=box.ROUNDED, show_header=True, header_style="bold cyan")
+            table.add_column("Metric", style="cyan")
+            table.add_column("Count", justify="right", style="green")
+
+            table.add_row("Total Files", str(total_files))
+            table.add_row("Successful", str(total_files - len(failed_files)))
+            if failed_files:
+                table.add_row("Failed", f"[red]{len(failed_files)}[/red]")
+
+            console.print(table)
+
+            if failed_files:
+                console.print("\n[bold red]Failed files:[/bold red]")
+                for filename in failed_files:
+                    console.print(f"  [red]✗[/red] {filename}")
+        else:
+            logger.info(f"Batch processing complete: {total_files - len(failed_files)}/{total_files} successful")
+            if failed_files:
+                logger.error(f"Failed files: {', '.join(failed_files)}")
+
+    return 1 if failed_files else 0
 
 
 if __name__ == '__main__':
