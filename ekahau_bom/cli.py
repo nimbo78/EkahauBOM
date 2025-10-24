@@ -311,6 +311,36 @@ def process_project(
                 project_name=esx_file.stem
             )
 
+            # Display advanced analytics
+            from .analytics import CoverageAnalytics, MountingAnalytics
+
+            # Coverage analytics
+            try:
+                measured_areas_data = parser.get_measured_areas()
+                if measured_areas_data and measured_areas_data.get("measuredAreas"):
+                    logger.info("=" * 60)
+                    logger.info("Coverage Analytics")
+                    logger.info("=" * 60)
+                    coverage_metrics = CoverageAnalytics.calculate_coverage_metrics(
+                        access_points, measured_areas_data
+                    )
+                    # Metrics are logged by the analytics class
+            except Exception as e:
+                logger.debug(f"Could not load coverage analytics: {e}")
+
+            # Mounting analytics
+            if any(ap.mounting_height is not None for ap in access_points):
+                logger.info("=" * 60)
+                logger.info("Installation & Mounting Analytics")
+                logger.info("=" * 60)
+                mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+                # Display height distribution
+                height_dist = MountingAnalytics.group_by_height_range(access_points)
+                logger.info("Height Distribution:")
+                for range_label, count in sorted(height_dist.items()):
+                    if count > 0:
+                        logger.info(f"  {range_label}: {count} APs")
+
             # Calculate costs if enabled
             cost_summary = None
             if enable_pricing:

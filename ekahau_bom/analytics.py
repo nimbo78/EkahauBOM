@@ -5,11 +5,52 @@
 
 import logging
 from collections import Counter, defaultdict
-from typing import Any
+from typing import Any, Optional
+from dataclasses import dataclass
 
 from .models import AccessPoint
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CoverageMetrics:
+    """Coverage metrics for project analysis.
+
+    Attributes:
+        total_area: Total coverage area in square meters
+        excluded_area: Excluded area in square meters
+        ap_count: Number of access points
+        ap_density: Access points per 1000 square meters
+        average_coverage_per_ap: Average coverage area per AP in square meters
+    """
+    total_area: float
+    excluded_area: float
+    ap_count: int
+    ap_density: float
+    average_coverage_per_ap: float
+
+
+@dataclass
+class MountingMetrics:
+    """Mounting parameter metrics.
+
+    Attributes:
+        avg_height: Average mounting height in meters
+        min_height: Minimum mounting height in meters
+        max_height: Maximum mounting height in meters
+        height_variance: Variance in mounting heights
+        aps_with_height: Number of APs with height data
+        avg_azimuth: Average azimuth angle
+        avg_tilt: Average tilt angle
+    """
+    avg_height: Optional[float]
+    min_height: Optional[float]
+    max_height: Optional[float]
+    height_variance: Optional[float]
+    aps_with_height: int
+    avg_azimuth: Optional[float]
+    avg_tilt: Optional[float]
 
 
 class GroupingAnalytics:
@@ -18,6 +59,36 @@ class GroupingAnalytics:
     Provides methods for grouping access points by various dimensions
     and calculating statistics.
     """
+
+    @staticmethod
+    def group_by_dimension(
+        access_points: list[AccessPoint],
+        dimension: str,
+        tag_key: str | None = None
+    ) -> dict[str, int]:
+        """Group access points by specified dimension.
+
+        Args:
+            access_points: List of access points to group
+            dimension: Dimension to group by ("vendor", "model", "floor", "color", "tag")
+            tag_key: Tag key name (required if dimension is "tag")
+
+        Returns:
+            Dictionary mapping dimension value to count
+        """
+        if dimension == "vendor":
+            return GroupingAnalytics.group_by_vendor(access_points)
+        elif dimension == "model":
+            return GroupingAnalytics.group_by_model(access_points)
+        elif dimension == "floor":
+            return GroupingAnalytics.group_by_floor(access_points)
+        elif dimension == "color":
+            return GroupingAnalytics.group_by_color(access_points)
+        elif dimension == "tag" and tag_key:
+            return GroupingAnalytics.group_by_tag(access_points, tag_key)
+        else:
+            logger.warning(f"Unknown dimension: {dimension}")
+            return {}
 
     @staticmethod
     def group_by_floor(access_points: list[AccessPoint]) -> dict[str, int]:
@@ -249,3 +320,207 @@ class GroupingAnalytics:
                 logger.info(f"  {key}: {count}")
 
         logger.info("=" * 60)
+
+
+class CoverageAnalytics:
+    """Analytics for coverage areas and AP density.
+
+    Provides metrics for Wi-Fi engineers to analyze:
+    - Total coverage area
+    - Excluded areas
+    - AP density (APs per 1000 m²)
+    - Average coverage per AP
+    """
+
+    @staticmethod
+    def calculate_coverage_metrics(
+        access_points: list[AccessPoint],
+        measured_areas: Optional[dict[str, Any]] = None
+    ) -> CoverageMetrics:
+        """Calculate coverage metrics from access points and measured areas.
+
+        Args:
+            access_points: List of access points
+            measured_areas: Optional measured areas data from Ekahau
+
+        Returns:
+            CoverageMetrics object with calculated values
+        """
+        ap_count = len(access_points)
+        total_area = 0.0
+        excluded_area = 0.0
+
+        # Calculate areas from measured areas if available
+        if measured_areas and "measuredAreas" in measured_areas:
+            for area in measured_areas["measuredAreas"]:
+                area_size = area.get("size", 0)  # Area in square meters
+                if area.get("excluded", False):
+                    excluded_area += area_size
+                else:
+                    total_area += area_size
+
+        # Calculate metrics
+        effective_area = total_area - excluded_area
+        ap_density = (ap_count / effective_area * 1000) if effective_area > 0 else 0
+        avg_coverage_per_ap = (effective_area / ap_count) if ap_count > 0 else 0
+
+        logger.info(f"Coverage metrics: {ap_count} APs, {total_area:.1f}m² total, {excluded_area:.1f}m² excluded")
+        logger.info(f"AP density: {ap_density:.2f} APs/1000m², avg coverage: {avg_coverage_per_ap:.1f}m²/AP")
+
+        return CoverageMetrics(
+            total_area=total_area,
+            excluded_area=excluded_area,
+            ap_count=ap_count,
+            ap_density=ap_density,
+            average_coverage_per_ap=avg_coverage_per_ap
+        )
+
+    @staticmethod
+    def group_by_floor_with_density(
+        access_points: list[AccessPoint],
+        floor_areas: Optional[dict[str, float]] = None
+    ) -> dict[str, dict[str, Any]]:
+        """Group APs by floor and calculate density per floor.
+
+        Args:
+            access_points: List of access points
+            floor_areas: Optional dictionary mapping floor name to area in m²
+
+        Returns:
+            Dictionary with floor-level metrics
+        """
+        floor_counts = Counter(ap.floor_name for ap in access_points)
+        result = {}
+
+        for floor_name, count in floor_counts.items():
+            metrics = {
+                "ap_count": count,
+                "area": floor_areas.get(floor_name, 0) if floor_areas else 0,
+                "density": 0
+            }
+
+            if floor_areas and floor_name in floor_areas and floor_areas[floor_name] > 0:
+                metrics["density"] = count / floor_areas[floor_name] * 1000
+
+            result[floor_name] = metrics
+
+        return result
+
+
+class MountingAnalytics:
+    """Analytics for mounting parameters.
+
+    Provides metrics for installation teams:
+    - Average mounting height
+    - Height variance
+    - Azimuth distribution
+    - Tilt angle distribution
+    """
+
+    @staticmethod
+    def calculate_mounting_metrics(access_points: list[AccessPoint]) -> MountingMetrics:
+        """Calculate mounting parameter statistics.
+
+        Args:
+            access_points: List of access points
+
+        Returns:
+            MountingMetrics object with calculated values
+        """
+        # Filter APs with height data
+        heights = [ap.mounting_height for ap in access_points if ap.mounting_height is not None]
+        azimuths = [ap.azimuth for ap in access_points if ap.azimuth is not None]
+        tilts = [ap.tilt for ap in access_points if ap.tilt is not None]
+
+        # Calculate height statistics
+        avg_height = sum(heights) / len(heights) if heights else None
+        min_height = min(heights) if heights else None
+        max_height = max(heights) if heights else None
+
+        # Calculate variance
+        height_variance = None
+        if heights and avg_height is not None:
+            variance_sum = sum((h - avg_height) ** 2 for h in heights)
+            height_variance = variance_sum / len(heights)
+
+        # Calculate angle averages
+        avg_azimuth = sum(azimuths) / len(azimuths) if azimuths else None
+        avg_tilt = sum(tilts) / len(tilts) if tilts else None
+
+        logger.info(f"Mounting metrics: {len(heights)} APs with height data")
+        if avg_height:
+            logger.info(f"Height: avg={avg_height:.2f}m, min={min_height:.2f}m, max={max_height:.2f}m")
+        if avg_azimuth:
+            logger.info(f"Azimuth: avg={avg_azimuth:.1f}°")
+        if avg_tilt:
+            logger.info(f"Tilt: avg={avg_tilt:.1f}°")
+
+        return MountingMetrics(
+            avg_height=avg_height,
+            min_height=min_height,
+            max_height=max_height,
+            height_variance=height_variance,
+            aps_with_height=len(heights),
+            avg_azimuth=avg_azimuth,
+            avg_tilt=avg_tilt
+        )
+
+    @staticmethod
+    def group_by_height_range(access_points: list[AccessPoint]) -> dict[str, int]:
+        """Group APs by mounting height ranges.
+
+        Args:
+            access_points: List of access points
+
+        Returns:
+            Dictionary mapping height range to count
+        """
+        ranges = {
+            "< 2.5m": 0,
+            "2.5-3.5m": 0,
+            "3.5-4.5m": 0,
+            "4.5-6.0m": 0,
+            "> 6.0m": 0,
+            "Unknown": 0
+        }
+
+        for ap in access_points:
+            if ap.mounting_height is None:
+                ranges["Unknown"] += 1
+            elif ap.mounting_height < 2.5:
+                ranges["< 2.5m"] += 1
+            elif ap.mounting_height < 3.5:
+                ranges["2.5-3.5m"] += 1
+            elif ap.mounting_height < 4.5:
+                ranges["3.5-4.5m"] += 1
+            elif ap.mounting_height < 6.0:
+                ranges["4.5-6.0m"] += 1
+            else:
+                ranges["> 6.0m"] += 1
+
+        return ranges
+
+    @staticmethod
+    def get_installation_summary(access_points: list[AccessPoint]) -> dict[str, Any]:
+        """Get summary of installation parameters.
+
+        Args:
+            access_points: List of access points
+
+        Returns:
+            Dictionary with installation-relevant metrics
+        """
+        metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+        height_distribution = MountingAnalytics.group_by_height_range(access_points)
+
+        return {
+            "total_aps": len(access_points),
+            "mounting_metrics": metrics,
+            "height_distribution": height_distribution,
+            "aps_requiring_height_adjustment": sum(
+                1 for ap in access_points
+                if ap.mounting_height and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
+            ),
+            "aps_with_tilt": sum(1 for ap in access_points if ap.tilt is not None),
+            "aps_with_azimuth": sum(1 for ap in access_points if ap.azimuth is not None)
+        }

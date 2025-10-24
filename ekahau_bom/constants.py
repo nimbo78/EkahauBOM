@@ -32,6 +32,9 @@ ESX_SIMULATED_RADIOS_FILE = "simulatedRadios.json"
 ESX_ANTENNA_TYPES_FILE = "antennaTypes.json"
 ESX_TAG_KEYS_FILE = "tagKeys.json"
 ESX_PROJECT_METADATA_FILE = "projectMetadata.json"
+ESX_MEASURED_AREAS_FILE = "measuredAreas.json"
+ESX_NOTES_FILE = "notes.json"
+ESX_ACCESS_POINT_MODELS_FILE = "accessPointModels.json"
 
 # Export settings
 CSV_DIALECT = "excel"

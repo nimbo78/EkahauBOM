@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna, Tag, Floor
-from ..analytics import GroupingAnalytics
+from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +93,10 @@ class JSONExporter(BaseExporter):
         by_color = analytics.group_by_dimension(project_data.access_points, "color")
         by_model = analytics.group_by_dimension(project_data.access_points, "model")
 
+        # Calculate mounting metrics
+        mounting_metrics = MountingAnalytics.calculate_mounting_metrics(project_data.access_points)
+        height_distribution = MountingAnalytics.group_by_height_range(project_data.access_points)
+
         # Build JSON structure
         json_structure = {
             "metadata": {
@@ -173,7 +177,20 @@ class JSONExporter(BaseExporter):
                 "by_vendor": self._format_grouping(by_vendor),
                 "by_floor": self._format_grouping(by_floor),
                 "by_color": self._format_grouping(by_color),
-                "by_model": self._format_grouping(by_model)
+                "by_model": self._format_grouping(by_model),
+                "mounting": {
+                    "avg_height_m": mounting_metrics.avg_height,
+                    "min_height_m": mounting_metrics.min_height,
+                    "max_height_m": mounting_metrics.max_height,
+                    "height_variance": mounting_metrics.height_variance,
+                    "aps_with_height_data": mounting_metrics.aps_with_height,
+                    "avg_azimuth_deg": mounting_metrics.avg_azimuth,
+                    "avg_tilt_deg": mounting_metrics.avg_tilt,
+                    "height_distribution": [
+                        {"range": range_name, "count": count}
+                        for range_name, count in sorted(height_distribution.items())
+                    ]
+                }
             }
         }
 

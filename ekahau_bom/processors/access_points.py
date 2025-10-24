@@ -99,6 +99,23 @@ class AccessPointProcessor:
                 tags = self.tag_processor.process_ap_tags(ap_tags)
                 logger.debug(f"Processed {len(tags)} tags for AP {ap_data.get('name', 'Unknown')}")
 
+        # Extract mounting parameters
+        location = ap_data.get("location", {})
+        mounting_height = location.get("z")  # Height above floor in meters
+
+        # Extract antenna parameters
+        azimuth = None
+        tilt = None
+        antenna_height = None
+
+        # Check if antenna properties are in the AP data
+        if "antennas" in ap_data and ap_data["antennas"]:
+            # Get first antenna configuration
+            first_antenna = ap_data["antennas"][0]
+            azimuth = first_antenna.get("azimuth")
+            tilt = first_antenna.get("tilt")
+            antenna_height = first_antenna.get("antennaHeight")
+
         return AccessPoint(
             vendor=vendor,
             model=model,
@@ -106,5 +123,9 @@ class AccessPointProcessor:
             floor_name=floor_name,
             tags=tags,
             mine=ap_data.get("mine", True),
-            floor_id=floor_id
+            floor_id=floor_id,
+            mounting_height=mounting_height,
+            azimuth=azimuth,
+            tilt=tilt,
+            antenna_height=antenna_height
         )

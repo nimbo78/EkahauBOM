@@ -15,6 +15,9 @@ from .constants import (
     ESX_SIMULATED_RADIOS_FILE,
     ESX_ANTENNA_TYPES_FILE,
     ESX_TAG_KEYS_FILE,
+    ESX_MEASURED_AREAS_FILE,
+    ESX_NOTES_FILE,
+    ESX_ACCESS_POINT_MODELS_FILE,
 )
 
 logger = logging.getLogger(__name__)
@@ -144,6 +147,46 @@ class EkahauParser:
             # tagKeys.json may not exist in older Ekahau projects
             logger.info(f"{ESX_TAG_KEYS_FILE} not found in project (older Ekahau version or no tags)")
             return {"tagKeys": []}
+
+    def get_measured_areas(self) -> dict[str, Any]:
+        """Get measured areas data from the project.
+
+        Measured areas define coverage zones and excluded areas.
+
+        Returns:
+            Dictionary with measured areas data. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_MEASURED_AREAS_FILE)
+        except KeyError:
+            logger.info(f"{ESX_MEASURED_AREAS_FILE} not found in project")
+            return {"measuredAreas": []}
+
+    def get_notes(self) -> dict[str, Any]:
+        """Get notes data from the project.
+
+        Returns:
+            Dictionary with notes data. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_NOTES_FILE)
+        except KeyError:
+            logger.debug(f"{ESX_NOTES_FILE} not found in project")
+            return {"notes": []}
+
+    def get_access_point_models(self) -> dict[str, Any]:
+        """Get access point models data from the project.
+
+        Contains detailed specifications for AP models.
+
+        Returns:
+            Dictionary with AP models data. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_ACCESS_POINT_MODELS_FILE)
+        except KeyError:
+            logger.debug(f"{ESX_ACCESS_POINT_MODELS_FILE} not found in project")
+            return {"accessPointModels": []}
 
     def list_files(self) -> list[str]:
         """List all files in the .esx archive.
