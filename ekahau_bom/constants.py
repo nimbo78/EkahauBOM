@@ -30,6 +30,7 @@ ESX_ACCESS_POINTS_FILE = "accessPoints.json"
 ESX_FLOOR_PLANS_FILE = "floorPlans.json"
 ESX_SIMULATED_RADIOS_FILE = "simulatedRadios.json"
 ESX_ANTENNA_TYPES_FILE = "antennaTypes.json"
+ESX_TAG_KEYS_FILE = "tagKeys.json"
 ESX_PROJECT_METADATA_FILE = "projectMetadata.json"
 
 # Export settings

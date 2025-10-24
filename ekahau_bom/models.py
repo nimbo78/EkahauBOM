@@ -3,8 +3,45 @@
 
 """Data models for Ekahau project entities."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
+
+
+@dataclass
+class Tag:
+    """Represents a tag key-value pair in Ekahau project.
+
+    Tags are custom metadata that can be applied to access points.
+    Introduced in Ekahau v10.2+.
+
+    Attributes:
+        key: Tag name/category (e.g., "Location", "Zone", "Building")
+        value: Tag value (e.g., "Building A", "Office", "Floor 1")
+        tag_key_id: UUID reference to tagKeys.json
+    """
+    key: str
+    value: str
+    tag_key_id: str
+
+    def __hash__(self):
+        """Make Tag hashable."""
+        return hash((self.key, self.value))
+
+    def __str__(self):
+        """String representation for display."""
+        return f"{self.key}:{self.value}"
+
+
+@dataclass
+class TagKey:
+    """Represents a tag key definition from tagKeys.json.
+
+    Attributes:
+        id: UUID identifier for the tag key
+        key: Human-readable tag name (e.g., "Location", "Zone")
+    """
+    id: str
+    key: str
 
 
 @dataclass
@@ -28,6 +65,7 @@ class AccessPoint:
         model: Model name/number of the access point
         color: Color code or name for visual identification
         floor_name: Name of the floor where AP is located
+        tags: List of tags applied to this access point
         mine: Whether this AP belongs to the project (not neighbor/survey)
         floor_id: ID of the floor where AP is located
     """
@@ -35,12 +73,48 @@ class AccessPoint:
     model: str
     color: Optional[str]
     floor_name: str
+    tags: list[Tag] = field(default_factory=list)
     mine: bool = True
     floor_id: Optional[str] = None
 
     def __hash__(self):
-        """Make AccessPoint hashable for use in Counter."""
+        """Make AccessPoint hashable for use in Counter.
+
+        Note: Tags are not included in hash to allow grouping by
+        vendor/model/color/floor regardless of tags.
+        """
         return hash((self.vendor, self.model, self.color, self.floor_name))
+
+    def get_tag_value(self, tag_key: str) -> Optional[str]:
+        """Get value of a specific tag by key name.
+
+        Args:
+            tag_key: Name of the tag key to find
+
+        Returns:
+            Tag value if found, None otherwise
+        """
+        for tag in self.tags:
+            if tag.key == tag_key:
+                return tag.value
+        return None
+
+    def has_tag(self, tag_key: str, tag_value: Optional[str] = None) -> bool:
+        """Check if access point has a specific tag.
+
+        Args:
+            tag_key: Name of the tag key
+            tag_value: Optional value to match. If None, checks only key existence.
+
+        Returns:
+            True if tag exists (and matches value if specified)
+        """
+        for tag in self.tags:
+            if tag.key == tag_key:
+                if tag_value is None:
+                    return True
+                return tag.value == tag_value
+        return False
 
 
 @dataclass

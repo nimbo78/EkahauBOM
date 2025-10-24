@@ -12,6 +12,7 @@ from . import __version__
 from .parser import EkahauParser
 from .processors.access_points import AccessPointProcessor
 from .processors.antennas import AntennaProcessor
+from .processors.tags import TagProcessor
 from .exporters.csv_exporter import CSVExporter
 from .models import Floor, ProjectData
 from .constants import DEFAULT_OUTPUT_DIR
@@ -103,6 +104,7 @@ def process_project(
             floor_plans_data = parser.get_floor_plans()
             simulated_radios_data = parser.get_simulated_radios()
             antenna_types_data = parser.get_antenna_types()
+            tag_keys_data = parser.get_tag_keys()
 
             # Build floor lookup dictionary (optimized for O(1) access)
             floors = {
@@ -111,8 +113,13 @@ def process_project(
             }
             logger.info(f"Found {len(floors)} floors")
 
+            # Process tags
+            tag_processor = TagProcessor(tag_keys_data)
+            if tag_processor.tag_keys:
+                logger.info(f"Found {len(tag_processor.tag_keys)} tag types: {', '.join(tag_processor.get_tag_key_names())}")
+
             # Process access points
-            ap_processor = AccessPointProcessor(color_db)
+            ap_processor = AccessPointProcessor(color_db, tag_processor)
             access_points = ap_processor.process(access_points_data, floors)
 
             # Process antennas

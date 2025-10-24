@@ -14,6 +14,7 @@ from .constants import (
     ESX_FLOOR_PLANS_FILE,
     ESX_SIMULATED_RADIOS_FILE,
     ESX_ANTENNA_TYPES_FILE,
+    ESX_TAG_KEYS_FILE,
 )
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,23 @@ class EkahauParser:
             Dictionary with antenna types data
         """
         return self._read_json(ESX_ANTENNA_TYPES_FILE)
+
+    def get_tag_keys(self) -> dict[str, Any]:
+        """Get tag keys data from the project.
+
+        Tag keys define the available tags that can be applied to access points.
+        Tags were introduced in Ekahau v10.2+.
+
+        Returns:
+            Dictionary with tag keys data. Returns empty dict if tagKeys.json
+            not found (for older Ekahau versions or projects without tags).
+        """
+        try:
+            return self._read_json(ESX_TAG_KEYS_FILE)
+        except KeyError:
+            # tagKeys.json may not exist in older Ekahau projects
+            logger.info(f"{ESX_TAG_KEYS_FILE} not found in project (older Ekahau version or no tags)")
+            return {"tagKeys": []}
 
     def list_files(self) -> list[str]:
         """List all files in the .esx archive.

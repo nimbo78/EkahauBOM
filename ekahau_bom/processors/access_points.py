@@ -4,10 +4,11 @@
 """Processor for access points data."""
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from ..models import AccessPoint, Floor
 from ..utils import get_color_name
+from .tags import TagProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +16,15 @@ logger = logging.getLogger(__name__)
 class AccessPointProcessor:
     """Process access points data from Ekahau project."""
 
-    def __init__(self, color_database: dict[str, str]):
-        """Initialize processor with color database.
+    def __init__(self, color_database: dict[str, str], tag_processor: Optional[TagProcessor] = None):
+        """Initialize processor with color database and optional tag processor.
 
         Args:
             color_database: Dictionary mapping hex color codes to names
+            tag_processor: Optional TagProcessor for handling tags. If None, tags won't be processed.
         """
         self.color_database = color_database
+        self.tag_processor = tag_processor
 
     def process(
         self,
@@ -88,11 +91,20 @@ class AccessPointProcessor:
             if color == hex_color:
                 logger.debug(f"Unknown color code: {hex_color}")
 
+        # Process tags
+        tags = []
+        if self.tag_processor and "tags" in ap_data:
+            ap_tags = ap_data.get("tags", [])
+            if ap_tags:
+                tags = self.tag_processor.process_ap_tags(ap_tags)
+                logger.debug(f"Processed {len(tags)} tags for AP {ap_data.get('name', 'Unknown')}")
+
         return AccessPoint(
             vendor=vendor,
             model=model,
             color=color,
             floor_name=floor_name,
+            tags=tags,
             mine=ap_data.get("mine", True),
             floor_id=floor_id
         )
