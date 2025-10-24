@@ -96,10 +96,14 @@ class AccessPoint:
         tags: List of tags applied to this access point
         mine: Whether this AP belongs to the project (not neighbor/survey)
         floor_id: ID of the floor where AP is located
+        name: Name/identifier of the access point
+        location_x: X coordinate of AP location in meters
+        location_y: Y coordinate of AP location in meters
         mounting_height: Height of AP above floor in meters
         azimuth: Horizontal rotation angle in degrees (0-360)
         tilt: Vertical tilt angle in degrees
         antenna_height: Antenna height above ground in meters
+        enabled: Whether the AP is enabled in the design
     """
     vendor: str
     model: str
@@ -108,10 +112,14 @@ class AccessPoint:
     tags: list[Tag] = field(default_factory=list)
     mine: bool = True
     floor_id: Optional[str] = None
+    name: Optional[str] = None
+    location_x: Optional[float] = None
+    location_y: Optional[float] = None
     mounting_height: Optional[float] = None
     azimuth: Optional[float] = None
     tilt: Optional[float] = None
     antenna_height: Optional[float] = None
+    enabled: bool = True
 
     def __hash__(self):
         """Make AccessPoint hashable for use in Counter.

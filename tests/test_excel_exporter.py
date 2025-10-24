@@ -6,7 +6,7 @@
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.excel_exporter import ExcelExporter
-from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag
+from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor
 
 
 @pytest.fixture
@@ -23,11 +23,20 @@ def sample_project_data():
                    tags=[Tag("Location", "Building B", "1")]),
     ]
     antennas = [
-        Antenna("ANT-2513P4M-N-R"),
-        Antenna("ANT-2513P4M-N-R"),
-        Antenna("ANT-20"),
+        Antenna("ANT-2513P4M-N-R", "ant1"),
+        Antenna("ANT-2513P4M-N-R", "ant1"),
+        Antenna("ANT-20", "ant2"),
     ]
-    return ProjectData("Test Project", aps, antennas)
+    floors = {
+        "f1": Floor("f1", "Floor 1"),
+        "f2": Floor("f2", "Floor 2")
+    }
+    return ProjectData(
+        project_name="Test Project",
+        access_points=aps,
+        antennas=antennas,
+        floors=floors
+    )
 
 
 class TestExcelExporter:
@@ -162,7 +171,12 @@ class TestExcelExporter:
 
     def test_empty_project_data(self, tmp_path):
         """Test export with empty project data."""
-        empty_data = ProjectData("Empty Project", [], [])
+        empty_data = ProjectData(
+            project_name="Empty Project",
+            access_points=[],
+            antennas=[],
+            floors={}
+        )
         exporter = ExcelExporter(tmp_path)
         files = exporter.export(empty_data)
 
