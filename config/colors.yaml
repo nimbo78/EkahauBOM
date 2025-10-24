@@ -1,0 +1,19 @@
+# Color database for Ekahau access points
+# Maps hex color codes to human-readable color names
+#
+# You can add custom colors here as needed
+# Format: "HEX_CODE": "Color Name"
+
+"#FFE600": "Yellow"
+"#FF8500": "Orange"
+"#FF0000": "Red"
+"#FF00FF": "Pink"
+"#C297FF": "Violet"
+"#0068FF": "Blue"
+"#6D6D6D": "Gray"
+"#00FF00": "Green"
+"#C97700": "Brown"
+"#00FFCE": "Mint"
+
+# Add your custom colors below:
+# "#RRGGBB": "Custom Color Name"

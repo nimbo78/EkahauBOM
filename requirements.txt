@@ -1,0 +1,5 @@
+# Core dependencies for EkahauBOM
+# Python 3.7+
+
+# YAML support for configuration files
+PyYAML>=6.0

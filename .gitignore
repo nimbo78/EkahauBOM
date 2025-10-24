@@ -1,2 +1,60 @@
+# Virtual environments
 venv/
+env/
+.venv/
+
+# IDE
 .DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Output files (user can customize)
+output/*.csv
+output/*.xlsx
+output/*.html
+output/*.json
+output/*.pdf
+
+# But keep the output directory
+!output/.gitkeep
