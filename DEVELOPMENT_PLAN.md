@@ -274,29 +274,60 @@ class Tag:
 
 **См. также:** FILTERING_GROUPING_PLAN.md для детального плана
 
-### 5.2 Расчет стоимости
+### 5.2 Расчет стоимости ✅ ЗАВЕРШЕНО v2.4.0
 **Задачи:**
-- [ ] База данных цен оборудования (YAML/JSON)
-- [ ] Расчет общей стоимости проекта
-- [ ] Разбивка стоимости по:
-  - Этажам
-  - Вендорам
-  - Типам оборудования
-- [ ] Опция кастомных цен через CLI или файл
-- [ ] Расчет с учетом скидок
+- [x] ✅ База данных цен оборудования (YAML/JSON) (v2.4.0 Part 1)
+- [x] ✅ Расчет общей стоимости проекта (v2.4.0 Part 1)
+- [x] ✅ Разбивка стоимости по:
+  - ✅ Этажам (v2.4.0 Part 1)
+  - ✅ Вендорам (v2.4.0 Part 1)
+  - ✅ Типам оборудования (AP и антенны) (v2.4.0 Part 1)
+- [x] ✅ Опция кастомных цен через CLI или файл (v2.4.0 Part 1)
+- [x] ✅ Расчет с учетом скидок (v2.4.0 Part 1)
+  - ✅ Volume discounts (объемные скидки)
+  - ✅ Custom discount percent
+  - ✅ Disable volume discounts опция
 
-**Время:** 2-3 дня
+**Статус:** ✅ ЗАВЕРШЕНО в v2.4.0 (Part 1)
+**Время фактическое:** 1 день (Iteration 4, день 1)
 **Сложность:** Средняя
 
-### 5.3 Дополнительные метрики
+**См. также:** pricing.py, config/pricing.yaml, tests/test_pricing.py
+
+### 5.3 Дополнительные метрики ⏳ В ПРОЦЕССЕ v2.4.0
 **Задачи:**
-- [ ] Плотность размещения AP (AP на м²)
+- [x] ✅ **Плотность размещения AP (AP на м²)** (v2.4.0 Part 2)
+  - ✅ Coverage analytics (общая площадь, excluded areas)
+  - ✅ AP density (APs per 1000 m²)
+  - ✅ Average coverage per AP
+  - ✅ Floor-level density grouping
+- [x] ✅ **Mounting analytics для монтажников** (v2.4.0 Part 2)
+  - ✅ Mounting height (avg, min, max, variance)
+  - ✅ Azimuth (направление антенны)
+  - ✅ Tilt (угол наклона антенны)
+  - ✅ Height distribution ranges
+  - ✅ Installation summary
+- [x] ✅ **Расширенная модель AccessPoint** (v2.4.0 Part 2)
+  - ✅ mounting_height field
+  - ✅ azimuth field
+  - ✅ tilt field
+  - ✅ antenna_height field
+- [x] ✅ **Интеграция в CLI** (v2.4.0 Part 2)
+  - ✅ Coverage analytics display (если measured areas доступны)
+  - ✅ Mounting analytics display (если height data есть)
+  - ✅ Height distribution в консоли
+- [x] ✅ **Интеграция в JSON exporter** (v2.4.0 Part 2)
+  - ✅ Mounting metrics в analytics section
+  - ✅ Height distribution export
 - [ ] Статистика по радио-настройкам
 - [ ] Анализ покрытия каналов
 - [ ] Мощность передатчиков (статистика)
 
-**Время:** 3-4 дня
+**Статус:** ⏳ Частично завершено в v2.4.0 (Part 2)
+**Время фактическое:** 1 день (Iteration 4, день 2)
 **Сложность:** Средняя-Высокая
+
+**См. также:** analytics.py (CoverageAnalytics, MountingAnalytics), tests/test_advanced_analytics.py
 
 ---
 
@@ -1031,12 +1062,15 @@ sphinx >= 5.0.0
 **Высокий приоритет:**
 1. ✅ ~~HTML отчеты с визуализацией~~ (ЗАВЕРШЕНО v2.3.0) ⭐
 2. ✅ ~~JSON экспорт~~ (ЗАВЕРШЕНО v2.3.0) ⭐
-3. Unit тесты (выполнено: 96 тестов - 48 для v2.1.0 + 13 для v2.2.0 + 35 для v2.3.0)
+3. ✅ ~~Расширенная аналитика (расчет стоимости)~~ (ЗАВЕРШЕНО v2.4.0 Part 1) ⭐
+4. ✅ ~~Coverage & Mounting analytics~~ (ЗАВЕРШЕНО v2.4.0 Part 2) ⭐
+5. Unit тесты (выполнено: 135 тестов - 48 для v2.1.0 + 13 для v2.2.0 + 35 для v2.3.0 + 17 для pricing + 22 для advanced analytics)
 
 **Средний приоритет:**
-4. 🎯 **Расширенная аналитика (расчет стоимости)** ⭐ СЛЕДУЮЩЕЕ
-5. Документация и публикация
-6. PDF экспорт
+6. 🎯 **Radio analytics, channel planning** ⭐ СЛЕДУЮЩЕЕ (v2.4.0 Part 3 планируется)
+7. Interactive CLI output (rich/colorama)
+8. Документация и публикация
+9. PDF экспорт
 
 ### 📊 Реализовано в v2.1.0
 
@@ -1112,6 +1146,70 @@ python EkahauBOM.py project.esx --format json
 
 # Все форматы одновременно
 python EkahauBOM.py project.esx --format csv,excel,html,json
+```
+
+### 📊 Реализовано в v2.4.0 (Part 1 & 2) ⏳ В ПРОЦЕССЕ
+
+Итерация 4 добавила:
+
+**Part 1: Pricing & Cost Calculation**
+- ✅ Pricing database (config/pricing.yaml)
+  - ✅ 50+ моделей AP с ценами (Cisco, Huawei, MikroTik, Ubiquiti, Ruckus)
+  - ✅ Цены на антенны
+- ✅ Автоматический расчет стоимости (PricingDatabase, CostCalculator)
+  - ✅ Cost per vendor, floor, equipment type
+  - ✅ Volume discounts (6 tiers: 0%, 5%, 10%, 15%, 20%, 25%)
+  - ✅ Custom discount percentage
+  - ✅ Coverage percentage tracking
+- ✅ CLI аргументы для pricing:
+  - ✅ --enable-pricing
+  - ✅ --pricing-file
+  - ✅ --discount
+  - ✅ --no-volume-discounts
+- ✅ 17 unit тестов для pricing
+
+**Part 2: Advanced Analytics для Wi-Fi инженеров**
+- ✅ Расширенная модель AccessPoint:
+  - ✅ mounting_height (высота монтажа)
+  - ✅ azimuth (направление антенны)
+  - ✅ tilt (угол наклона)
+  - ✅ antenna_height
+- ✅ CoverageAnalytics класс:
+  - ✅ Coverage metrics (total area, excluded areas)
+  - ✅ AP density (APs per 1000 m²)
+  - ✅ Average coverage per AP
+  - ✅ Floor-level density grouping
+- ✅ MountingAnalytics класс:
+  - ✅ Mounting height statistics (avg, min, max, variance)
+  - ✅ Azimuth и tilt averages
+  - ✅ Height distribution ranges
+  - ✅ Installation summary
+- ✅ Parser расширен:
+  - ✅ get_measured_areas() - для coverage analytics
+  - ✅ get_notes() - заметки проекта
+  - ✅ get_access_point_models() - спецификации AP
+- ✅ Интеграция в CLI:
+  - ✅ Coverage analytics display
+  - ✅ Mounting analytics display
+  - ✅ Height distribution в консоли
+- ✅ Интеграция в JSON exporter:
+  - ✅ Mounting metrics в analytics section
+- ✅ 22 unit тестов для advanced analytics
+
+**Пример использования:**
+```bash
+# Экспорт с расчетом стоимости
+python EkahauBOM.py project.esx --enable-pricing
+
+# С кастомной скидкой 10%
+python EkahauBOM.py project.esx --enable-pricing --discount 10
+
+# Без объемных скидок
+python EkahauBOM.py project.esx --enable-pricing --no-volume-discounts
+
+# JSON с mounting analytics
+python EkahauBOM.py project.esx --format json
+# (mounting metrics автоматически включены в analytics section)
 ```
 
 ### 📚 Дополнительная документация
