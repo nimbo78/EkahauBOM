@@ -294,7 +294,7 @@ class Tag:
 
 **См. также:** pricing.py, config/pricing.yaml, tests/test_pricing.py
 
-### 5.3 Дополнительные метрики ⏳ В ПРОЦЕССЕ v2.4.0
+### 5.3 Дополнительные метрики ✅ ЗАВЕРШЕНО v2.4.0
 **Задачи:**
 - [x] ✅ **Плотность размещения AP (AP на м²)** (v2.4.0 Part 2)
   - ✅ Coverage analytics (общая площадь, excluded areas)
@@ -316,18 +316,35 @@ class Tag:
   - ✅ Coverage analytics display (если measured areas доступны)
   - ✅ Mounting analytics display (если height data есть)
   - ✅ Height distribution в консоли
-- [x] ✅ **Интеграция в JSON exporter** (v2.4.0 Part 2)
-  - ✅ Mounting metrics в analytics section
-  - ✅ Height distribution export
-- [ ] Статистика по радио-настройкам
-- [ ] Анализ покрытия каналов
-- [ ] Мощность передатчиков (статистика)
+- [x] ✅ **Интеграция в exporters** (v2.4.0 Part 2-3)
+  - ✅ JSON exporter: Mounting metrics в analytics section (Part 2)
+  - ✅ CSV exporter: Analytics в отдельный CSV файл (Part 2)
+  - ✅ Excel exporter: Analytics sheet с mounting metrics (Part 2)
+  - ✅ HTML exporter: Analytics section с mounting визуализацией (Part 2)
+- [x] ✅ **Radio & Wi-Fi Configuration Analytics** (v2.4.0 Part 3)
+  - ✅ Radio model и RadioProcessor
+  - ✅ Frequency band analysis (2.4GHz, 5GHz, 6GHz)
+  - ✅ Channel allocation statistics
+  - ✅ Wi-Fi standards distribution (802.11a/b/g/n/ac/ax/be)
+  - ✅ Channel width distribution (20/40/80/160 MHz)
+  - ✅ TX power statistics (avg, min, max, distribution)
+  - ✅ RadioAnalytics класс с comprehensive metrics
+  - ✅ Интеграция в CLI output
+  - ✅ Интеграция во все exporters (CSV, Excel, HTML, JSON)
+- [x] ✅ **Detailed AP Installation Parameters Export** (v2.4.0 Part 4)
+  - ✅ Экспорт каждой точки доступа индивидуально с mounting параметрами
+  - ✅ CSV: access_points_detailed.csv (AP name, location X/Y, height, azimuth, tilt)
+  - ✅ Excel: "AP Installation Details" sheet с форматированием чисел
+  - ✅ HTML: "Access Points Installation Details" таблица с monospace шрифтом
 
-**Статус:** ⏳ Частично завершено в v2.4.0 (Part 2)
-**Время фактическое:** 1 день (Iteration 4, день 2)
+**Статус:** ✅ ЗАВЕРШЕНО в v2.4.0 (Part 2, 3, 4)
+**Время фактическое:** 3 дня (Iteration 4, день 2-4)
 **Сложность:** Средняя-Высокая
 
-**См. также:** analytics.py (CoverageAnalytics, MountingAnalytics), tests/test_advanced_analytics.py
+**См. также:**
+- analytics.py (CoverageAnalytics, MountingAnalytics, RadioAnalytics)
+- processors/radios.py (RadioProcessor)
+- tests/test_advanced_analytics.py
 
 ---
 
@@ -887,18 +904,83 @@ python EkahauBOM.py project.esx \
 
 **Результат:** ✅ 4 формата экспорта (CSV, Excel, HTML, JSON) с полной интеграцией
 
-**Коммиты:** (будет добавлено после коммита)
+**Коммиты:**
+- HTML и JSON exporters добавлены в v2.3.0
 
 ---
 
-### Итерация 4 (Advanced Analytics): 1-2 недели
-**Фокус:** Расширенная аналитика
-1. Фаза 5.2: Расчет стоимости
-2. Фаза 5.3: Дополнительные метрики
-3. Фаза 6.2-6.3: Интерактивность и batch
-4. Фаза 8.1-8.3: Дополнительные данные из Ekahau
+### ✅ Итерация 4 (Advanced Analytics): ЗАВЕРШЕНО v2.4.0
+**Фокус:** Расширенная аналитика и детальные параметры установки
+**Статус:** ✅ ЗАВЕРШЕНО
 
-**Результат:** Комплексный аналитический инструмент
+**Часть 1 (День 1): Pricing & Cost Calculation** ✅
+1. Фаза 5.2: Расчет стоимости
+   - [x] ✅ Pricing database (config/pricing.yaml) - 50+ AP models
+   - [x] ✅ PricingDatabase класс с fallback logic
+   - [x] ✅ CostCalculator класс:
+     - ✅ Volume discounts (6 tiers: 0%-25%)
+     - ✅ Custom discount percentage
+     - ✅ Cost breakdown (by vendor, floor, equipment type)
+   - [x] ✅ CLI аргументы: --enable-pricing, --pricing-file, --discount, --no-volume-discounts
+   - [x] ✅ 17 unit тестов для pricing
+
+**Часть 2 (День 2): Coverage & Mounting Analytics** ✅
+2. Фаза 5.3 (Часть 1): Coverage & Mounting
+   - [x] ✅ CoverageAnalytics класс:
+     - ✅ Coverage metrics (total area, AP density, avg coverage per AP)
+     - ✅ Парсинг measured areas из проекта
+   - [x] ✅ MountingAnalytics класс:
+     - ✅ Mounting height statistics (avg, min, max, variance)
+     - ✅ Azimuth и tilt averages
+     - ✅ Height distribution ranges
+     - ✅ Installation summary
+   - [x] ✅ Расширена модель AccessPoint (mounting_height, azimuth, tilt, antenna_height)
+   - [x] ✅ Интеграция в CLI output
+   - [x] ✅ Интеграция во все exporters (CSV, Excel, HTML, JSON)
+   - [x] ✅ 22 unit тестов для advanced analytics
+
+**Часть 3 (День 3): Radio & Wi-Fi Configuration Analytics** ✅
+3. Фаза 5.3 (Часть 2): Radio Analytics
+   - [x] ✅ Radio model и RadioProcessor:
+     - ✅ Парсинг simulatedRadios.json
+     - ✅ Radio dataclass (frequency_band, channel, channel_width, tx_power, standard)
+   - [x] ✅ RadioAnalytics класс:
+     - ✅ Frequency band distribution (2.4/5/6 GHz)
+     - ✅ Channel allocation statistics
+     - ✅ Wi-Fi standards (802.11a/b/g/n/ac/ax/be)
+     - ✅ Channel width distribution (20/40/80/160 MHz)
+     - ✅ TX power statistics (avg/min/max, ranges)
+   - [x] ✅ Интеграция в CLI output (Radio & Wi-Fi Configuration Analytics section)
+   - [x] ✅ Интеграция во все exporters:
+     - ✅ CSV: Radio metrics в analytics.csv
+     - ✅ Excel: Radio section в Analytics sheet с PieChart & BarChart
+     - ✅ HTML: Radio analytics section с Chart.js visualizations
+     - ✅ JSON: Radio metrics в analytics section
+
+**Часть 4 (День 3): Detailed AP Installation Parameters** ✅
+4. Детальный экспорт параметров установки
+   - [x] ✅ CSV Exporter: access_points_detailed.csv
+     - ✅ Все параметры каждой точки: name, location X/Y, height, azimuth, tilt, tags, enabled
+     - ✅ Форматирование: 2 знака для высот/координат, 1 знак для углов
+   - [x] ✅ Excel Exporter: "AP Installation Details" sheet
+     - ✅ Number formatting (0.00 для heights, 0.0 для angles)
+     - ✅ Auto-filters, freeze panes, borders
+   - [x] ✅ HTML Exporter: "Access Points Installation Details" table
+     - ✅ Right-aligned numeric columns с monospace font
+     - ✅ Centered enabled status (✓/✗)
+     - ✅ Responsive design
+
+**Результат:** ✅ Комплексный аналитический инструмент с:
+- Расчетом стоимости с объемными скидками
+- Coverage & Mounting analytics для инженеров
+- Radio & Wi-Fi configuration analytics
+- Детальный экспорт параметров установки для монтажников
+
+**Коммиты:**
+- Pricing & Cost Calculation (v2.4.0 Part 1)
+- Coverage & Mounting Analytics (v2.4.0 Part 2)
+- Radio Analytics Integration (v2.4.0 Part 3)
+- Detailed AP Installation Parameters Export (v2.4.0 Part 4)
 
 ---
 
@@ -1029,16 +1111,17 @@ sphinx >= 5.0.0
 
 ### 🎯 Рекомендуемый следующий шаг
 
-**Итерация 4: Advanced Analytics** (1-2 недели) ⭐ СЛЕДУЮЩАЯ
+**Итерация 5: Production Ready** (2-3 недели) ⭐ СЛЕДУЮЩАЯ
 
-Расширенная аналитика и расчеты:
-- Расчет стоимости оборудования (BOM costing)
-- База данных цен (YAML/JSON)
-- Дополнительные метрики (плотность AP, статистика радио)
-- Интерактивный вывод (rich, прогресс-бар)
+Путь к production-готовому продукту:
+- Unit и integration тесты (coverage >80%)
+- Обновление документации (README, user guide)
+- PDF экспорт (WeasyPrint или ReportLab)
+- Интерактивный CLI output (rich library, прогресс-бары)
 - Batch обработка нескольких проектов
+- Публикация на PyPI
 
-**Альтернатива:** Итерация 5 (Production Ready) - тестирование, документация, публикация на PyPI
+**Альтернатива:** Итерация 6+ (Optional) - Web UI, GUI, Database интеграция (по запросу)
 
 ### 📈 Обновленная оценка времени
 
@@ -1047,9 +1130,9 @@ sphinx >= 5.0.0
 - ✅ Итерация 1: Фильтрация/группировка (ЗАВЕРШЕНО - v2.1.0) ⭐
 - ✅ Итерация 2: Excel экспорт (ЗАВЕРШЕНО - v2.2.0) ⭐
 - ✅ Итерация 3: HTML/JSON (ЗАВЕРШЕНО - v2.3.0) ⭐
-- 🎯 Итерация 4: Advanced Analytics — 1-2 недели ⭐ СЛЕДУЮЩАЯ
-- Итерация 5: Production Ready — 2-3 недели
-- **ИТОГО:** 3-5 недель до production (уже выполнено: 3.5 недели из ~6.5 недель)
+- ✅ Итерация 4: Advanced Analytics (ЗАВЕРШЕНО - v2.4.0) ⭐
+- 🎯 Итерация 5: Production Ready — 2-3 недели ⭐ СЛЕДУЮЩАЯ
+- **ИТОГО:** 2-3 недели до production (уже выполнено: 4+ недели из ~6.5 недель)
 
 ### 🚀 Приоритеты (обновлено)
 
@@ -1064,13 +1147,15 @@ sphinx >= 5.0.0
 2. ✅ ~~JSON экспорт~~ (ЗАВЕРШЕНО v2.3.0) ⭐
 3. ✅ ~~Расширенная аналитика (расчет стоимости)~~ (ЗАВЕРШЕНО v2.4.0 Part 1) ⭐
 4. ✅ ~~Coverage & Mounting analytics~~ (ЗАВЕРШЕНО v2.4.0 Part 2) ⭐
-5. Unit тесты (выполнено: 135 тестов - 48 для v2.1.0 + 13 для v2.2.0 + 35 для v2.3.0 + 17 для pricing + 22 для advanced analytics)
+5. ✅ ~~Radio & Wi-Fi Configuration Analytics~~ (ЗАВЕРШЕНО v2.4.0 Part 3) ⭐
+6. ✅ ~~Detailed AP Installation Parameters Export~~ (ЗАВЕРШЕНО v2.4.0 Part 4) ⭐
+7. Unit тесты (выполнено: 135 тестов - 48 для v2.1.0 + 13 для v2.2.0 + 35 для v2.3.0 + 17 для pricing + 22 для advanced analytics)
 
 **Средний приоритет:**
-6. 🎯 **Radio analytics, channel planning** ⭐ СЛЕДУЮЩЕЕ (v2.4.0 Part 3 планируется)
-7. Interactive CLI output (rich/colorama)
-8. Документация и публикация
-9. PDF экспорт
+8. 🎯 **Interactive CLI output (rich/colorama)** ⭐ СЛЕДУЮЩЕЕ
+9. Batch обработка нескольких проектов
+10. Документация и публикация
+11. PDF экспорт
 
 ### 📊 Реализовано в v2.1.0
 
@@ -1148,11 +1233,11 @@ python EkahauBOM.py project.esx --format json
 python EkahauBOM.py project.esx --format csv,excel,html,json
 ```
 
-### 📊 Реализовано в v2.4.0 (Part 1 & 2) ⏳ В ПРОЦЕССЕ
+### 📊 Реализовано в v2.4.0 (Part 1-4) ✅ ЗАВЕРШЕНО
 
 Итерация 4 добавила:
 
-**Part 1: Pricing & Cost Calculation**
+**Part 1: Pricing & Cost Calculation** ✅
 - ✅ Pricing database (config/pricing.yaml)
   - ✅ 50+ моделей AP с ценами (Cisco, Huawei, MikroTik, Ubiquiti, Ruckus)
   - ✅ Цены на антенны
@@ -1168,7 +1253,7 @@ python EkahauBOM.py project.esx --format csv,excel,html,json
   - ✅ --no-volume-discounts
 - ✅ 17 unit тестов для pricing
 
-**Part 2: Advanced Analytics для Wi-Fi инженеров**
+**Part 2: Coverage & Mounting Analytics для Wi-Fi инженеров** ✅
 - ✅ Расширенная модель AccessPoint:
   - ✅ mounting_height (высота монтажа)
   - ✅ azimuth (направление антенны)
@@ -1192,9 +1277,50 @@ python EkahauBOM.py project.esx --format csv,excel,html,json
   - ✅ Coverage analytics display
   - ✅ Mounting analytics display
   - ✅ Height distribution в консоли
-- ✅ Интеграция в JSON exporter:
-  - ✅ Mounting metrics в analytics section
+- ✅ Интеграция во все exporters:
+  - ✅ CSV: analytics.csv с mounting metrics
+  - ✅ Excel: Analytics sheet с mounting visualizations
+  - ✅ HTML: Analytics section с mounting charts
+  - ✅ JSON: Mounting metrics в analytics section
 - ✅ 22 unit тестов для advanced analytics
+
+**Part 3: Radio & Wi-Fi Configuration Analytics** ✅
+- ✅ Radio модель и RadioProcessor:
+  - ✅ Парсинг simulatedRadios.json
+  - ✅ Radio dataclass с полями: frequency_band, channel, channel_width, tx_power, standard
+- ✅ RadioAnalytics класс:
+  - ✅ Frequency band distribution (2.4GHz, 5GHz, 6GHz)
+  - ✅ Channel allocation statistics
+  - ✅ Wi-Fi standards distribution (802.11a/b/g/n/ac/ax/be)
+  - ✅ Channel width distribution (20/40/80/160 MHz)
+  - ✅ TX power statistics (avg, min, max, ranges)
+- ✅ Интеграция в CLI output:
+  - ✅ Radio & Wi-Fi Configuration Analytics section
+  - ✅ Frequency bands с процентами
+  - ✅ Wi-Fi standards distribution
+  - ✅ TX power statistics
+- ✅ Интеграция во все exporters:
+  - ✅ CSV: Radio analytics в analytics.csv
+  - ✅ Excel: Radio metrics в Analytics sheet с PieChart и BarChart
+  - ✅ HTML: Radio analytics section с Chart.js визуализациями
+  - ✅ JSON: Radio metrics в analytics section
+
+**Part 4: Detailed AP Installation Parameters Export** ✅
+- ✅ Детальный экспорт каждой точки доступа индивидуально
+- ✅ CSV Exporter:
+  - ✅ Новый файл: access_points_detailed.csv
+  - ✅ Поля: AP Name, Vendor, Model, Floor, Location X/Y (m), Mounting Height (m), Azimuth (°), Tilt (°), Color, Tags, Enabled
+  - ✅ Форматирование чисел: 2 знака для высот/координат, 1 знак для углов
+- ✅ Excel Exporter:
+  - ✅ Новый лист: "AP Installation Details"
+  - ✅ Все параметры установки каждой точки
+  - ✅ Number formatting (0.00 для высот, 0.0 для углов)
+  - ✅ Автофильтры, freeze panes, borders
+- ✅ HTML Exporter:
+  - ✅ Новая таблица: "Access Points Installation Details"
+  - ✅ Числовые колонки с right-align и monospace шрифтом
+  - ✅ Centered enabled status (✓/✗)
+  - ✅ Responsive design с horizontal scrolling
 
 **Пример использования:**
 ```bash
@@ -1204,12 +1330,17 @@ python EkahauBOM.py project.esx --enable-pricing
 # С кастомной скидкой 10%
 python EkahauBOM.py project.esx --enable-pricing --discount 10
 
-# Без объемных скидок
-python EkahauBOM.py project.esx --enable-pricing --no-volume-discounts
-
-# JSON с mounting analytics
+# JSON с mounting & radio analytics
 python EkahauBOM.py project.esx --format json
-# (mounting metrics автоматически включены в analytics section)
+# (mounting и radio metrics автоматически включены)
+
+# Excel с полной аналитикой
+python EkahauBOM.py project.esx --format excel
+# Содержит: BOM, детальные параметры установки, analytics с mounting & radio metrics
+
+# Все форматы с детальными данными установки
+python EkahauBOM.py project.esx --format csv,excel,html,json
+# Создаст: access_points.csv, access_points_detailed.csv, analytics.csv, .xlsx, .html, .json
 ```
 
 ### 📚 Дополнительная документация
