@@ -119,12 +119,28 @@ python EkahauBOM.py project.esx
 ekahau-bom project.esx
 ```
 
-Output:
+Output (with Rich library installed):
 ```
-✓ Parsing project.esx...
-✓ Processing 45 access points
-✓ Processing 90 antennas
-✓ Generating CSV reports...
+╭─────────────────────────────────────────╮
+│ EkahauBOM - Bill of Materials Generator │
+│ Version 2.4.0                           │
+╰─────────────────────────────────────────╯
+
+Processing project: project.esx ✓
+
+✓ Processing completed successfully!
+
+Project Summary
+┌────────────────┬───────┐
+│ Metric         │ Count │
+├────────────────┼───────┤
+│ Access Points  │   45  │
+│ Antennas       │   90  │
+│ Radios         │   90  │
+│ Floors         │    3  │
+│ Unique Vendors │    2  │
+└────────────────┴───────┘
+
 ✓ Reports saved to: output/
 ```
 
@@ -577,6 +593,7 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution guid
 - **PyYAML** >= 6.0
 - **openpyxl** >= 3.0.0 (for Excel export)
 - **WeasyPrint** >= 60.0 (for PDF export, optional)
+- **rich** >= 13.0.0 (for enhanced terminal output, optional)
 
 ### Development
 - **pytest** >= 7.0.0

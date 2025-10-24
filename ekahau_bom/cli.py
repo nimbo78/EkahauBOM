@@ -8,6 +8,16 @@ import logging
 import sys
 from pathlib import Path
 
+try:
+    from rich.console import Console
+    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+    from rich.table import Table
+    from rich.panel import Panel
+    from rich import box
+    RICH_AVAILABLE = True
+except ImportError:
+    RICH_AVAILABLE = False
+
 from . import __version__
 from .parser import EkahauParser
 from .processors.access_points import AccessPointProcessor
@@ -22,6 +32,9 @@ from .constants import DEFAULT_OUTPUT_DIR
 from .utils import load_color_database, ensure_output_dir, setup_logging
 
 logger = logging.getLogger(__name__)
+
+# Initialize Rich console if available
+console = Console() if RICH_AVAILABLE else None
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -178,6 +191,110 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def print_header():
+    """Print application header with Rich."""
+    if RICH_AVAILABLE and console:
+        console.print(Panel.fit(
+            "[bold blue]EkahauBOM[/bold blue] - Bill of Materials Generator\n"
+            f"[dim]Version {__version__}[/dim]",
+            border_style="blue"
+        ))
+    else:
+        logger.info(f"EkahauBOM - Version {__version__}")
+
+
+def print_summary_table(access_points, antennas, radios, floors):
+    """Print summary statistics table with Rich."""
+    if not RICH_AVAILABLE or not console:
+        return
+
+    table = Table(title="Project Summary", box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("Metric", style="cyan", no_wrap=True)
+    table.add_column("Count", justify="right", style="green")
+
+    table.add_row("Access Points", str(len(access_points)))
+    table.add_row("Antennas", str(len(antennas)))
+    table.add_row("Radios", str(len(radios)))
+    table.add_row("Floors", str(len(floors)))
+
+    # Unique vendors
+    unique_vendors = len(set(ap.vendor for ap in access_points))
+    table.add_row("Unique Vendors", str(unique_vendors))
+
+    console.print(table)
+
+
+def print_grouping_table(title, data_dict):
+    """Print grouping statistics with Rich."""
+    if not RICH_AVAILABLE or not console or not data_dict:
+        return
+
+    total = sum(data_dict.values())
+    table = Table(title=title, box=box.SIMPLE, show_header=True, header_style="bold magenta")
+    table.add_column("Name", style="yellow")
+    table.add_column("Count", justify="right", style="cyan")
+    table.add_column("Percentage", justify="right", style="green")
+
+    for name, count in sorted(data_dict.items(), key=lambda x: x[1], reverse=True):
+        percentage = (count / total * 100) if total > 0 else 0
+        table.add_row(str(name), str(count), f"{percentage:.1f}%")
+
+    console.print(table)
+
+
+def print_analytics_table(analytics_data):
+    """Print analytics data as table."""
+    if not RICH_AVAILABLE or not console or not analytics_data:
+        return
+
+    table = Table(title="Analytics", box=box.ROUNDED, show_header=True, header_style="bold yellow")
+    table.add_column("Metric", style="yellow")
+    table.add_column("Value", justify="right", style="cyan")
+
+    for key, value in analytics_data.items():
+        if isinstance(value, float):
+            table.add_row(key, f"{value:.2f}")
+        else:
+            table.add_row(key, str(value))
+
+    console.print(table)
+
+
+def print_cost_summary(cost_summary):
+    """Print cost summary with Rich."""
+    if not RICH_AVAILABLE or not console or not cost_summary:
+        return
+
+    table = Table(title="💰 Cost Summary", box=box.DOUBLE, show_header=True, header_style="bold green")
+    table.add_column("Item", style="cyan")
+    table.add_column("Amount", justify="right", style="green")
+
+    table.add_row("Access Points", f"${cost_summary.grand_total:,.2f}")
+    if hasattr(cost_summary, 'total_discount') and cost_summary.total_discount > 0:
+        table.add_row("Total Savings", f"[red]-${cost_summary.total_discount:,.2f}[/red]")
+    table.add_row("[bold]Total[/bold]", f"[bold green]${cost_summary.grand_total:,.2f}[/bold green]")
+
+    console.print(table)
+
+
+def print_export_summary(exported_files):
+    """Print exported files summary."""
+    if not RICH_AVAILABLE or not console:
+        return
+
+    table = Table(title="📄 Generated Files", box=box.ROUNDED, show_header=True, header_style="bold blue")
+    table.add_column("File", style="cyan")
+    table.add_column("Size", justify="right", style="yellow")
+
+    for file_path in exported_files:
+        if file_path.exists():
+            size_kb = file_path.stat().st_size / 1024
+            table.add_row(file_path.name, f"{size_kb:.1f} KB")
+
+    console.print(table)
+    console.print(f"\n[bold green]✓[/bold green] Reports saved to: [cyan]{exported_files[0].parent if exported_files else 'output/'}[/cyan]")
+
+
 def process_project(
     esx_file: Path,
     output_dir: Path,
@@ -224,16 +341,30 @@ def process_project(
         Exit code (0 for success, 1 for error)
     """
     try:
+        # Print header
+        print_header()
+
         # Ensure output directory exists
         ensure_output_dir(output_dir)
 
         # Load color database
         color_db = load_color_database(colors_config)
 
-        # Parse .esx file
-        logger.info(f"Processing project: {esx_file}")
+        # Parse .esx file with progress
+        if RICH_AVAILABLE and console:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console
+            ) as progress:
+                task = progress.add_task(f"[cyan]Processing project: {esx_file.name}", total=None)
+                parser_context = EkahauParser(esx_file)
+                progress.update(task, completed=True)
+        else:
+            logger.info(f"Processing project: {esx_file}")
+            parser_context = EkahauParser(esx_file)
 
-        with EkahauParser(esx_file) as parser:
+        with parser_context as parser:
             # Get raw data
             access_points_data = parser.get_access_points()
             floor_plans_data = parser.get_floor_plans()
@@ -423,40 +554,87 @@ def process_project(
                 'pdf': PDFExporter(output_dir)
             }
 
+            # Export with progress
             exported_files = []
-            for format_name in export_formats:
-                if format_name in exporters:
-                    logger.info(f"Exporting to {format_name.upper()}...")
-                    exporter = exporters[format_name]
-                    files = exporter.export(project_data)
-                    exported_files.extend(files)
-                else:
-                    logger.warning(f"Unknown export format: {format_name}")
+            if RICH_AVAILABLE and console:
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    BarColumn(),
+                    TaskProgressColumn(),
+                    console=console
+                ) as progress:
+                    export_task = progress.add_task("[cyan]Exporting reports...", total=len(export_formats))
+                    for format_name in export_formats:
+                        if format_name in exporters:
+                            progress.update(export_task, description=f"[cyan]Exporting to {format_name.upper()}...")
+                            exporter = exporters[format_name]
+                            files = exporter.export(project_data)
+                            exported_files.extend(files)
+                            progress.advance(export_task)
+                        else:
+                            console.print(f"[yellow]⚠[/yellow] Unknown export format: {format_name}")
+                            progress.advance(export_task)
+            else:
+                for format_name in export_formats:
+                    if format_name in exporters:
+                        logger.info(f"Exporting to {format_name.upper()}...")
+                        exporter = exporters[format_name]
+                        files = exporter.export(project_data)
+                        exported_files.extend(files)
+                    else:
+                        logger.warning(f"Unknown export format: {format_name}")
 
-            # Summary
-            logger.info("=" * 60)
-            logger.info("Processing completed successfully!")
-            logger.info(f"Access Points: {len(access_points)}")
-            logger.info(f"Antennas: {len(antennas)}")
-            logger.info(f"Floors: {len(floors)}")
-            logger.info(f"Generated files: {len(exported_files)}")
-            for file in exported_files:
-                logger.info(f"  - {file}")
-            logger.info("=" * 60)
+            # Print summary with Rich
+            if RICH_AVAILABLE and console:
+                console.print("\n[bold green]✓ Processing completed successfully![/bold green]\n")
+                print_summary_table(access_points, antennas, radios, floors)
+                print_export_summary(exported_files)
+            else:
+                logger.info("=" * 60)
+                logger.info("Processing completed successfully!")
+                logger.info(f"Access Points: {len(access_points)}")
+                logger.info(f"Antennas: {len(antennas)}")
+                logger.info(f"Floors: {len(floors)}")
+                logger.info(f"Generated files: {len(exported_files)}")
+                for file in exported_files:
+                    logger.info(f"  - {file}")
+                logger.info("=" * 60)
 
             return 0
 
     except FileNotFoundError as e:
-        logger.error(f"File not found: {e}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] File not found: {e}")
+        else:
+            logger.error(f"File not found: {e}")
         return 1
     except ValueError as e:
-        logger.error(f"Invalid input: {e}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] Invalid input: {e}")
+        else:
+            logger.error(f"Invalid input: {e}")
         return 1
     except KeyError as e:
-        logger.error(f"Missing required data in .esx file: {e}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] Missing required data in .esx file: {e}")
+        else:
+            logger.error(f"Missing required data in .esx file: {e}")
+        return 1
+    except ImportError as e:
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] Missing dependency: {e}")
+            console.print("[yellow]Hint:[/yellow] Install missing dependencies with: pip install -r requirements.txt")
+        else:
+            logger.error(f"Missing dependency: {e}")
         return 1
     except Exception as e:
-        logger.error(f"Unexpected error: {e}", exc_info=True)
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] {e}")
+            if logger.level == logging.DEBUG:
+                console.print_exception()
+        else:
+            logger.error(f"Unexpected error: {e}", exc_info=True)
         return 1
 
 
