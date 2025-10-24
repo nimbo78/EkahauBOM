@@ -2,7 +2,7 @@
 
 ## 📍 Current Status
 
-**Branch:** `claude/initial-planning-011CURjywbPVJqyRiUpszUp6`
+**Branch:** `claude/main-011CURjywbPVJqyRiUpszUp6`
 **Version:** v2.4.0 (with Iteration 5 Phase 1 in progress)
 **Last update:** 2025-10-24
 
@@ -163,7 +163,7 @@ python -m pytest tests/ --cov=ekahau_bom --cov-report=html
 git status
 
 # Pull latest changes
-git pull origin claude/initial-planning-011CURjywbPVJqyRiUpszUp6
+git pull origin claude/main-011CURjywbPVJqyRiUpszUp6
 
 # Make changes...
 
@@ -172,7 +172,7 @@ git add .
 git commit -m "Your commit message"
 
 # Push
-git push origin claude/initial-planning-011CURjywbPVJqyRiUpszUp6
+git push origin claude/main-011CURjywbPVJqyRiUpszUp6
 ```
 
 ---
