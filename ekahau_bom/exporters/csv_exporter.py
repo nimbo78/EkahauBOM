@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import CoverageAnalytics, MountingAnalytics
+from ..analytics import CoverageAnalytics, MountingAnalytics, RadioAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +59,7 @@ class CSVExporter(BaseExporter):
         # Export analytics if data available
         analytics_file = self._export_analytics(
             project_data.access_points,
+            project_data.radios,
             project_data.project_name
         )
         if analytics_file:
@@ -148,12 +149,14 @@ class CSVExporter(BaseExporter):
     def _export_analytics(
         self,
         access_points: list[AccessPoint],
+        radios: list,
         project_name: str
     ) -> Path | None:
         """Export analytics metrics to CSV file.
 
         Args:
             access_points: List of access points
+            radios: List of radios
             project_name: Name of the project
 
         Returns:
@@ -161,8 +164,9 @@ class CSVExporter(BaseExporter):
         """
         # Check if there's any analytics data to export
         has_height_data = any(ap.mounting_height is not None for ap in access_points)
+        has_radio_data = len(radios) > 0
 
-        if not has_height_data:
+        if not has_height_data and not has_radio_data:
             logger.debug("No analytics data to export")
             return None
 
@@ -222,6 +226,65 @@ class CSVExporter(BaseExporter):
             writer.writerow(["APs with Tilt Data", sum(1 for ap in access_points if ap.tilt is not None)])
             writer.writerow(["APs with Azimuth Data", sum(1 for ap in access_points if ap.azimuth is not None)])
             writer.writerow(["APs Requiring Height Adjustment", aps_requiring_adjustment])
+
+            # Radio Analytics Section
+            if radios:
+                radio_metrics = RadioAnalytics.calculate_radio_metrics(radios)
+
+                writer.writerow([])
+                writer.writerow(["=== RADIO CONFIGURATION ANALYTICS ==="])
+                writer.writerow([])
+
+                writer.writerow(["Metric", "Value", "Unit"])
+                writer.writerow(["Total Radios", radio_metrics.total_radios, "count"])
+
+                # Frequency Bands
+                writer.writerow([])
+                writer.writerow(["=== FREQUENCY BANDS ==="])
+                writer.writerow([])
+                writer.writerow(["Band", "Count", "Percentage"])
+                for band, count in sorted(radio_metrics.band_distribution.items()):
+                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    writer.writerow([band, count, f"{percentage:.1f}%"])
+
+                # Wi-Fi Standards
+                if radio_metrics.standard_distribution:
+                    writer.writerow([])
+                    writer.writerow(["=== WI-FI STANDARDS ==="])
+                    writer.writerow([])
+                    writer.writerow(["Standard", "Count", "Percentage"])
+                    for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                        percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                        writer.writerow([standard, count, f"{percentage:.1f}%"])
+
+                # Channel Widths
+                if radio_metrics.channel_width_distribution:
+                    writer.writerow([])
+                    writer.writerow(["=== CHANNEL WIDTHS ==="])
+                    writer.writerow([])
+                    writer.writerow(["Width", "Count"])
+                    for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+                        writer.writerow([f"{width} MHz", count])
+
+                # TX Power
+                if radio_metrics.avg_tx_power:
+                    writer.writerow([])
+                    writer.writerow(["=== TRANSMIT POWER ==="])
+                    writer.writerow([])
+                    writer.writerow(["Metric", "Value", "Unit"])
+                    writer.writerow(["Average TX Power", f"{radio_metrics.avg_tx_power:.1f}", "dBm"])
+                    writer.writerow(["Minimum TX Power", f"{radio_metrics.min_tx_power:.1f}", "dBm"])
+                    writer.writerow(["Maximum TX Power", f"{radio_metrics.max_tx_power:.1f}", "dBm"])
+
+                # TX Power Distribution
+                power_dist = RadioAnalytics.get_tx_power_distribution(radios)
+                writer.writerow([])
+                writer.writerow(["=== TX POWER DISTRIBUTION ==="])
+                writer.writerow([])
+                writer.writerow(["Power Range", "Count"])
+                for range_label, count in power_dist.items():
+                    if count > 0:
+                        writer.writerow([range_label, count])
 
         logger.debug(f"Analytics exported to {output_file}")
         return output_file
