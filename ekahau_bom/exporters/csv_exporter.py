@@ -42,12 +42,19 @@ class CSVExporter(BaseExporter):
         """
         files = []
 
-        # Export access points
+        # Export access points BOM (aggregated)
         ap_file = self._export_access_points(
             project_data.access_points,
             project_data.project_name
         )
         files.append(ap_file)
+
+        # Export detailed access points (individual with mounting data)
+        detailed_ap_file = self._export_detailed_access_points(
+            project_data.access_points,
+            project_data.project_name
+        )
+        files.append(detailed_ap_file)
 
         # Export antennas
         antenna_file = self._export_antennas(
@@ -109,6 +116,76 @@ class CSVExporter(BaseExporter):
                 writer.writerow([vendor, model, floor, color or "", tags_str, count])
 
         logger.debug(f"Access points exported to {output_file}")
+        return output_file
+
+    def _export_detailed_access_points(
+        self,
+        access_points: list[AccessPoint],
+        project_name: str
+    ) -> Path:
+        """Export detailed access points with installation parameters.
+
+        Each row represents a single access point with all its properties including
+        mounting height, azimuth, tilt, and location coordinates.
+
+        Args:
+            access_points: List of access points to export
+            project_name: Name of the project
+
+        Returns:
+            Path to created CSV file
+        """
+        output_file = self._get_output_filename(project_name, "access_points_detailed.csv")
+
+        logger.info(f"Exporting {len(access_points)} access points with detailed parameters")
+
+        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
+
+            # Write header with all fields
+            writer.writerow([
+                "AP Name",
+                "Vendor",
+                "Model",
+                "Floor",
+                "Location X (m)",
+                "Location Y (m)",
+                "Mounting Height (m)",
+                "Azimuth (°)",
+                "Tilt (°)",
+                "Color",
+                "Tags",
+                "Enabled"
+            ])
+
+            # Write data rows - one row per AP
+            for ap in access_points:
+                # Format tags as "Key1:Value1; Key2:Value2"
+                tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)) if ap.tags else ""
+
+                # Format numeric values with appropriate precision
+                location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else ""
+                location_y = f"{ap.location_y:.2f}" if ap.location_y is not None else ""
+                mounting_height = f"{ap.mounting_height:.2f}" if ap.mounting_height is not None else ""
+                azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else ""
+                tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else ""
+
+                writer.writerow([
+                    ap.name or "",
+                    ap.vendor,
+                    ap.model,
+                    ap.floor_name,
+                    location_x,
+                    location_y,
+                    mounting_height,
+                    azimuth,
+                    tilt,
+                    ap.color or "",
+                    tags_str,
+                    "Yes" if ap.enabled else "No"
+                ])
+
+        logger.debug(f"Detailed access points exported to {output_file}")
         return output_file
 
     def _export_antennas(

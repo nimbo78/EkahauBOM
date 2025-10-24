@@ -83,6 +83,7 @@ class ExcelExporter(BaseExporter):
         # Create sheets in order
         self._create_summary_sheet(wb, project_data)
         self._create_access_points_sheet(wb, project_data.access_points, project_data.project_name)
+        self._create_detailed_access_points_sheet(wb, project_data.access_points, project_data.project_name)
         self._create_antennas_sheet(wb, project_data.antennas, project_data.project_name)
         self._create_grouped_sheets(wb, project_data.access_points)
 
@@ -289,6 +290,90 @@ class ExcelExporter(BaseExporter):
         self._apply_autofilter(ws)
         self._freeze_header(ws)
         self._apply_borders(ws)
+
+    def _create_detailed_access_points_sheet(self, wb: Workbook, access_points: list[AccessPoint], project_name: str):
+        """Create detailed access points sheet with installation parameters.
+
+        Each row represents a single access point with all its properties including
+        mounting height, azimuth, tilt, and location coordinates.
+
+        Args:
+            wb: Workbook
+            access_points: List of access points
+            project_name: Project name
+        """
+        ws = wb.create_sheet("AP Installation Details")
+
+        # Headers with all fields
+        headers = [
+            "AP Name",
+            "Vendor",
+            "Model",
+            "Floor",
+            "Location X (m)",
+            "Location Y (m)",
+            "Mounting Height (m)",
+            "Azimuth (°)",
+            "Tilt (°)",
+            "Color",
+            "Tags",
+            "Enabled"
+        ]
+        ws.append(headers)
+        self._apply_header_style(ws)
+
+        logger.info(f"Exporting {len(access_points)} access points with detailed installation parameters")
+
+        # Write data - one row per AP
+        for ap in access_points:
+            # Format tags as "Key1:Value1; Key2:Value2"
+            tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)) if ap.tags else ""
+
+            # Prepare numeric values (will be None if not set)
+            location_x = ap.location_x if ap.location_x is not None else None
+            location_y = ap.location_y if ap.location_y is not None else None
+            mounting_height = ap.mounting_height if ap.mounting_height is not None else None
+            azimuth = ap.azimuth if ap.azimuth is not None else None
+            tilt = ap.tilt if ap.tilt is not None else None
+
+            ws.append([
+                ap.name or "",
+                ap.vendor,
+                ap.model,
+                ap.floor_name,
+                location_x,
+                location_y,
+                mounting_height,
+                azimuth,
+                tilt,
+                ap.color or "",
+                tags_str,
+                "Yes" if ap.enabled else "No"
+            ])
+
+        # Apply formatting
+        self._auto_size_columns(ws)
+        self._apply_autofilter(ws)
+        self._freeze_header(ws)
+        self._apply_borders(ws)
+
+        # Apply number formatting to numeric columns
+        for row in range(2, ws.max_row + 1):  # Skip header row
+            # Location X, Y (columns 5, 6) - 2 decimal places
+            if ws.cell(row, 5).value is not None:
+                ws.cell(row, 5).number_format = '0.00'
+            if ws.cell(row, 6).value is not None:
+                ws.cell(row, 6).number_format = '0.00'
+            # Mounting Height (column 7) - 2 decimal places
+            if ws.cell(row, 7).value is not None:
+                ws.cell(row, 7).number_format = '0.00'
+            # Azimuth, Tilt (columns 8, 9) - 1 decimal place
+            if ws.cell(row, 8).value is not None:
+                ws.cell(row, 8).number_format = '0.0'
+            if ws.cell(row, 9).value is not None:
+                ws.cell(row, 9).number_format = '0.0'
+
+        logger.info("Detailed AP installation sheet created")
 
     def _create_antennas_sheet(self, wb: Workbook, antennas: list[Antenna], project_name: str):
         """Create antennas sheet.

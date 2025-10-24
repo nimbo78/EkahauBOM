@@ -83,6 +83,7 @@ class HTMLExporter(BaseExporter):
         )
 
         aps_table_html = self._generate_aps_table(project_data.access_points)
+        detailed_aps_table_html = self._generate_detailed_aps_table(project_data.access_points)
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
         grouping_html = self._generate_grouping_section(project_data.access_points)
         analytics_html = self._generate_analytics_section(project_data.access_points, project_data.radios)
@@ -108,6 +109,7 @@ class HTMLExporter(BaseExporter):
         {grouping_html}
         {analytics_html}
         {aps_table_html}
+        {detailed_aps_table_html}
         {antennas_table_html}
 
         <footer>
@@ -195,6 +197,72 @@ class HTMLExporter(BaseExporter):
                             <th>Color</th>
                             <th>Tags</th>
                             <th>Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows_html}
+                    </tbody>
+                </table>
+            </div>
+        </section>"""
+
+    def _generate_detailed_aps_table(self, access_points: list[AccessPoint]) -> str:
+        """Generate detailed access points table with installation parameters.
+
+        Args:
+            access_points: List of access points
+
+        Returns:
+            HTML string for detailed access points table
+        """
+        rows_html = ""
+        for ap in access_points:
+            # Format tags
+            tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)) if ap.tags else ""
+
+            # Format numeric values with appropriate precision
+            location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else "—"
+            location_y = f"{ap.location_y:.2f}" if ap.location_y is not None else "—"
+            mounting_height = f"{ap.mounting_height:.2f}" if ap.mounting_height is not None else "—"
+            azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else "—"
+            tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else "—"
+            enabled_status = "✓" if ap.enabled else "✗"
+
+            rows_html += f"""
+                <tr>
+                    <td>{html.escape(ap.name or "")}</td>
+                    <td>{html.escape(ap.vendor)}</td>
+                    <td>{html.escape(ap.model)}</td>
+                    <td>{html.escape(ap.floor_name)}</td>
+                    <td class="number">{location_x}</td>
+                    <td class="number">{location_y}</td>
+                    <td class="number">{mounting_height}</td>
+                    <td class="number">{azimuth}</td>
+                    <td class="number">{tilt}</td>
+                    <td>{html.escape(ap.color or "")}</td>
+                    <td>{html.escape(tags_str)}</td>
+                    <td class="centered">{enabled_status}</td>
+                </tr>"""
+
+        return f"""
+        <section class="table-section">
+            <h3>Access Points Installation Details</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>AP Name</th>
+                            <th>Vendor</th>
+                            <th>Model</th>
+                            <th>Floor</th>
+                            <th>Location X (m)</th>
+                            <th>Location Y (m)</th>
+                            <th>Height (m)</th>
+                            <th>Azimuth (°)</th>
+                            <th>Tilt (°)</th>
+                            <th>Color</th>
+                            <th>Tags</th>
+                            <th>Enabled</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -476,6 +544,17 @@ class HTMLExporter(BaseExporter):
             font-weight: bold;
             color: #667eea;
             text-align: center;
+        }
+
+        td.number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        td.centered {
+            text-align: center;
+            font-size: 1.2em;
         }
 
         .charts-section {
