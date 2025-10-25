@@ -7,9 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2025-01-25 (Production Ready Release)
+
+### Added
+- **PDF Export** (Phase 3 - Iteration 5)
+  - Professional print-ready PDF reports using WeasyPrint
+  - Print-optimized layout (A4 page size, proper margins)
+  - All sections included: Summary, Distribution, Analytics, AP tables
+  - Grouping statistics (vendor, floor, color, model)
+  - Radio and mounting analytics integration
+  - CLI argument `--format pdf`
+  - 14 unit tests for PDF exporter
+
+- **Interactive CLI with Rich** (Phase 4 - Iteration 5)
+  - Rich library integration for enhanced terminal output
+  - Progress bars for parsing and export operations
+  - Styled tables for summary statistics
+  - Enhanced error messages with colors and hints
+  - Helper functions: print_header(), print_summary_table(), print_export_summary()
+  - Graceful degradation if Rich not installed
+
+- **Batch Processing** (Phase 5 - Iteration 5)
+  - `--batch` CLI argument for processing multiple .esx files
+  - `--recursive` option for subdirectory search
+  - Batch progress display with Rich integration
+  - Batch summary table showing successful/failed files
+  - Error handling for individual file failures
+  - Support for all export formats in batch mode
+
+### Enhanced
+- **Documentation** (Phase 2 - Iteration 5)
+  - Complete README.md overhaul with professional structure
+  - User guide (docs/USER_GUIDE.md) with examples
+  - Developer guide (docs/DEVELOPER_GUIDE.md) for contributors
+  - Complete CHANGELOG.md with version history
+  - Russian translations for all documentation
+
+### Fixed
+- **Testing & Quality** (Phase 1 - Iteration 5)
+  - All 258 tests passing (100% pass rate)
+  - Test coverage increased from 40% to 70%
+  - Fixed AccessPoint model edge cases
+  - Enhanced error handling in analytics modules
+  - Fixed height range boundaries in mounting analytics
+
 ### Changed
-- Comprehensive documentation overhaul (README, user guides)
-- Test coverage increased to 70%
+- Version bumped to 2.5.0
+- Production-ready status achieved
 
 ## [2.4.0] - 2024 (Advanced Analytics & Installation Export)
 
@@ -190,6 +234,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Key Features |
 |---------|------|-------------|
+| **2.5.0** | 2025-01-25 | Production Ready: PDF Export, Interactive CLI, Batch Processing |
 | **2.4.0** | 2024 | Radio Analytics, Installation Export, Cost Calculation |
 | **2.3.0** | 2024 | HTML & JSON Export |
 | **2.2.0** | 2024 | Excel Export with Charts |
@@ -200,6 +245,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## Upgrade Notes
+
+### From 2.4.x to 2.5.0
+- No breaking changes
+- New CLI options: `--batch`, `--recursive` for batch processing
+- New export format: `--format pdf` (requires WeasyPrint>=60.0)
+- Rich library integration for enhanced CLI output (optional dependency)
+- All existing functionality remains backward compatible
 
 ### From 2.3.x to 2.4.0
 - New CLI options: `--calculate-cost`, `--discount`, `--no-volume-discounts`

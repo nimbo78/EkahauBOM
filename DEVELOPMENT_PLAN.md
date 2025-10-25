@@ -708,16 +708,15 @@ python EkahauBOM.py project.esx \
 
 ### 10.3 Упаковка и распространение
 **Задачи:**
-- [ ] setup.py / pyproject.toml
-- [ ] Публикация на PyPI
+- [ ] setup.py / pyproject.toml для локальной установки
   ```bash
-  pip install ekahau-bom
+  pip install -e .
   ```
-- [ ] Docker образ
-- [ ] GitHub releases
+- [ ] Docker образ (опционально)
+- [ ] GitHub releases с changelog
 - [ ] Версионирование (semantic versioning)
 
-**Время:** 2-3 дня
+**Время:** 1-2 дня
 **Сложность:** Средняя
 
 ---
@@ -1060,12 +1059,13 @@ python EkahauBOM.py project.esx \
    - ✅ All tests passing
    - ✅ Updated README.md and README.ru.md with batch processing examples
 
-**Phase 6: Публикация** 🔴 НЕ НАЧАТО
-1. setup.py/pyproject.toml
-2. PyPI release
-3. GitHub releases
+**Phase 6: Упаковка и релиз** 🔴 НЕ НАЧАТО
+1. Обновление версий (setup.py, __init__.py, CHANGELOG.md)
+2. Создание pyproject.toml для современной упаковки
+3. GitHub releases с changelog и дистрибутивами
+4. Опционально: Docker образ
 
-**Результат:** Production-ready продукт готов к публикации
+**Результат:** Production-ready продукт готов к использованию и распространению
 
 ---
 
@@ -1192,7 +1192,7 @@ sphinx >= 5.0.0
 - PDF экспорт (WeasyPrint или ReportLab)
 - Интерактивный CLI output (rich library, прогресс-бары)
 - Batch обработка нескольких проектов
-- Публикация на PyPI
+- GitHub releases и упаковка
 
 **Альтернатива:** Итерация 6+ (Optional) - Web UI, GUI, Database интеграция (по запросу)
 

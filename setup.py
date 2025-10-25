@@ -19,7 +19,7 @@ if requirements_file.exists():
 
 setup(
     name="ekahau-bom",
-    version="2.0.0",
+    version="2.5.0",
     author="Pavel Semenischev",
     author_email="",
     description="Bill of Materials (BOM) generator for Ekahau AI project files",

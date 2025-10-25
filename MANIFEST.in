@@ -1,0 +1,25 @@
+# Include documentation
+include README.md
+include README.ru.md
+include CHANGELOG.md
+include LICENSE
+
+# Include configuration files
+recursive-include config *.yaml
+recursive-include config *.yml
+
+# Include documentation directory
+recursive-include docs *.md
+
+# Exclude development and test files
+exclude .gitignore
+exclude requirements-dev.txt
+recursive-exclude tests *
+recursive-exclude .git *
+recursive-exclude __pycache__ *
+recursive-exclude *.egg-info *
+recursive-exclude build *
+recursive-exclude dist *
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .DS_Store
