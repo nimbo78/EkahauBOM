@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2025-10-27
+
 ### Added
 - **GitHub Actions CI/CD** (Phase 9.2 - NEW!)
   - Automated release workflow (`release.yml`)
@@ -78,17 +80,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works seamlessly with alpha compositing and transparency features
   - Independent from default AP color transparency
 
-### Fixed
-- **Mounting Height in Detailed CSV Export**
-  - Fixed missing mounting height values in `_access_points_detailed.csv`
-  - Now correctly extracts `antenna_height` from Radio objects
-  - Falls back to Radio's antenna_height when AccessPoint.mounting_height is not available
-  - Displays actual mounting heights (e.g., 2.40m for ceiling APs, 0.40m for wall APs)
-  - Accurate data for installation planning and field verification
-
-## [2.7.0] - 2025-10-26 (Network Settings & Radio Configuration)
-
-### Added
 - **Network Settings Support** (Phase 8.4 - NEW!)
   - DataRate, NetworkCapacitySettings dataclasses for network configuration
   - NetworkSettingsProcessor for processing network capacity settings:
@@ -139,6 +130,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - No more "Invalid hex color" warnings for standard color names
   - Better visual differentiation between AP types
   - More professional and presentation-ready output
+
+### Fixed
+- **Mounting Height in Detailed CSV Export**
+  - Fixed missing mounting height values in `_access_points_detailed.csv`
+  - Now correctly extracts `antenna_height` from Radio objects
+  - Falls back to Radio's antenna_height when AccessPoint.mounting_height is not available
+  - Displays actual mounting heights (e.g., 2.40m for ceiling APs, 0.40m for wall APs)
+  - Accurate data for installation planning and field verification
 
 ## [2.6.0] - 2025-10-26 (Map Notes, Cable Infrastructure & Floor Plan Visualization)
 
