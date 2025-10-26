@@ -35,6 +35,107 @@ class ProjectMetadata:
 
 
 @dataclass
+class NoteHistory:
+    """Represents history metadata for a note.
+
+    Attributes:
+        created_at: ISO 8601 timestamp when note was created
+        created_by: Name of user who created the note
+    """
+    created_at: str = ""
+    created_by: str = ""
+
+
+@dataclass
+class Note:
+    """Represents a text note in Ekahau project.
+
+    Text notes contain information about installation details, cable routing,
+    or other important details for the project.
+
+    Attributes:
+        id: Unique identifier for the note
+        text: Text content of the note
+        history: Creation history (timestamp and author)
+        image_ids: List of image IDs attached to this note
+        status: Note status (typically "CREATED")
+    """
+    id: str
+    text: str = ""
+    history: Optional[NoteHistory] = None
+    image_ids: list[str] = field(default_factory=list)
+    status: str = "CREATED"
+
+
+@dataclass
+class Point:
+    """Represents a 2D coordinate point.
+
+    Attributes:
+        x: X coordinate in project units
+        y: Y coordinate in project units
+    """
+    x: float
+    y: float
+
+
+@dataclass
+class CableNote:
+    """Represents a cable route annotation on floor plan.
+
+    Cable notes show the physical path of network cables through
+    the building, including routes through ceiling, conduits, etc.
+
+    Attributes:
+        id: Unique identifier for the cable note
+        floor_plan_id: ID of the floor where cable is routed
+        points: List of coordinate points defining the cable path
+        color: Color of the cable line (hex format, e.g., "#000000")
+        note_ids: List of Note IDs with additional information
+        status: Cable note status (typically "CREATED")
+    """
+    id: str
+    floor_plan_id: str = ""
+    points: list[Point] = field(default_factory=list)
+    color: str = "#000000"
+    note_ids: list[str] = field(default_factory=list)
+    status: str = "CREATED"
+
+
+@dataclass
+class Location:
+    """Represents a location on a floor plan.
+
+    Attributes:
+        floor_plan_id: ID of the floor
+        x: X coordinate in project units
+        y: Y coordinate in project units
+    """
+    floor_plan_id: str = ""
+    x: float = 0.0
+    y: float = 0.0
+
+
+@dataclass
+class PictureNote:
+    """Represents a picture/image note placed on floor plan.
+
+    Picture notes are visual markers on the floor plan that can have
+    associated text notes with additional details.
+
+    Attributes:
+        id: Unique identifier for the picture note
+        location: Location on floor plan (floor ID and coordinates)
+        note_ids: List of Note IDs with text descriptions
+        status: Picture note status (typically "CREATED")
+    """
+    id: str
+    location: Optional[Location] = None
+    note_ids: list[str] = field(default_factory=list)
+    status: str = "CREATED"
+
+
+@dataclass
 class Tag:
     """Represents a tag key-value pair in Ekahau project.
 
@@ -215,6 +316,9 @@ class ProjectData:
         project_name: Name of the project file
         radios: List of radio configurations in the project
         metadata: Project metadata (name, customer, location, etc.)
+        notes: List of text notes in the project
+        cable_notes: List of cable route annotations
+        picture_notes: List of picture notes on floor plans
     """
     access_points: list[AccessPoint]
     antennas: list[Antenna]
@@ -222,3 +326,6 @@ class ProjectData:
     project_name: str
     radios: list[Radio] = field(default_factory=list)
     metadata: Optional[ProjectMetadata] = None
+    notes: list[Note] = field(default_factory=list)
+    cable_notes: list[CableNote] = field(default_factory=list)
+    picture_notes: list[PictureNote] = field(default_factory=list)

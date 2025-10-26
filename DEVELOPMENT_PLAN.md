@@ -609,7 +609,72 @@ python EkahauBOM.py project.esx \
 **Время фактическое:** 1 день (Iteration 5, Phase 8.1)
 **Сложность:** Низкая
 
-### 8.2 Информация о зонах и помещениях
+### 8.2 Заметки на карте (Map Notes) ✅ ЗАВЕРШЕНО v2.6.0
+**Задачи:**
+- [x] ✅ **Парсинг notes.json** - текстовые заметки на планах (v2.6.0)
+- [x] ✅ **Парсинг cableNotes.json** - заметки для кабельных трасс (v2.6.0)
+- [x] ✅ **Парсинг pictureNotes.json** - заметки с изображениями (v2.6.0)
+- [x] ✅ **Модели данных для заметок** (v2.6.0)
+  ```python
+  @dataclass
+  class Note:
+      id: str
+      text: str
+      history: Optional[NoteHistory]  # created_at, created_by
+      image_ids: list[str]
+      status: str
+
+  @dataclass
+  class CableNote:
+      id: str
+      floor_plan_id: str
+      points: list[Point]  # Path coordinates
+      color: str
+      note_ids: list[str]
+      status: str
+
+  @dataclass
+  class PictureNote:
+      id: str
+      location: Optional[Location]  # floor_plan_id, x, y
+      note_ids: list[str]
+      status: str
+  ```
+- [x] ✅ **NotesProcessor** (v2.6.0)
+  - ✅ process_notes() - обработка текстовых заметок
+  - ✅ process_cable_notes() - обработка кабельных трасс
+  - ✅ process_picture_notes() - обработка графических заметок
+- [x] ✅ **Интеграция в ProjectData** (v2.6.0)
+  - ✅ Добавлены поля: notes, cable_notes, picture_notes
+  - ✅ Обработка в CLI с логированием
+- [x] ✅ **Добавление заметок в экспортеры** (v2.6.0)
+  - ✅ **JSON**: Полная секция notes с text_notes, cable_notes, picture_notes
+  - ✅ Summary table с количеством заметок в CLI
+- [x] ✅ **Тесты** (v2.6.0)
+  - ✅ tests/test_notes_processor.py (15 unit tests)
+  - ✅ Тестирование всех типов заметок
+
+**Новые файлы:**
+- ✅ ekahau_bom/processors/notes.py - NotesProcessor (220+ строк)
+- ✅ tests/test_notes_processor.py (15 unit tests)
+
+**Обновленные файлы:**
+- ✅ ekahau_bom/models.py - Note, NoteHistory, CableNote, PictureNote, Point, Location
+- ✅ ekahau_bom/parser.py - get_notes(), get_cable_notes(), get_picture_notes()
+- ✅ ekahau_bom/constants.py - ESX_NOTES_FILE, ESX_CABLE_NOTES_FILE, ESX_PICTURE_NOTES_FILE
+- ✅ ekahau_bom/cli.py - интеграция notes processor, updated summary table
+- ✅ ekahau_bom/exporters/json_exporter.py - notes section
+
+**Статус:** ✅ ЗАВЕРШЕНО в v2.6.0
+**Время фактическое:** 1 день (Iteration 5, Phase 8.2)
+**Сложность:** Средняя
+
+**Результаты:**
+- Успешно обработано в wine office.esx: 4 text notes, 10 cable notes, 4 picture notes
+- 308 тестов passing (было 293, +15 новых)
+- Полная интеграция заметок в JSON экспорт
+
+### 8.3 Информация о зонах и помещениях
 **Задачи:**
 - [ ] Парсинг зон покрытия
 - [ ] Группировка AP по зонам
@@ -619,7 +684,7 @@ python EkahauBOM.py project.esx \
 **Время:** 2-3 дня
 **Сложность:** Средняя
 
-### 8.3 Настройки радио
+### 8.4 Настройки радио
 **Задачи:**
 - [ ] Извлечение настроек мощности
 - [ ] Каналы и их распределение
@@ -629,24 +694,70 @@ python EkahauBOM.py project.esx \
 **Время:** 2-3 дня
 **Сложность:** Средняя
 
-### 8.4 Кабельная инфраструктура
+### 8.5 Кабельная инфраструктура ✅ ЗАВЕРШЕНО v2.6.0
 **Задачи:**
-- [ ] Парсинг информации о кабелях
-- [ ] Расчет длины кабелей
-- [ ] BOM для кабельной системы
-- [ ] Стоимость кабельной инфраструктуры
+- [x] ✅ **Расчет длины кабелей** (v2.6.0)
+  - ✅ Вычисление евклидова расстояния между точками
+  - ✅ Суммирование длины по всему маршруту
+  - ✅ Поддержка множественных сегментов
+- [x] ✅ **CableMetrics и CableAnalytics** (v2.6.0)
+  ```python
+  @dataclass
+  class CableMetrics:
+      total_cables: int
+      total_length: float  # In project units (pixels)
+      total_length_m: Optional[float]  # In meters if scale available
+      avg_length: float
+      min_length: float
+      max_length: float
+      cables_by_floor: dict[str, int]
+      length_by_floor: dict[str, float]
+      scale_factor: Optional[float]
+  ```
+- [x] ✅ **Cable Analytics** (v2.6.0)
+  - ✅ calculate_cable_length() - длина одного кабельного маршрута
+  - ✅ calculate_cable_metrics() - общая аналитика по всем кабелям
+  - ✅ estimate_cable_cost() - оценка стоимости ($2/м кабель + $5/м установка)
+  - ✅ generate_cable_bom() - генерация BOM для кабелей и коннекторов
+- [x] ✅ **BOM для кабельной системы** (v2.6.0)
+  - ✅ Cat6A UTP кабель (в метрах, с округлением вверх)
+  - ✅ RJ45 коннекторы (количество = кабели × 2)
+  - ✅ Cable Routes/Runs (логическое количество маршрутов)
+  - ✅ Настраиваемые типы кабелей и коннекторов
+- [x] ✅ **Стоимость кабельной инфраструктуры** (v2.6.0)
+  - ✅ Материалы кабеля с фактором запаса (1.2x = 20%)
+  - ✅ Стоимость установки (работы)
+  - ✅ Настраиваемые цены за метр
+  - ✅ Breakdown: cable_material, installation, total
+- [x] ✅ **Интеграция в CLI** (v2.6.0)
+  - ✅ Cable Infrastructure Analytics секция
+  - ✅ Маршруты по этажам с длиной
+  - ✅ Cable Bill of Materials вывод
+- [x] ✅ **JSON Export** (v2.6.0)
+  - ✅ notes.cable_infrastructure.metrics - все метрики
+  - ✅ notes.cable_infrastructure.bill_of_materials - BOM items
+- [x] ✅ **Тесты** (v2.6.0)
+  - ✅ tests/test_cable_analytics.py (18 unit tests)
+  - ✅ Тестирование расчета длины, метрик, BOM, стоимости
 
-**Время:** 3-4 дня
-**Сложность:** Средняя-Высокая
+**Новые файлы:**
+- ✅ ekahau_bom/cable_analytics.py - CableAnalytics и CableMetrics (220+ строк)
+- ✅ tests/test_cable_analytics.py (18 unit tests)
 
-### 8.5 Заметки и комментарии
-**Задачи:**
-- [ ] Извлечение заметок к AP
-- [ ] Комментарии в отчетах
-- [ ] Фильтрация по наличию заметок
+**Обновленные файлы:**
+- ✅ ekahau_bom/cli.py - интеграция cable analytics
+- ✅ ekahau_bom/exporters/json_exporter.py - cable_infrastructure section
 
-**Время:** 1 день
-**Сложность:** Низкая
+**Статус:** ✅ ЗАВЕРШЕНО в v2.6.0
+**Время фактическое:** 1 день (Iteration 5, Phase 8.5)
+**Сложность:** Средняя
+
+**Результаты:**
+- Успешно обработано в wine office.esx: 10 cable routes
+- Общая длина: 3465.8 units, средняя: 346.6 units
+- BOM: RJ45 коннекторы (20 шт), Cable Routes (10)
+- 326 тестов passing (было 308, +18 новых)
+- Полная интеграция кабельной аналитики в JSON экспорт
 
 ### 8.6 Теги и метаданные ✅ ЗАВЕРШЕНО v2.1.0
 **Цель:** Поддержка Ekahau тегов (key-value пары)
@@ -698,6 +809,58 @@ python EkahauBOM.py project.esx \
 **Сложность:** Низкая-Средняя
 
 **См. также:** FILTERING_GROUPING_PLAN.md для детального плана реализации
+
+### 8.7 Визуализация планов этажей (Floor Plan Visualization) ✅ ЗАВЕРШЕНО v2.6.0
+**Цель:** Генерация визуальных планов этажей с размещением точек доступа
+
+**Приоритет:** СРЕДНИЙ
+
+**Задачи:**
+- [x] ✅ **FloorPlanVisualizer класс** (v2.6.0)
+  - ✅ Извлечение изображений планов из .esx файлов
+  - ✅ Overlay AP позиций на планах
+  - ✅ Цветные кружки соответствующие цветам Ekahau
+  - ✅ Опциональные метки с названиями AP
+- [x] ✅ **Настройки визуализации** (v2.6.0)
+  - ✅ Радиус кружков AP (по умолчанию: 15px)
+  - ✅ Ширина границы кружков (по умолчанию: 3px)
+  - ✅ Показ/скрытие названий AP
+  - ✅ Размер шрифта для меток
+- [x] ✅ **CLI интеграция** (v2.6.0)
+  - ✅ `--visualize-floor-plans` флаг
+  - ✅ `--ap-circle-radius N` опция
+  - ✅ `--no-ap-names` флаг
+- [x] ✅ **Поддержка множества этажей** (v2.6.0)
+  - ✅ Автоматическая обработка всех этажей с AP
+  - ✅ Сохранение в `output/visualizations/`
+  - ✅ PNG формат с высоким качеством
+- [x] ✅ **Исправления AccessPointProcessor** (v2.6.0)
+  - ✅ Извлечение координат location_x, location_y
+  - ✅ Извлечение имени AP (name)
+
+**Новые файлы:**
+- ✅ `ekahau_bom/visualizers/__init__.py` (v2.6.0)
+- ✅ `ekahau_bom/visualizers/floor_plan.py` - FloorPlanVisualizer класс (v2.6.0)
+- ✅ `tests/test_floor_plan_visualizer.py` - 12 unit тестов (v2.6.0)
+
+**Обновленные файлы:**
+- ✅ `ekahau_bom/cli.py` - CLI интеграция (v2.6.0)
+- ✅ `ekahau_bom/config.py` - конфигурация визуализации (v2.6.0)
+- ✅ `ekahau_bom/processors/access_points.py` - координаты и имена (v2.6.0)
+- ✅ `.gitignore` - игнорирование визуализаций (v2.6.0)
+
+**Зависимости:**
+- ✅ Требует Pillow library (опциональная зависимость)
+- ✅ Плавная деградация если библиотека не установлена
+
+**Статус:** ✅ ЗАВЕРШЕНО в v2.6.0
+**Время фактическое:** 1 день (Iteration 5, Phase 8.7)
+**Сложность:** Средняя
+
+**Результаты:**
+- Успешно создана визуализация для wine office.esx: 1 floor, 3 APs
+- 338 тестов passing (было 326, +12 новых)
+- Визуализации сохраняются в PNG формате с полным качеством
 
 ---
 

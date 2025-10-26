@@ -11,6 +11,7 @@ from pathlib import Path
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna, Tag, Floor
 from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
+from ..cable_analytics import CableAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,16 @@ class JSONExporter(BaseExporter):
         radio_metrics = None
         if project_data.radios:
             radio_metrics = RadioAnalytics.calculate_radio_metrics(project_data.radios)
+
+        # Calculate cable metrics
+        cable_metrics = None
+        cable_bom = None
+        if project_data.cable_notes:
+            cable_metrics = CableAnalytics.calculate_cable_metrics(
+                project_data.cable_notes,
+                project_data.floors
+            )
+            cable_bom = CableAnalytics.generate_cable_bom(cable_metrics)
 
         # Build metadata section
         metadata_section = {
@@ -244,6 +255,66 @@ class JSONExporter(BaseExporter):
                         "max_dbm": radio_metrics.max_tx_power
                     } if radio_metrics and radio_metrics.avg_tx_power else None
                 }
+            },
+            "notes": {
+                "text_notes": [
+                    {
+                        "id": note.id,
+                        "text": note.text,
+                        "created_at": note.history.created_at if note.history else None,
+                        "created_by": note.history.created_by if note.history else None,
+                        "image_ids": note.image_ids,
+                        "status": note.status
+                    }
+                    for note in project_data.notes
+                ],
+                "cable_notes": [
+                    {
+                        "id": cable_note.id,
+                        "floor_plan_id": cable_note.floor_plan_id,
+                        "floor_name": project_data.floors.get(cable_note.floor_plan_id).name if cable_note.floor_plan_id in project_data.floors else None,
+                        "points": [
+                            {"x": point.x, "y": point.y}
+                            for point in cable_note.points
+                        ],
+                        "color": cable_note.color,
+                        "note_ids": cable_note.note_ids,
+                        "status": cable_note.status
+                    }
+                    for cable_note in project_data.cable_notes
+                ],
+                "picture_notes": [
+                    {
+                        "id": picture_note.id,
+                        "location": {
+                            "floor_plan_id": picture_note.location.floor_plan_id if picture_note.location else None,
+                            "floor_name": project_data.floors.get(picture_note.location.floor_plan_id).name if picture_note.location and picture_note.location.floor_plan_id in project_data.floors else None,
+                            "x": picture_note.location.x if picture_note.location else None,
+                            "y": picture_note.location.y if picture_note.location else None
+                        } if picture_note.location else None,
+                        "note_ids": picture_note.note_ids,
+                        "status": picture_note.status
+                    }
+                    for picture_note in project_data.picture_notes
+                ],
+                "summary": {
+                    "total_text_notes": len(project_data.notes),
+                    "total_cable_notes": len(project_data.cable_notes),
+                    "total_picture_notes": len(project_data.picture_notes)
+                },
+                "cable_infrastructure": {
+                    "metrics": {
+                        "total_cables": cable_metrics.total_cables if cable_metrics else 0,
+                        "total_length_units": cable_metrics.total_length if cable_metrics else 0.0,
+                        "total_length_meters": cable_metrics.total_length_m if cable_metrics else None,
+                        "avg_length_units": cable_metrics.avg_length if cable_metrics else 0.0,
+                        "min_length_units": cable_metrics.min_length if cable_metrics else 0.0,
+                        "max_length_units": cable_metrics.max_length if cable_metrics else 0.0,
+                        "cables_by_floor": cable_metrics.cables_by_floor if cable_metrics else {},
+                        "length_by_floor_units": cable_metrics.length_by_floor if cable_metrics else {}
+                    },
+                    "bill_of_materials": cable_bom if cable_bom else []
+                } if cable_metrics else None
             }
         }
 

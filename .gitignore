@@ -55,6 +55,8 @@ output/*.xlsx
 output/*.html
 output/*.json
 output/*.pdf
+output/visualizations/*.png
+output/test_*/
 
 # But keep the output directory
 !output/.gitkeep

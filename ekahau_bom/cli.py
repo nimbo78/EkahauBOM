@@ -26,6 +26,7 @@ from .processors.antennas import AntennaProcessor
 from .processors.tags import TagProcessor
 from .processors.radios import RadioProcessor
 from .processors.metadata import ProjectMetadataProcessor
+from .processors.notes import NotesProcessor
 from .filters import APFilter
 from .analytics import GroupingAnalytics
 from .exporters.csv_exporter import CSVExporter
@@ -212,6 +213,28 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help='Search for .esx files recursively in subdirectories (use with --batch)'
     )
 
+    # Visualization options
+    viz_group = parser.add_argument_group('visualization options')
+
+    viz_group.add_argument(
+        '--visualize-floor-plans',
+        action='store_true',
+        help='Generate floor plan images with AP placements overlaid (requires Pillow library)'
+    )
+
+    viz_group.add_argument(
+        '--ap-circle-radius',
+        type=int,
+        default=15,
+        help='Radius of AP marker circles in pixels (default: 15)'
+    )
+
+    viz_group.add_argument(
+        '--no-ap-names',
+        action='store_true',
+        help='Hide AP names on floor plan visualizations'
+    )
+
     return parser
 
 
@@ -227,7 +250,7 @@ def print_header():
         logger.info(f"EkahauBOM - Version {__version__}")
 
 
-def print_summary_table(access_points, antennas, radios, floors):
+def print_summary_table(access_points, antennas, radios, floors, notes=None, cable_notes=None, picture_notes=None):
     """Print summary statistics table with Rich."""
     if not RICH_AVAILABLE or not console:
         return
@@ -244,6 +267,14 @@ def print_summary_table(access_points, antennas, radios, floors):
     # Unique vendors
     unique_vendors = len(set(ap.vendor for ap in access_points))
     table.add_row("Unique Vendors", str(unique_vendors))
+
+    # Notes counts
+    if notes is not None:
+        table.add_row("Text Notes", str(len(notes)))
+    if cable_notes is not None:
+        table.add_row("Cable Notes", str(len(cable_notes)))
+    if picture_notes is not None:
+        table.add_row("Picture Notes", str(len(picture_notes)))
 
     console.print(table)
 
@@ -372,7 +403,10 @@ def process_project(
     enable_pricing: bool = False,
     pricing_file: Path | None = None,
     discount: float = 0.0,
-    no_volume_discounts: bool = False
+    no_volume_discounts: bool = False,
+    visualize_floor_plans: bool = False,
+    ap_circle_radius: int = 15,
+    show_ap_names: bool = True
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -395,6 +429,9 @@ def process_project(
         pricing_file: Custom pricing database file
         discount: Additional discount percentage (0-100)
         no_volume_discounts: Disable volume-based discounts
+        visualize_floor_plans: Generate floor plan visualizations with APs
+        ap_circle_radius: Radius of AP marker circles in pixels
+        show_ap_names: Whether to show AP names on visualizations
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -431,6 +468,9 @@ def process_project(
             antenna_types_data = parser.get_antenna_types()
             tag_keys_data = parser.get_tag_keys()
             project_metadata_data = parser.get_project_metadata()
+            notes_data = parser.get_notes()
+            cable_notes_data = parser.get_cable_notes()
+            picture_notes_data = parser.get_picture_notes()
 
             # Build floor lookup dictionary (optimized for O(1) access)
             floors = {
@@ -503,6 +543,13 @@ def process_project(
             radio_processor = RadioProcessor()
             radios = radio_processor.process(simulated_radios_data)
 
+            # Process notes
+            notes_processor = NotesProcessor()
+            notes = notes_processor.process_notes(notes_data)
+            cable_notes = notes_processor.process_cable_notes(cable_notes_data, floors)
+            picture_notes = notes_processor.process_picture_notes(picture_notes_data, floors)
+            logger.info(f"Found {len(notes)} text notes, {len(cable_notes)} cable notes, {len(picture_notes)} picture notes")
+
             # Create project data container
             project_data = ProjectData(
                 access_points=access_points,
@@ -510,7 +557,10 @@ def process_project(
                 floors=floors,
                 project_name=esx_file.stem,
                 radios=radios,
-                metadata=project_metadata
+                metadata=project_metadata,
+                notes=notes,
+                cable_notes=cable_notes,
+                picture_notes=picture_notes
             )
 
             # Display advanced analytics
@@ -575,6 +625,28 @@ def process_project(
                                f"min={radio_metrics.min_tx_power:.1f} dBm, " +
                                f"max={radio_metrics.max_tx_power:.1f} dBm")
 
+            # Cable infrastructure analytics
+            if cable_notes:
+                from .cable_analytics import CableAnalytics
+
+                logger.info("=" * 60)
+                logger.info("Cable Infrastructure Analytics")
+                logger.info("=" * 60)
+                cable_metrics = CableAnalytics.calculate_cable_metrics(cable_notes, floors)
+
+                # Cable counts by floor
+                if cable_metrics.cables_by_floor:
+                    logger.info("Cable Routes by Floor:")
+                    for floor_name, count in sorted(cable_metrics.cables_by_floor.items()):
+                        length = cable_metrics.length_by_floor.get(floor_name, 0.0)
+                        logger.info(f"  {floor_name}: {count} routes ({length:.1f} units)")
+
+                # Cable BOM
+                cable_bom = CableAnalytics.generate_cable_bom(cable_metrics)
+                logger.info("Cable Bill of Materials:")
+                for item in cable_bom:
+                    logger.info(f"  {item['description']}: {item['quantity']} {item['unit']}")
+
             # Calculate costs if enabled
             cost_summary = None
             if enable_pricing:
@@ -609,15 +681,22 @@ def process_project(
             from .exporters.excel_exporter import ExcelExporter
             from .exporters.html_exporter import HTMLExporter
             from .exporters.json_exporter import JSONExporter
-            from .exporters.pdf_exporter import PDFExporter
 
             exporters = {
                 'csv': CSVExporter(output_dir),
                 'excel': ExcelExporter(output_dir),
                 'html': HTMLExporter(output_dir),
-                'json': JSONExporter(output_dir),
-                'pdf': PDFExporter(output_dir)
+                'json': JSONExporter(output_dir)
             }
+
+            # Import PDF exporter only if needed (WeasyPrint may not be installed)
+            if 'pdf' in export_formats:
+                try:
+                    from .exporters.pdf_exporter import PDFExporter
+                    exporters['pdf'] = PDFExporter(output_dir)
+                except ImportError as e:
+                    logger.warning(f"PDF export not available: {e}")
+                    logger.warning("Install WeasyPrint to enable PDF export: pip install weasyprint")
 
             # Export with progress
             exported_files = []
@@ -650,11 +729,54 @@ def process_project(
                     else:
                         logger.warning(f"Unknown export format: {format_name}")
 
+            # Generate floor plan visualizations if requested
+            visualization_files = []
+            if visualize_floor_plans:
+                try:
+                    from .visualizers.floor_plan import FloorPlanVisualizer
+
+                    logger.info("=" * 60)
+                    logger.info("Generating Floor Plan Visualizations")
+                    logger.info("=" * 60)
+
+                    # Create visualizations subdirectory
+                    viz_output_dir = output_dir / "visualizations"
+                    viz_output_dir.mkdir(parents=True, exist_ok=True)
+
+                    # Create visualizer
+                    with FloorPlanVisualizer(
+                        esx_path=esx_file,
+                        output_dir=viz_output_dir,
+                        ap_circle_radius=ap_circle_radius,
+                        show_ap_names=show_ap_names
+                    ) as visualizer:
+                        visualization_files = visualizer.visualize_all_floors(
+                            floors=floors,
+                            access_points=access_points
+                        )
+
+                    if visualization_files:
+                        logger.info(f"Generated {len(visualization_files)} floor plan visualizations:")
+                        for viz_file in visualization_files:
+                            logger.info(f"  - {viz_file.name}")
+                    else:
+                        logger.warning("No floor plan visualizations were generated")
+
+                except ImportError as e:
+                    logger.error(f"Floor plan visualization requires Pillow library: {e}")
+                    logger.error("Install with: pip install Pillow")
+                except Exception as e:
+                    logger.error(f"Error generating floor plan visualizations: {e}")
+                    import traceback
+                    logger.debug(traceback.format_exc())
+
             # Print summary with Rich
             if RICH_AVAILABLE and console:
                 console.print("\n[bold green]✓ Processing completed successfully![/bold green]\n")
-                print_summary_table(access_points, antennas, radios, floors)
-                print_export_summary(exported_files)
+                print_summary_table(access_points, antennas, radios, floors, notes, cable_notes, picture_notes)
+                # Combine exported files and visualization files for summary
+                all_files = exported_files + visualization_files
+                print_export_summary(all_files)
             else:
                 logger.info("=" * 60)
                 logger.info("Processing completed successfully!")
@@ -840,7 +962,10 @@ def main(args: list[str] | None = None) -> int:
                 enable_pricing=merged_config.get('enable_pricing'),
                 pricing_file=merged_config.get('pricing_file'),
                 discount=merged_config.get('discount', 0.0),
-                no_volume_discounts=merged_config.get('no_volume_discounts', False)
+                no_volume_discounts=merged_config.get('no_volume_discounts', False),
+                visualize_floor_plans=merged_config.get('visualize_floor_plans', False),
+                ap_circle_radius=merged_config.get('ap_circle_radius', 15),
+                show_ap_names=not merged_config.get('no_ap_names', False)
             )
 
             if exit_code != 0:

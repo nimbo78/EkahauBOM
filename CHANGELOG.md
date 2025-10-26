@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2025-10-26 (Map Notes, Cable Infrastructure & Floor Plan Visualization)
+
+### Added
+- **Floor Plan Visualization** (NEW!)
+  - FloorPlanVisualizer class for generating visual floor plans with AP placements
+  - Extract floor plan images from .esx project files
+  - Overlay AP positions with colored circles matching their Ekahau colors
+  - Customizable visualization options:
+    - AP circle radius and border width
+    - Optional AP name labels with auto-positioning
+    - Support for custom colors or default values
+  - CLI integration with `--visualize-floor-plans` flag
+  - Additional CLI options:
+    - `--ap-circle-radius` - Set marker size (default: 15px)
+    - `--no-ap-names` - Hide AP names on visualizations
+  - Visualizations saved to `output/visualizations/` directory
+  - Support for multiple floors with automatic processing
+  - PNG format output with floor plan as background
+  - Requires Pillow library (optional dependency)
+  - 12 comprehensive unit tests
+
+- **Cable Infrastructure Analytics** (Phase 8.5 - NEW!)
+  - CableMetrics dataclass with comprehensive cable statistics
+  - CableAnalytics class with calculation methods:
+    - calculate_cable_length() - Euclidean distance between coordinate points
+    - calculate_cable_metrics() - aggregated metrics (total/avg/min/max length)
+    - estimate_cable_cost() - cost estimation with material + installation
+    - generate_cable_bom() - BOM for cables, connectors, routes
+  - Cable length calculation from coordinate points (pixels to units)
+  - Support for scale factor conversion to meters
+  - Cables grouped by floor with length totals
+  - Cable BOM generation:
+    - Cat6A UTP cable (in meters, rounded up)
+    - RJ45 connectors (quantity = cables × 2)
+    - Cable routes/runs (logical count)
+  - Cost estimation with customizable prices:
+    - Cable material cost with overage factor (default 1.2x = 20%)
+    - Installation labor cost
+    - Total cost breakdown
+  - CLI integration with "Cable Infrastructure Analytics" section
+  - JSON export with complete cable_infrastructure section:
+    - metrics: total_cables, lengths (units and meters), avg/min/max, by floor
+    - bill_of_materials: complete BOM items array
+  - 18 new unit tests (tests/test_cable_analytics.py)
+
+- **Map Notes Support** (Phase 8.2 - NEW!)
+  - Note, NoteHistory, CableNote, PictureNote, Point, Location dataclasses
+  - NotesProcessor for processing all note types:
+    - process_notes() - text notes with history (created_at, created_by)
+    - process_cable_notes() - cable routing paths with coordinates
+    - process_picture_notes() - image markers on floor plans
+  - Parser functions: get_notes(), get_cable_notes(), get_picture_notes()
+  - Constants: ESX_NOTES_FILE, ESX_CABLE_NOTES_FILE, ESX_PICTURE_NOTES_FILE
+  - Integration into ProjectData with notes, cable_notes, picture_notes fields
+  - CLI integration with logging: "Found X text notes, Y cable notes, Z picture notes"
+  - Updated summary table to display notes counts
+  - JSON export with complete notes section:
+    - text_notes array with id, text, created_at, created_by, image_ids, status
+    - cable_notes array with floor info, path points, color, linked note IDs
+    - picture_notes array with location coordinates, linked note IDs
+    - notes.summary with totals
+  - 15 new unit tests (tests/test_notes_processor.py)
+
+### Fixed
+- **PDF Import Error** (Conditional Import)
+  - PDF exporter now imports only when 'pdf' format requested
+  - Graceful error message if WeasyPrint not installed
+  - Prevents import errors when PDF not needed
+  - Better UX for users without WeasyPrint
+
+### Changed
+- Updated CLI summary table to accept notes parameters
+- Updated print_summary_table() to display notes counts
+
 ## [2.5.0] - 2025-10-26 (Production Ready Release)
 
 ### Added

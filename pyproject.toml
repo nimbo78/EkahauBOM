@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ekahau-bom"
-version = "2.5.0"
+version = "2.6.0"
 description = "Bill of Materials (BOM) generator for Ekahau AI project files"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -54,9 +54,13 @@ pdf = [
 rich = [
     "rich>=13.0.0",
 ]
+visualization = [
+    "Pillow>=10.0.0",
+]
 all = [
     "WeasyPrint>=60.0",
     "rich>=13.0.0",
+    "Pillow>=10.0.0",
 ]
 dev = [
     "pytest>=7.0.0",
@@ -69,17 +73,17 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nimbo78/EkahauBOM"
-Repository = "https://github.com/nimbo78/EkahauBOM"
-Documentation = "https://github.com/nimbo78/EkahauBOM/tree/main/docs"
-"Bug Tracker" = "https://github.com/nimbo78/EkahauBOM/issues"
-Changelog = "https://github.com/nimbo78/EkahauBOM/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/htechno/EkahauBOM"
+Repository = "https://github.com/htechno/EkahauBOM"
+Documentation = "https://github.com/htechno/EkahauBOM/tree/main/docs"
+"Bug Tracker" = "https://github.com/htechno/EkahauBOM/issues"
+Changelog = "https://github.com/htechno/EkahauBOM/blob/main/CHANGELOG.md"
 
 [project.scripts]
 ekahau-bom = "ekahau_bom.cli:main"
 
 [tool.setuptools]
-packages = ["ekahau_bom", "ekahau_bom.processors", "ekahau_bom.exporters"]
+packages = ["ekahau_bom", "ekahau_bom.processors", "ekahau_bom.exporters", "ekahau_bom.visualizers"]
 
 [tool.setuptools.package-data]
 ekahau_bom = ["py.typed"]

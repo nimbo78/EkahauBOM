@@ -282,6 +282,11 @@ class Config:
         else:
             merged['recursive'] = self.get('batch.recursive', False)
 
+        # Visualization
+        merged['visualize_floor_plans'] = getattr(args, 'visualize_floor_plans', False)
+        merged['ap_circle_radius'] = getattr(args, 'ap_circle_radius', 15)
+        merged['no_ap_names'] = getattr(args, 'no_ap_names', False)
+
         return merged
 
     def _merge_list_arg(self, args: Any, arg_name: str, config_default: list) -> list[str] | None:

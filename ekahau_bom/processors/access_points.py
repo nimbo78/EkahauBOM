@@ -119,9 +119,14 @@ class AccessPointProcessor:
                 tags = self.tag_processor.process_ap_tags(ap_tags)
                 logger.debug(f"Processed {len(tags)} tags for AP {ap_data.get('name', 'Unknown')}")
 
-        # Extract mounting parameters
+        # Extract mounting and location parameters
         location = ap_data.get("location", {})
         mounting_height = location.get("z")  # Height above floor in meters
+
+        # Extract x, y coordinates from location.coord
+        coord = location.get("coord", {})
+        location_x = coord.get("x")
+        location_y = coord.get("y")
 
         # Extract antenna parameters from simulated radios
         # Use first radio's parameters if available (typically all radios of an AP have same mounting)
@@ -153,6 +158,9 @@ class AccessPointProcessor:
             tags=tags,
             mine=ap_data.get("mine", True),
             floor_id=floor_id,
+            name=ap_data.get("name"),
+            location_x=location_x,
+            location_y=location_y,
             mounting_height=mounting_height,
             azimuth=azimuth,
             tilt=tilt,

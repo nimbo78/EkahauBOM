@@ -7,7 +7,7 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Code Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](tests/)
-[![Tests](https://img.shields.io/badge/tests-295%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-338%20passing-brightgreen.svg)](tests/)
 
 **English** | [Русский](README.ru.md)
 
@@ -55,6 +55,65 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
   - HTML: Formatted metadata card
   - PDF: Professional cover page section
   - JSON: Structured metadata object
+
+### 📝 **Map Notes Support** _(New in v2.6.0)_
+- **Text Notes** - annotations on floor plans with creation history
+  - Extract note text, author, and timestamp
+  - Link to image attachments
+- **Cable Notes** - cable routing paths
+  - Coordinate points defining cable routes
+  - Floor associations and color coding
+  - Link to descriptive text notes
+- **Picture Notes** - image markers on floor plans
+  - Location coordinates (x, y) on floor plans
+  - Link to associated text descriptions
+- **JSON Export** includes complete notes section:
+  - Full text notes with metadata (author, timestamp)
+  - Cable paths with all coordinate points
+  - Picture markers with floor locations
+  - Notes summary (totals by type)
+
+### 🔌 **Cable Infrastructure Analytics** _(New in v2.6.0)_
+- **Cable length calculation** - Euclidean distance from coordinate points
+  - Total cable length in project units and meters (with scale factor)
+  - Average, minimum, and maximum cable lengths
+  - Cable routes grouped by floor
+- **Cable Bill of Materials (BOM)**
+  - Cat6A UTP cable quantities (meters, rounded up)
+  - RJ45 connector counts (cables × 2)
+  - Cable route/run counts
+  - Customizable cable and connector types
+- **Cost estimation**
+  - Material costs with overage factor (default 20%)
+  - Installation labor costs
+  - Breakdown: cable_material, installation, total
+  - Customizable pricing per meter
+- **JSON Export** includes cable_infrastructure section:
+  - Complete metrics (total_cables, lengths, by floor)
+  - Bill of materials with all items
+- **CLI Analytics** - "Cable Infrastructure Analytics" display
+
+### 🗺️ **Floor Plan Visualization** _(New in v2.6.0)_
+- **Visual floor plans** with AP placement overlay
+  - Extract floor plan background images from .esx files
+  - Overlay AP positions with colored circles
+  - Circles match Ekahau color assignments for each AP
+- **Customizable visualization**
+  - Adjustable AP circle radius (default: 15px)
+  - Optional AP name labels
+  - Black borders for better visibility
+  - Auto-positioning for text labels
+- **CLI Integration**
+  - `--visualize-floor-plans` flag to enable
+  - `--ap-circle-radius N` to customize marker size
+  - `--no-ap-names` to hide AP labels
+- **Multi-floor support**
+  - Automatically processes all floors with APs
+  - Saved to `output/visualizations/` directory
+  - PNG format with high-quality output
+- **Requirements**
+  - Requires Pillow library: `pip install Pillow`
+  - Graceful degradation if not installed
 
 ### 🏷️ **Tag Support & Filtering**
 - Full support for **Ekahau v10.2+ tags**
