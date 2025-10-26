@@ -11,6 +11,10 @@ env/
 *.swo
 *~
 
+# Claude Code session notes
+CLAUDE.md
+.claude/
+
 # Python
 __pycache__/
 *.py[cod]
