@@ -21,6 +21,7 @@ from .constants import (
     ESX_CABLE_NOTES_FILE,
     ESX_PICTURE_NOTES_FILE,
     ESX_ACCESS_POINT_MODELS_FILE,
+    ESX_NETWORK_CAPACITY_SETTINGS_FILE,
 )
 
 logger = logging.getLogger(__name__)
@@ -236,6 +237,21 @@ class EkahauParser:
         except KeyError:
             logger.debug(f"{ESX_PICTURE_NOTES_FILE} not found in project")
             return {"pictureNotes": []}
+
+    def get_network_capacity_settings(self) -> dict[str, Any]:
+        """Get network capacity settings from the project.
+
+        Network capacity settings contain SSID configuration, data rates,
+        and other RF settings per frequency band.
+
+        Returns:
+            Dictionary with network capacity settings. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_NETWORK_CAPACITY_SETTINGS_FILE)
+        except KeyError:
+            logger.debug(f"{ESX_NETWORK_CAPACITY_SETTINGS_FILE} not found in project")
+            return {"networkCapacitySettings": []}
 
     def list_files(self) -> list[str]:
         """List all files in the .esx archive.

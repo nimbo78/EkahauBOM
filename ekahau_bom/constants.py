@@ -38,6 +38,7 @@ ESX_NOTES_FILE = "notes.json"
 ESX_CABLE_NOTES_FILE = "cableNotes.json"
 ESX_PICTURE_NOTES_FILE = "pictureNotes.json"
 ESX_ACCESS_POINT_MODELS_FILE = "accessPointModels.json"
+ESX_NETWORK_CAPACITY_SETTINGS_FILE = "networkCapacitySettings.json"
 
 # Export settings
 CSV_DIALECT = "excel"

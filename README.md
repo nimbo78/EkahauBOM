@@ -93,11 +93,28 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
   - Bill of materials with all items
 - **CLI Analytics** - "Cable Infrastructure Analytics" display
 
-### 🗺️ **Floor Plan Visualization** _(New in v2.6.0)_
+### 🗺️ **Floor Plan Visualization** _(New in v2.6.0, Enhanced in v2.7.0/2.8.0)_
 - **Visual floor plans** with AP placement overlay
   - Extract floor plan background images from .esx files
-  - Overlay AP positions with colored circles
-  - Circles match Ekahau color assignments for each AP
+  - **Different shapes for mounting types** _(v2.7.0)_:
+    - 🔵 Ceiling-mounted APs: circles (traditional)
+    - ▭ Wall-mounted APs: rectangles oriented by azimuth direction
+    - ▪ Floor-mounted APs: squares
+  - AP markers match Ekahau color assignments
+  - **Automatic color legend** with AP count per color
+- **Azimuth Direction Arrows** _(New in v2.8.0!)_
+  - Optional arrows showing antenna direction
+  - Smart color selection for optimal contrast
+  - Particularly useful for wall-mounted and directional APs
+  - Enable with `--show-azimuth-arrows` flag
+- **True transparency support** _(v2.7.0)_
+  - APs without assigned colors: pale blue with 50% opacity
+  - Floor plan details show through transparent markers
+  - Alpha compositing for proper RGBA rendering
+- **Enhanced color support** _(v2.7.0)_
+  - Standard color names (Red, Blue, Green, Yellow, Orange, etc.)
+  - Automatic typo correction for duplicate characters
+  - Case-insensitive color matching
 - **Customizable visualization**
   - Adjustable AP circle radius (default: 15px)
   - Optional AP name labels
@@ -107,6 +124,8 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
   - `--visualize-floor-plans` flag to enable
   - `--ap-circle-radius N` to customize marker size
   - `--no-ap-names` to hide AP labels
+  - `--show-azimuth-arrows` to display directional arrows _(New!)_
+  - `--ap-opacity 0.75` to set marker transparency (0.0-1.0, default: 1.0) _(New!)_
 - **Multi-floor support**
   - Automatically processes all floors with APs
   - Saved to `output/visualizations/` directory
@@ -114,6 +133,24 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 - **Requirements**
   - Requires Pillow library: `pip install Pillow`
   - Graceful degradation if not installed
+
+### 📶 **Network Settings & SSID Configuration** _(New in v2.7.0)_
+- **Network capacity settings** extraction from Ekahau projects
+  - SSID count per frequency band (2.4 GHz, 5 GHz, 6 GHz)
+  - Maximum associated clients per band
+  - RTS/CTS configuration status
+- **802.11 Data Rate Configuration**
+  - Data rate settings (R1, R2, R5.5, R6, R9, R11, R12, R18, R24, R36, R48, R54)
+  - Rate states: Mandatory, Supported, Disabled
+  - Summary by frequency band
+- **CLI Analytics** - "Network Configuration" section
+  - SSID configuration display per band
+  - Max clients per band
+  - Channel distribution (top 10 most used channels)
+- **JSON Export** includes network_settings section:
+  - SSID configuration summary
+  - Data rates summary per band
+  - Detailed band configuration with all data rates
 
 ### 🏷️ **Tag Support & Filtering**
 - Full support for **Ekahau v10.2+ tags**
@@ -243,6 +280,15 @@ ekahau-bom project.esx --log-file processing.log
 
 # Use custom colors configuration
 ekahau-bom project.esx --colors-config my_colors.yaml
+
+# Generate floor plan visualizations
+ekahau-bom project.esx --visualize-floor-plans
+
+# Visualize with azimuth arrows for directional APs
+ekahau-bom project.esx --visualize-floor-plans --show-azimuth-arrows
+
+# Visualize with 75% transparent AP markers for better floor plan visibility
+ekahau-bom project.esx --visualize-floor-plans --ap-opacity 0.75 --show-azimuth-arrows
 ```
 
 ---

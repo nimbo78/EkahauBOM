@@ -286,6 +286,8 @@ class Config:
         merged['visualize_floor_plans'] = getattr(args, 'visualize_floor_plans', False)
         merged['ap_circle_radius'] = getattr(args, 'ap_circle_radius', 15)
         merged['no_ap_names'] = getattr(args, 'no_ap_names', False)
+        merged['show_azimuth_arrows'] = getattr(args, 'show_azimuth_arrows', False)
+        merged['ap_opacity'] = getattr(args, 'ap_opacity', 1.0)
 
         return merged
 

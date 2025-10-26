@@ -75,6 +75,12 @@ class RadioProcessor:
         # Determine Wi-Fi standard
         standard = self._determine_wifi_standard(radio_data, channel_width)
 
+        # Extract antenna mounting and orientation data
+        antenna_mounting = radio_data.get("antennaMounting")
+        antenna_direction = radio_data.get("antennaDirection")
+        antenna_tilt = radio_data.get("antennaTilt")
+        antenna_height = radio_data.get("antennaHeight")
+
         return Radio(
             id=radio_id,
             access_point_id=access_point_id,
@@ -83,7 +89,11 @@ class RadioProcessor:
             channel_width=channel_width,
             tx_power=tx_power,
             antenna_type_id=antenna_type_id,
-            standard=standard
+            standard=standard,
+            antenna_mounting=antenna_mounting,
+            antenna_direction=antenna_direction,
+            antenna_tilt=antenna_tilt,
+            antenna_height=antenna_height
         )
 
     def _extract_value(self, value: Any) -> int | float | None:

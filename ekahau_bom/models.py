@@ -197,6 +197,10 @@ class Radio:
         tx_power: Transmit power in dBm
         antenna_type_id: ID of the antenna type used
         standard: Wi-Fi standard (802.11a/b/g/n/ac/ax/be)
+        antenna_mounting: Mounting type (CEILING, WALL, FLOOR)
+        antenna_direction: Antenna azimuth/direction in degrees (0-360)
+        antenna_tilt: Antenna tilt in degrees
+        antenna_height: Antenna height in meters
     """
     id: str
     access_point_id: str
@@ -206,6 +210,10 @@ class Radio:
     tx_power: Optional[float] = None
     antenna_type_id: Optional[str] = None
     standard: Optional[str] = None
+    antenna_mounting: Optional[str] = None
+    antenna_direction: Optional[float] = None
+    antenna_tilt: Optional[float] = None
+    antenna_height: Optional[float] = None
 
     def __hash__(self):
         """Make Radio hashable."""
@@ -217,6 +225,7 @@ class AccessPoint:
     """Represents an access point in Ekahau project.
 
     Attributes:
+        id: Unique identifier of the access point
         vendor: Manufacturer of the access point
         model: Model name/number of the access point
         color: Color code or name for visual identification
@@ -233,10 +242,11 @@ class AccessPoint:
         antenna_height: Antenna height above ground in meters
         enabled: Whether the AP is enabled in the design
     """
-    vendor: str
-    model: str
-    color: Optional[str]
-    floor_name: str
+    id: Optional[str] = None
+    vendor: str = ""
+    model: str = ""
+    color: Optional[str] = None
+    floor_name: str = ""
     tags: list[Tag] = field(default_factory=list)
     mine: bool = True
     floor_id: Optional[str] = None
@@ -306,6 +316,39 @@ class Antenna:
 
 
 @dataclass
+class DataRate:
+    """Represents a data rate configuration (802.11 a/b/g rates).
+
+    Attributes:
+        rate: Rate identifier (e.g., "R1", "R2", "R6", "R54")
+        state: Rate state ("MANDATORY", "DISABLED", "SUPPORTED")
+    """
+    rate: str
+    state: str
+
+
+@dataclass
+class NetworkCapacitySettings:
+    """Represents network capacity settings for a frequency band.
+
+    Contains SSID configuration, client limits, and data rate settings
+    for either 2.4 GHz or 5 GHz band.
+
+    Attributes:
+        frequency_band: Frequency band ("2.4GHz" or "5GHz")
+        number_of_ssids: Number of SSIDs configured
+        rts_cts_enabled: Whether RTS/CTS is enabled
+        max_associated_clients: Maximum number of associated clients
+        data_rates: List of data rate configurations
+    """
+    frequency_band: str
+    number_of_ssids: int = 1
+    rts_cts_enabled: bool = False
+    max_associated_clients: int = 200
+    data_rates: list[DataRate] = field(default_factory=list)
+
+
+@dataclass
 class ProjectData:
     """Container for all parsed project data.
 
@@ -319,6 +362,7 @@ class ProjectData:
         notes: List of text notes in the project
         cable_notes: List of cable route annotations
         picture_notes: List of picture notes on floor plans
+        network_settings: List of network capacity settings (SSID, rates, etc.)
     """
     access_points: list[AccessPoint]
     antennas: list[Antenna]
@@ -329,3 +373,4 @@ class ProjectData:
     notes: list[Note] = field(default_factory=list)
     cable_notes: list[CableNote] = field(default_factory=list)
     picture_notes: list[PictureNote] = field(default_factory=list)
+    network_settings: list[NetworkCapacitySettings] = field(default_factory=list)

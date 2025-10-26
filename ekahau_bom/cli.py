@@ -235,6 +235,19 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help='Hide AP names on floor plan visualizations'
     )
 
+    viz_group.add_argument(
+        '--show-azimuth-arrows',
+        action='store_true',
+        help='Show azimuth direction arrows on AP markers (useful for wall-mounted and directional APs)'
+    )
+
+    viz_group.add_argument(
+        '--ap-opacity',
+        type=float,
+        default=1.0,
+        help='Opacity for AP markers (0.0-1.0, default: 1.0 = 100%%, 0.75 = 75%% for better floor plan visibility)'
+    )
+
     return parser
 
 
@@ -406,7 +419,9 @@ def process_project(
     no_volume_discounts: bool = False,
     visualize_floor_plans: bool = False,
     ap_circle_radius: int = 15,
-    show_ap_names: bool = True
+    show_ap_names: bool = True,
+    show_azimuth_arrows: bool = False,
+    ap_opacity: float = 1.0
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -432,6 +447,8 @@ def process_project(
         visualize_floor_plans: Generate floor plan visualizations with APs
         ap_circle_radius: Radius of AP marker circles in pixels
         show_ap_names: Whether to show AP names on visualizations
+        show_azimuth_arrows: Whether to show azimuth direction arrows on AP markers
+        ap_opacity: Opacity for AP markers (0.0-1.0, 1.0 = 100%)
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -550,6 +567,11 @@ def process_project(
             picture_notes = notes_processor.process_picture_notes(picture_notes_data, floors)
             logger.info(f"Found {len(notes)} text notes, {len(cable_notes)} cable notes, {len(picture_notes)} picture notes")
 
+            # Process network settings
+            from .processors.network_settings import NetworkSettingsProcessor
+            network_settings_data = parser.get_network_capacity_settings()
+            network_settings = NetworkSettingsProcessor.process_network_settings(network_settings_data)
+
             # Create project data container
             project_data = ProjectData(
                 access_points=access_points,
@@ -560,7 +582,8 @@ def process_project(
                 metadata=project_metadata,
                 notes=notes,
                 cable_notes=cable_notes,
-                picture_notes=picture_notes
+                picture_notes=picture_notes,
+                network_settings=network_settings
             )
 
             # Display advanced analytics
@@ -619,11 +642,33 @@ def process_project(
                     for width, count in sorted(radio_metrics.channel_width_distribution.items(), key=lambda x: x[0] if x[0] else 0):
                         logger.info(f"  {width} MHz: {count} radios")
 
+                # Channel distribution
+                if radio_metrics.channel_distribution:
+                    logger.info("Channel Distribution:")
+                    # Show top 10 most used channels
+                    top_channels = sorted(radio_metrics.channel_distribution.items(), key=lambda x: x[1], reverse=True)[:10]
+                    for channel, count in top_channels:
+                        logger.info(f"  Channel {channel}: {count} radios")
+
                 # TX Power
                 if radio_metrics.avg_tx_power:
                     logger.info(f"TX Power: avg={radio_metrics.avg_tx_power:.1f} dBm, " +
                                f"min={radio_metrics.min_tx_power:.1f} dBm, " +
                                f"max={radio_metrics.max_tx_power:.1f} dBm")
+
+            # Network settings (SSID, rates, etc.)
+            if network_settings:
+                logger.info("")  # Empty line for readability
+                logger.info("Network Configuration:")
+
+                # SSID summary
+                ssid_summary = NetworkSettingsProcessor.get_ssid_summary(network_settings)
+                if ssid_summary:
+                    logger.info("  SSID Configuration:")
+                    if ssid_summary.get("ssids_2_4ghz"):
+                        logger.info(f"    2.4 GHz: {ssid_summary['ssids_2_4ghz']} SSID(s), max {ssid_summary['max_clients_2_4ghz']} clients")
+                    if ssid_summary.get("ssids_5ghz"):
+                        logger.info(f"    5 GHz: {ssid_summary['ssids_5ghz']} SSID(s), max {ssid_summary['max_clients_5ghz']} clients")
 
             # Cable infrastructure analytics
             if cable_notes:
@@ -748,11 +793,14 @@ def process_project(
                         esx_path=esx_file,
                         output_dir=viz_output_dir,
                         ap_circle_radius=ap_circle_radius,
-                        show_ap_names=show_ap_names
+                        show_ap_names=show_ap_names,
+                        show_azimuth_arrows=show_azimuth_arrows,
+                        ap_opacity=ap_opacity
                     ) as visualizer:
                         visualization_files = visualizer.visualize_all_floors(
                             floors=floors,
-                            access_points=access_points
+                            access_points=access_points,
+                            radios=radios
                         )
 
                     if visualization_files:
@@ -965,7 +1013,9 @@ def main(args: list[str] | None = None) -> int:
                 no_volume_discounts=merged_config.get('no_volume_discounts', False),
                 visualize_floor_plans=merged_config.get('visualize_floor_plans', False),
                 ap_circle_radius=merged_config.get('ap_circle_radius', 15),
-                show_ap_names=not merged_config.get('no_ap_names', False)
+                show_ap_names=not merged_config.get('no_ap_names', False),
+                show_azimuth_arrows=merged_config.get('show_azimuth_arrows', False),
+                ap_opacity=merged_config.get('ap_opacity', 1.0)
             )
 
             if exit_code != 0:

@@ -53,6 +53,7 @@ class CSVExporter(BaseExporter):
         # Export detailed access points (individual with mounting data)
         detailed_ap_file = self._export_detailed_access_points(
             project_data.access_points,
+            project_data.radios,
             project_data.project_name
         )
         files.append(detailed_ap_file)
@@ -137,6 +138,7 @@ class CSVExporter(BaseExporter):
     def _export_detailed_access_points(
         self,
         access_points: list[AccessPoint],
+        radios: list,
         project_name: str
     ) -> Path:
         """Export detailed access points with installation parameters.
@@ -146,6 +148,7 @@ class CSVExporter(BaseExporter):
 
         Args:
             access_points: List of access points to export
+            radios: List of radios (to get antenna_height)
             project_name: Name of the project
 
         Returns:
@@ -154,6 +157,13 @@ class CSVExporter(BaseExporter):
         output_file = self._get_output_filename(project_name, "access_points_detailed.csv")
 
         logger.info(f"Exporting {len(access_points)} access points with detailed parameters")
+
+        # Create AP ID -> Radio mapping for quick lookup of antenna height
+        ap_radio_map = {}
+        for radio in radios:
+            if radio.access_point_id not in ap_radio_map:
+                ap_radio_map[radio.access_point_id] = []
+            ap_radio_map[radio.access_point_id].append(radio)
 
         with open(output_file, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
@@ -182,7 +192,14 @@ class CSVExporter(BaseExporter):
                 # Format numeric values with appropriate precision
                 location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else ""
                 location_y = f"{ap.location_y:.2f}" if ap.location_y is not None else ""
-                mounting_height = f"{ap.mounting_height:.2f}" if ap.mounting_height is not None else ""
+
+                # Get mounting height from first radio's antenna_height (if available)
+                mounting_height_value = ap.mounting_height
+                if mounting_height_value is None and ap.id in ap_radio_map:
+                    first_radio = ap_radio_map[ap.id][0]
+                    mounting_height_value = first_radio.antenna_height
+
+                mounting_height = f"{mounting_height_value:.2f}" if mounting_height_value is not None else ""
                 azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else ""
                 tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else ""
 

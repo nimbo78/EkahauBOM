@@ -12,6 +12,7 @@ from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna, Tag, Floor
 from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
 from ..cable_analytics import CableAnalytics
+from ..processors.network_settings import NetworkSettingsProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -315,6 +316,26 @@ class JSONExporter(BaseExporter):
                     },
                     "bill_of_materials": cable_bom if cable_bom else []
                 } if cable_metrics else None
+            },
+            "network_settings": {
+                "ssid_configuration": NetworkSettingsProcessor.get_ssid_summary(project_data.network_settings) if project_data.network_settings else {},
+                "data_rates": NetworkSettingsProcessor.get_data_rate_summary(project_data.network_settings) if project_data.network_settings else {},
+                "bands": [
+                    {
+                        "frequency_band": setting.frequency_band,
+                        "number_of_ssids": setting.number_of_ssids,
+                        "rts_cts_enabled": setting.rts_cts_enabled,
+                        "max_associated_clients": setting.max_associated_clients,
+                        "data_rates": [
+                            {
+                                "rate": rate.rate,
+                                "state": rate.state
+                            }
+                            for rate in setting.data_rates
+                        ]
+                    }
+                    for setting in project_data.network_settings
+                ] if project_data.network_settings else []
             }
         }
 

@@ -151,6 +151,7 @@ class AccessPointProcessor:
             antenna_height = first_antenna.get("antennaHeight")
 
         return AccessPoint(
+            id=ap_data.get("id"),
             vendor=vendor,
             model=model,
             color=color,
