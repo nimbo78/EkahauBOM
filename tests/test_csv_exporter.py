@@ -297,7 +297,7 @@ class TestCSVExporter:
     def test_export_detailed_access_points_structure(self, output_dir, sample_access_points):
         """Test detailed access points file has correct structure."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_detailed_access_points(sample_access_points, "Test")
+        output_file = exporter._export_detailed_access_points(sample_access_points, [], "Test")
 
         with open(output_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
@@ -334,7 +334,7 @@ class TestCSVExporter:
         ]
 
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_detailed_access_points(aps, "Test")
+        output_file = exporter._export_detailed_access_points(aps, [], "Test")
 
         with open(output_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
@@ -369,7 +369,7 @@ class TestCSVExporter:
         ]
 
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_detailed_access_points(aps, "Test")
+        output_file = exporter._export_detailed_access_points(aps, [], "Test")
 
         with open(output_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)
@@ -407,7 +407,7 @@ class TestCSVExporter:
         ]
 
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_detailed_access_points(aps, "Test")
+        output_file = exporter._export_detailed_access_points(aps, [], "Test")
 
         with open(output_file, 'r', encoding='utf-8') as f:
             reader = csv.reader(f)

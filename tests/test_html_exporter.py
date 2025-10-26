@@ -13,13 +13,13 @@ from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor
 def sample_project_data():
     """Create sample project data for testing."""
     aps = [
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
+        AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
                    tags=[Tag("Location", "Building A", "tag1")]),
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
+        AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
                    tags=[Tag("Location", "Building A", "tag1")]),
-        AccessPoint("Cisco", "AP-635", "Red", "Floor 2", tags=[]),
-        AccessPoint("Aruba", "AP-515", "Yellow", "Floor 1", tags=[]),
-        AccessPoint("Aruba", "AP-635", "Blue", "Floor 2",
+        AccessPoint(id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2", tags=[]),
+        AccessPoint(id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]),
+        AccessPoint(id="ap5", vendor="Aruba", model="AP-635", color="Blue", floor_name="Floor 2",
                    tags=[Tag("Location", "Building B", "tag2")]),
     ]
     antennas = [
@@ -215,7 +215,7 @@ class TestHTMLExporter:
     def test_html_special_characters_escaped(self, tmp_path):
         """Test that special characters are properly escaped."""
         aps = [
-            AccessPoint("Test&Vendor", "Model<123>", None, "Floor \"1\"",
+            AccessPoint(id="ap1", vendor="Test&Vendor", model="Model<123>", color=None, floor_name="Floor \"1\"",
                        tags=[Tag("Key&1", "Value<2>", "tag1")]),
         ]
         project_data = ProjectData(

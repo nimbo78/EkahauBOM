@@ -18,6 +18,10 @@ from ekahau_bom.constants import (
     ESX_MEASURED_AREAS_FILE,
     ESX_NOTES_FILE,
     ESX_ACCESS_POINT_MODELS_FILE,
+    ESX_PROJECT_FILE,
+    ESX_CABLE_NOTES_FILE,
+    ESX_PICTURE_NOTES_FILE,
+    ESX_NETWORK_CAPACITY_SETTINGS_FILE,
 )
 
 
@@ -341,6 +345,55 @@ class TestEkahauParserGetMethods:
             assert data == {"accessPointModels": []}
 
 
+    def test_get_project_metadata_missing_file(self, tmp_path):
+        """Test get_project_metadata when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without project.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            metadata = parser.get_project_metadata()
+            assert metadata == {}
+
+    def test_get_cable_notes_missing_file(self, tmp_path):
+        """Test get_cable_notes when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without cableNotes.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            cable_notes = parser.get_cable_notes()
+            assert cable_notes == {'cableNotes': []}
+
+    def test_get_picture_notes_missing_file(self, tmp_path):
+        """Test get_picture_notes when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without pictureNotes.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            picture_notes = parser.get_picture_notes()
+            assert picture_notes == {'pictureNotes': []}
+
+    def test_get_network_capacity_settings_missing_file(self, tmp_path):
+        """Test get_network_capacity_settings when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without networkCapacitySettings.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            settings = parser.get_network_capacity_settings()
+            assert settings == {'networkCapacitySettings': []}
+
+
 class TestEkahauParserListFiles:
     """Test file listing functionality."""
 
@@ -443,3 +496,51 @@ class TestEkahauParserIntegration:
         with EkahauParser(esx_path) as parser:
             aps = parser.get_access_points()
             assert aps["accessPoints"] == []
+
+    def test_get_project_metadata_missing_file(self, tmp_path):
+        """Test get_project_metadata when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without project.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            metadata = parser.get_project_metadata()
+            assert metadata == {}
+
+    def test_get_cable_notes_missing_file(self, tmp_path):
+        """Test get_cable_notes when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without cableNotes.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            cable_notes = parser.get_cable_notes()
+            assert cable_notes == {'cableNotes': []}
+
+    def test_get_picture_notes_missing_file(self, tmp_path):
+        """Test get_picture_notes when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without pictureNotes.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            picture_notes = parser.get_picture_notes()
+            assert picture_notes == {'pictureNotes': []}
+
+    def test_get_network_capacity_settings_missing_file(self, tmp_path):
+        """Test get_network_capacity_settings when file is missing."""
+        esx_path = tmp_path / 'minimal.esx'
+        
+        # Create minimal archive without networkCapacitySettings.json
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+        
+        with EkahauParser(esx_path) as parser:
+            settings = parser.get_network_capacity_settings()
+            assert settings == {'networkCapacitySettings': []}

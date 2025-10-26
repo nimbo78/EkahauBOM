@@ -120,9 +120,9 @@ class TestCostCalculator:
     def test_calculate_access_points_cost(self, pricing_db):
         """Test calculating cost for access points."""
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1"),
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1"),
-            AccessPoint("Cisco", "AP-635", "Red", "Floor 2"),
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),
+            AccessPoint(id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2"),
         ]
 
         calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=False)
@@ -136,7 +136,7 @@ class TestCostCalculator:
     def test_calculate_with_volume_discount(self, pricing_db):
         """Test calculating with volume discount."""
         # Create 25 APs to trigger 10% discount
-        aps = [AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1") for _ in range(25)]
+        aps = [AccessPoint(id=f"ap{i}", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1") for i in range(25)]
 
         calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=True)
         summary = calculator.calculate_access_points_cost(aps)
@@ -147,7 +147,7 @@ class TestCostCalculator:
 
     def test_calculate_with_custom_discount(self, pricing_db):
         """Test calculating with custom discount."""
-        aps = [AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1") for _ in range(5)]
+        aps = [AccessPoint(id=f"ap{i}", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1") for i in range(5)]
 
         calculator = CostCalculator(pricing_db, custom_discount=15, apply_volume_discounts=False)
         summary = calculator.calculate_access_points_cost(aps)
@@ -174,8 +174,8 @@ class TestCostCalculator:
     def test_calculate_total_cost(self, pricing_db):
         """Test calculating total project cost."""
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1"),
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1"),
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),
         ]
         antennas = [
             Antenna("ANT-20", "ant1"),
@@ -191,7 +191,7 @@ class TestCostCalculator:
 
     def test_unknown_equipment_zero_price(self, pricing_db):
         """Test that unknown equipment gets $0 price."""
-        aps = [AccessPoint("Unknown", "Model123", "Yellow", "Floor 1")]
+        aps = [AccessPoint(id="ap1", vendor="Unknown", model="Model123", color="Yellow", floor_name="Floor 1")]
 
         calculator = CostCalculator(pricing_db)
         summary = calculator.calculate_access_points_cost(aps)
@@ -203,8 +203,8 @@ class TestCostCalculator:
     def test_coverage_percentage(self, pricing_db):
         """Test coverage percentage calculation."""
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1"),  # Known
-            AccessPoint("Unknown", "Model", "Yellow", "Floor 1"),  # Unknown
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),  # Known
+            AccessPoint(id="ap2", vendor="Unknown", model="Model", color="Yellow", floor_name="Floor 1"),  # Unknown
         ]
 
         calculator = CostCalculator(pricing_db)

@@ -17,15 +17,20 @@ from ekahau_bom.models import AccessPoint, Tag
 def sample_aps_with_mounting():
     """Create sample APs with mounting data."""
     return [
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", [], True, "f1",
+        AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
+                   tags=[], mine=True, floor_id="f1",
                    mounting_height=3.0, azimuth=45.0, tilt=10.0),
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", [], True, "f1",
+        AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
+                   tags=[], mine=True, floor_id="f1",
                    mounting_height=3.2, azimuth=90.0, tilt=15.0),
-        AccessPoint("Cisco", "AP-635", "Red", "Floor 2", [], True, "f2",
+        AccessPoint(id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2",
+                   tags=[], mine=True, floor_id="f2",
                    mounting_height=2.8, azimuth=180.0, tilt=5.0),
-        AccessPoint("Aruba", "AP-515", "Yellow", "Floor 1", [], True, "f1",
+        AccessPoint(id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1",
+                   tags=[], mine=True, floor_id="f1",
                    mounting_height=None, azimuth=None, tilt=None),
-        AccessPoint("Aruba", "AP-635", "Blue", "Floor 2", [], True, "f2",
+        AccessPoint(id="ap5", vendor="Aruba", model="AP-635", color="Blue", floor_name="Floor 2",
+                   tags=[], mine=True, floor_id="f2",
                    mounting_height=4.5, azimuth=270.0, tilt=20.0),
     ]
 
@@ -176,7 +181,8 @@ class TestMountingAnalytics:
     def test_calculate_mounting_metrics_no_data(self):
         """Test mounting metrics with no data."""
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", [], True, "f1")
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1")
         ]
         metrics = MountingAnalytics.calculate_mounting_metrics(aps)
 
@@ -202,12 +208,18 @@ class TestMountingAnalytics:
     def test_group_by_height_range_edge_cases(self):
         """Test height range grouping edge cases."""
         aps = [
-            AccessPoint("Cisco", "AP-1", None, "Floor 1", [], True, "f1", mounting_height=2.4),
-            AccessPoint("Cisco", "AP-2", None, "Floor 1", [], True, "f1", mounting_height=2.5),
-            AccessPoint("Cisco", "AP-3", None, "Floor 1", [], True, "f1", mounting_height=3.5),
-            AccessPoint("Cisco", "AP-4", None, "Floor 1", [], True, "f1", mounting_height=4.5),
-            AccessPoint("Cisco", "AP-5", None, "Floor 1", [], True, "f1", mounting_height=6.0),
-            AccessPoint("Cisco", "AP-6", None, "Floor 1", [], True, "f1", mounting_height=6.1),
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-1", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=2.4),
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-2", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=2.5),
+            AccessPoint(id="ap3", vendor="Cisco", model="AP-3", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=3.5),
+            AccessPoint(id="ap4", vendor="Cisco", model="AP-4", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=4.5),
+            AccessPoint(id="ap5", vendor="Cisco", model="AP-5", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=6.0),
+            AccessPoint(id="ap6", vendor="Cisco", model="AP-6", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=6.1),
         ]
 
         ranges = MountingAnalytics.group_by_height_range(aps)
@@ -233,9 +245,12 @@ class TestMountingAnalytics:
     def test_get_installation_summary_with_adjustments(self):
         """Test installation summary with APs requiring adjustment."""
         aps = [
-            AccessPoint("Cisco", "AP-1", None, "Floor 1", [], True, "f1", mounting_height=2.0),
-            AccessPoint("Cisco", "AP-2", None, "Floor 1", [], True, "f1", mounting_height=7.0),
-            AccessPoint("Cisco", "AP-3", None, "Floor 1", [], True, "f1", mounting_height=3.0),
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-1", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=2.0),
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-2", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=7.0),
+            AccessPoint(id="ap3", vendor="Cisco", model="AP-3", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=3.0),
         ]
 
         summary = MountingAnalytics.get_installation_summary(aps)
@@ -246,9 +261,12 @@ class TestMountingAnalytics:
     def test_height_variance_calculation(self):
         """Test variance calculation for heights."""
         aps = [
-            AccessPoint("Cisco", "AP-1", None, "Floor 1", [], True, "f1", mounting_height=3.0),
-            AccessPoint("Cisco", "AP-2", None, "Floor 1", [], True, "f1", mounting_height=3.0),
-            AccessPoint("Cisco", "AP-3", None, "Floor 1", [], True, "f1", mounting_height=3.0),
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-1", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=3.0),
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-2", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=3.0),
+            AccessPoint(id="ap3", vendor="Cisco", model="AP-3", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1", mounting_height=3.0),
         ]
 
         metrics = MountingAnalytics.calculate_mounting_metrics(aps)
@@ -259,9 +277,11 @@ class TestMountingAnalytics:
     def test_mixed_data_availability(self):
         """Test with mixed availability of mounting data."""
         aps = [
-            AccessPoint("Cisco", "AP-1", None, "Floor 1", [], True, "f1",
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-1", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1",
                        mounting_height=3.0, azimuth=None, tilt=10.0),
-            AccessPoint("Cisco", "AP-2", None, "Floor 1", [], True, "f1",
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-2", color=None,
+                       floor_name="Floor 1", tags=[], mine=True, floor_id="f1",
                        mounting_height=None, azimuth=45.0, tilt=None),
         ]
 

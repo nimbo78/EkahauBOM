@@ -135,9 +135,9 @@ class TestGroupingAnalytics:
     def test_group_by_color_with_none(self):
         """Test grouping by color when some APs have no color."""
         aps = [
-            AccessPoint("Cisco", "AP-515", None, "Floor 1"),
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1"),
-            AccessPoint("Aruba", "AP-635", None, "Floor 2"),
+            AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color=None, floor_name="Floor 1"),
+            AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),
+            AccessPoint(id="ap3", vendor="Aruba", model="AP-635", color=None, floor_name="Floor 2"),
         ]
         result = GroupingAnalytics.group_by_color(aps)
         assert result["No Color"] == 2  # None colors mapped to "No Color"

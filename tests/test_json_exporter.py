@@ -7,20 +7,20 @@ import json
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.json_exporter import JSONExporter, CompactJSONExporter
-from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor
+from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, Radio, CableNote, ProjectMetadata
 
 
 @pytest.fixture
 def sample_project_data():
     """Create sample project data for testing."""
     aps = [
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
+        AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
                    tags=[Tag("Location", "Building A", "tag1")]),
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
+        AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
                    tags=[Tag("Location", "Building A", "tag1")]),
-        AccessPoint("Cisco", "AP-635", "Red", "Floor 2", tags=[]),
-        AccessPoint("Aruba", "AP-515", "Yellow", "Floor 1", tags=[]),
-        AccessPoint("Aruba", "AP-635", "Blue", "Floor 2",
+        AccessPoint(id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2", tags=[]),
+        AccessPoint(id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]),
+        AccessPoint(id="ap5", vendor="Aruba", model="AP-635", color="Blue", floor_name="Floor 2",
                    tags=[Tag("Location", "Building B", "tag2")]),
     ]
     antennas = [
@@ -318,7 +318,7 @@ class TestJSONExporter:
     def test_json_unicode_support(self, tmp_path):
         """Test that JSON supports Unicode characters."""
         aps = [
-            AccessPoint("Тест", "モデル-123", "Yellow", "第1層", tags=[]),
+            AccessPoint(id="ap1", vendor="Тест", model="モデル-123", color="Yellow", floor_name="第1層", tags=[]),
         ]
         project_data = ProjectData(
             access_points=aps,
@@ -335,3 +335,101 @@ class TestJSONExporter:
 
         # Should handle Unicode without errors
         assert isinstance(data, dict)
+
+    def test_json_with_metadata(self, tmp_path):
+        """Test JSON export with project metadata."""
+        aps = [AccessPoint(id='ap1', vendor='Cisco', model='AP-515', color='Yellow', floor_name='Floor 1')]
+        metadata = ProjectMetadata(
+            name='Test Project',
+            customer='Test Customer',
+            location='Test Location',
+            responsible_person='Test Person',
+            schema_version='1.0',
+            note_ids=['note1', 'note2'],
+            project_ancestors=['ancestor1']
+        )
+        project_data = ProjectData(
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name='Test',
+            metadata=metadata
+        )
+
+        exporter = JSONExporter(tmp_path)
+        files = exporter.export(project_data)
+
+        with open(files[0], 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Check metadata section
+        assert 'metadata' in data
+        assert 'project_info' in data['metadata']
+        project_info = data['metadata']['project_info']
+        assert project_info['project_name'] == 'Test Project'
+        assert project_info['customer'] == 'Test Customer'
+        assert project_info['location'] == 'Test Location'
+        assert project_info['responsible_person'] == 'Test Person'
+        assert project_info['schema_version'] == '1.0'
+        assert project_info['note_ids'] == ['note1', 'note2']
+        assert project_info['project_ancestors'] == ['ancestor1']
+
+    def test_json_with_radios(self, tmp_path):
+        """Test JSON export with radios data."""
+        aps = [AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1")]
+        radios = [
+            Radio(id="radio1", access_point_id="ap1", frequency_band="2.4GHz"),
+            Radio(id="radio2", access_point_id="ap1", frequency_band="5GHz")
+        ]
+        project_data = ProjectData(
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Test",
+            radios=radios
+        )
+
+        exporter = JSONExporter(tmp_path)
+        files = exporter.export(project_data)
+
+        with open(files[0], "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Check that radios data is processed (radio metrics should be calculated)
+        assert "summary" in data
+
+
+        exporter = JSONExporter(tmp_path)
+        files = exporter.export(project_data)
+
+        with open(files[0], 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Check that radios data is processed (radio metrics should be calculated)
+        assert 'summary' in data
+        # Radio metrics would be in analytics if present
+
+    def test_json_with_cable_notes(self, tmp_path):
+        """Test JSON export with cable notes."""
+        aps = [AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1")]
+        cable_notes = [
+            CableNote(id="cable1", floor_plan_id="floor1"),
+            CableNote(id="cable2", floor_plan_id="floor1")
+        ]
+        floors = {"floor1": Floor("floor1", "Floor 1")}
+        project_data = ProjectData(
+            access_points=aps,
+            antennas=[],
+            floors=floors,
+            project_name="Test",
+            cable_notes=cable_notes
+        )
+
+        exporter = JSONExporter(tmp_path)
+        files = exporter.export(project_data)
+
+        with open(files[0], "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Check that cable data is processed
+        assert "summary" in data

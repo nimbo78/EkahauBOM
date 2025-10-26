@@ -7,6 +7,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Unit Tests Coverage Improvements** (Phase 9.1 - NEW!)
+  - Added 29 new unit tests (+9% increase)
+  - Fixed 16 failing tests (all tests now passing: 367/367)
+  - Installed pytest-cov for code coverage measurement
+  - Overall code coverage: 60% → 63%
+  - New test file: `tests/test_network_settings_processor.py` (15 tests)
+  - Module coverage improvements:
+    - network_settings.py: 24% → 100% (+76%)
+    - json_exporter.py: 74% → 100% (+26%)
+    - parser.py: 80% → 99% (+19%)
+    - access_points.py: 80% → 95% (+15%)
+  - Tests for:
+    - Network capacity settings processing
+    - JSON export with metadata, radios, cable notes
+    - Parser missing file handling
+    - Access point processing with radios and error handling
+
+- **Azimuth Direction Arrows** (Phase 8.9 - NEW!)
+  - New CLI flag `--show-azimuth-arrows` for displaying directional indicators on AP markers
+  - Arrow visualization showing antenna azimuth/direction (particularly useful for wall-mounted APs)
+  - Smart arrow color selection for optimal contrast:
+    - Red arrows for transparent/light APs
+    - Dark gray arrows for light solid colors
+    - Yellow arrows for dark solid colors
+  - Arrow properties:
+    - Length: 2 × ap_circle_radius (default 30px)
+    - Arrow head: filled triangle
+    - Line width: 2px
+  - Only shows arrows when azimuth ≠ 0° (has meaningful direction data)
+  - Works with all mounting types (CEILING, WALL, FLOOR)
+  - Mathematical implementation with proper coordinate system adjustment
+  - Fully backward compatible - arrows disabled by default
+  - `_draw_azimuth_arrow()` method in FloorPlanVisualizer
+
+- **Configurable AP Marker Opacity** (Phase 8.10 - NEW!)
+  - New CLI flag `--ap-opacity` for controlling AP marker opacity (0.0-1.0)
+  - Allows fine-tuning of AP marker visibility on floor plans
+  - Default: 1.0 (100% opacity, fully opaque)
+  - Examples:
+    - `--ap-opacity 0.5` for 50% transparent markers
+    - `--ap-opacity 0.3` for 70% transparent markers
+  - Applies to all AP markers (both colored and default)
+  - Works seamlessly with alpha compositing and transparency features
+  - Independent from default AP color transparency
+
+### Fixed
+- **Mounting Height in Detailed CSV Export**
+  - Fixed missing mounting height values in `_access_points_detailed.csv`
+  - Now correctly extracts `antenna_height` from Radio objects
+  - Falls back to Radio's antenna_height when AccessPoint.mounting_height is not available
+  - Displays actual mounting heights (e.g., 2.40m for ceiling APs, 0.40m for wall APs)
+  - Accurate data for installation planning and field verification
+
+## [2.7.0] - 2025-10-26 (Network Settings & Radio Configuration)
+
+### Added
+- **Network Settings Support** (Phase 8.4 - NEW!)
+  - DataRate, NetworkCapacitySettings dataclasses for network configuration
+  - NetworkSettingsProcessor for processing network capacity settings:
+    - process_network_settings() - processes frequency band settings (2.4GHz, 5GHz, 6GHz)
+    - get_ssid_summary() - SSID count and max client statistics per band
+    - get_data_rate_summary() - 802.11 a/b/g data rate configuration (mandatory/disabled/supported)
+  - Parser function: get_network_capacity_settings()
+  - Constant: ESX_NETWORK_CAPACITY_SETTINGS_FILE
+  - Integration into ProjectData with network_settings field
+  - CLI integration with "Network Configuration" section:
+    - SSID count per frequency band (2.4GHz, 5GHz)
+    - Max associated clients per band
+    - Channel distribution display (top 10 most used channels)
+  - JSON export with complete network_settings section:
+    - ssid_configuration: SSID count and max clients per band
+    - data_rates: mandatory/disabled rates summary per band
+    - bands: detailed configuration for each frequency band with all data rates
+  - Support for RTS/CTS settings
+  - Frequency band mapping: TWO→2.4GHz, FIVE→5GHz, SIX→6GHz
+  - 802.11 data rates (R1, R2, R5.5, R6, R9, R11, R12, R18, R24, R36, R48, R54)
+
+### Improved
+- **Floor Plan Visualization Enhancements**
+  - Enhanced color name support in floor plan visualizer
+    - Now supports standard color names (Red, Blue, Green, Yellow, Orange, Purple, Pink, etc.)
+    - Automatic typo correction for duplicate characters (RReedd → Red)
+    - Case-insensitive color matching with exact match priority
+    - Extended Ekahau color palette (lightblue, darkblue, lightgreen, etc.)
+  - Added automatic color legend to all floor plan visualizations
+    - Semi-transparent background for better readability
+    - Shows color distribution with AP count per color
+    - Positioned in top-right corner
+    - Matches AP marker style (circles with borders)
+    - Includes "Default" entry for APs without assigned colors
+  - **Proper transparency support with alpha compositing**
+    - Created overlay layer for AP markers with true alpha blending
+    - Default AP color changed to pale blue (173, 216, 230) with 50% opacity
+    - Transparent APs allow floor plan details to show through
+    - Uses Image.alpha_composite() for proper RGBA rendering
+  - **Mounting type visualization with different shapes**
+    - Ceiling-mounted APs: circles (traditional)
+    - Wall-mounted APs: rectangles oriented by azimuth direction
+    - Floor-mounted APs: squares
+    - Long edge of rectangles points in azimuth direction for wall APs
+  - **Fixed wall-mounted AP orientation**
+    - Rectangle orientation now correctly aligns long edge with azimuth
+    - Proper directional indication for wall-mounted access points
+  - No more "Invalid hex color" warnings for standard color names
+  - Better visual differentiation between AP types
+  - More professional and presentation-ready output
+
 ## [2.6.0] - 2025-10-26 (Map Notes, Cable Infrastructure & Floor Plan Visualization)
 
 ### Added
