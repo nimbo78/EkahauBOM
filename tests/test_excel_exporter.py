@@ -89,16 +89,28 @@ class TestExcelExporter:
         # Check title
         assert ws['A1'].value == "Project Summary"
 
-        # Check project name
-        assert ws['A3'].value == "Project Name:"
-        assert ws['B3'].value == "Test Project"
+        # Find where "Project Statistics" section starts (after optional metadata)
+        stats_row = None
+        for row in range(1, 20):
+            if ws[f'A{row}'].value == "Project Statistics":
+                stats_row = row
+                break
 
-        # Check counts
-        assert ws['A4'].value == "Total Access Points:"
-        assert ws['B4'].value == 5
+        assert stats_row is not None, "Project Statistics section not found"
 
-        assert ws['A5'].value == "Total Antennas:"
-        assert ws['B5'].value == 3
+        # Check counts (relative to stats_row)
+        file_name_row = stats_row + 1
+        ap_row = stats_row + 2
+        antenna_row = stats_row + 3
+
+        assert ws[f'A{file_name_row}'].value == "File Name:"
+        assert ws[f'B{file_name_row}'].value == "Test Project"
+
+        assert ws[f'A{ap_row}'].value == "Total Access Points:"
+        assert ws[f'B{ap_row}'].value == 5
+
+        assert ws[f'A{antenna_row}'].value == "Total Antennas:"
+        assert ws[f'B{antenna_row}'].value == 3
 
     def test_access_points_sheet_content(self, sample_project_data, tmp_path):
         """Test Access Points sheet has correct data."""

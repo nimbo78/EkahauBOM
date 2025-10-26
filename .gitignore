@@ -58,3 +58,7 @@ output/*.pdf
 
 # But keep the output directory
 !output/.gitkeep
+
+# Ekahau project files (examples for development)
+projects/
+*.esx

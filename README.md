@@ -7,7 +7,7 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Code Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](tests/)
-[![Tests](https://img.shields.io/badge/tests-258%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-295%20passing-brightgreen.svg)](tests/)
 
 **English** | [Русский](README.ru.md)
 
@@ -46,6 +46,16 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 - Custom discount support
 - Professional cost summary reports
 
+### 📄 **Project Metadata** _(New in v2.5.0)_
+- **Project information** extraction (name, customer, location, responsible person)
+- **Schema version** tracking
+- Metadata displayed in all export formats:
+  - CSV: Header comments with project info
+  - Excel: Dedicated "Project Information" section
+  - HTML: Formatted metadata card
+  - PDF: Professional cover page section
+  - JSON: Structured metadata object
+
 ### 🏷️ **Tag Support & Filtering**
 - Full support for **Ekahau v10.2+ tags**
 - Filter by tags (Location, Zone, Building, etc.)
@@ -83,7 +93,7 @@ Filter access points by:
 
 ```bash
 # Clone the repository
-git clone https://github.com/nimbo78/EkahauBOM.git
+git clone https://github.com/htechno/EkahauBOM.git
 cd EkahauBOM
 
 # Install dependencies
@@ -422,6 +432,46 @@ Perfect for:
 
 ## ⚙️ Configuration
 
+### Configuration File
+
+EkahauBOM supports a central configuration file (`config/config.yaml`) to set default values for all options:
+
+```yaml
+# Export settings
+export:
+  output_dir: reports
+  formats:
+    - excel
+    - html
+
+# Pricing configuration
+pricing:
+  enabled: true
+  default_discount: 10.0
+
+# Filters (optional defaults)
+filters:
+  exclude_colors:
+    - Gray
+
+# Logging
+logging:
+  level: INFO
+  file: logs/ekahau_bom.log
+```
+
+Use custom configuration:
+
+```bash
+# Use specific config file
+ekahau-bom project.esx --config my_config.yaml
+
+# Use default config (config/config.yaml)
+ekahau-bom project.esx
+```
+
+**Note:** CLI arguments always override configuration file values.
+
 ### Custom Colors
 
 Create a YAML file to map Ekahau hex colors to names:
@@ -638,7 +688,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Pavel Semenischev @htechno**
 
-- GitHub: [@nimbo78](https://github.com/nimbo78)
+- GitHub: [@htechno](https://github.com/htechno)
 - Telegram: [@htechno](https://t.me/htechno)
 
 ---
@@ -718,8 +768,8 @@ A: Yes! Use JSON export format for API integrations and automation.
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/nimbo78/EkahauBOM/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/nimbo78/EkahauBOM/discussions)
+- **Issues**: [GitHub Issues](https://github.com/htechno/EkahauBOM/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/htechno/EkahauBOM/discussions)
 
 ---
 

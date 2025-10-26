@@ -25,7 +25,7 @@ pip install ekahau_bom-2.5.0-py3-none-any.whl
 ### Editable Install (Developers)
 
 ```bash
-git clone https://github.com/nimbo78/EkahauBOM.git
+git clone https://github.com/htechno/EkahauBOM.git
 cd EkahauBOM
 git checkout v2.5.0
 pip install -e .
@@ -177,16 +177,16 @@ ekahau-bom --batch ./projects/ --format excel,pdf
 
 ## 🔗 Links
 
-- **Repository**: https://github.com/nimbo78/EkahauBOM
-- **Documentation**: https://github.com/nimbo78/EkahauBOM/tree/main/docs
-- **Changelog**: https://github.com/nimbo78/EkahauBOM/blob/main/CHANGELOG.md
-- **Issues**: https://github.com/nimbo78/EkahauBOM/issues
+- **Repository**: https://github.com/htechno/EkahauBOM
+- **Documentation**: https://github.com/htechno/EkahauBOM/tree/main/docs
+- **Changelog**: https://github.com/htechno/EkahauBOM/blob/main/CHANGELOG.md
+- **Issues**: https://github.com/htechno/EkahauBOM/issues
 
 ---
 
 ## 👤 Credits
 
-**Author**: Pavel Semenischev (@nimbo78)
+**Author**: Pavel Semenischev (@htechno)
 
 **Contributors**: The Wi-Fi engineering community
 
@@ -194,7 +194,7 @@ ekahau-bom --batch ./projects/ --format excel,pdf
 
 ## 📝 Full Changelog
 
-See [CHANGELOG.md](https://github.com/nimbo78/EkahauBOM/blob/main/CHANGELOG.md) for complete version history.
+See [CHANGELOG.md](https://github.com/htechno/EkahauBOM/blob/main/CHANGELOG.md) for complete version history.
 
 ### From 2.4.0 to 2.5.0
 - PDF Export functionality

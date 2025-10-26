@@ -476,12 +476,12 @@ class TestRadioProcessor:
         processor = RadioProcessor()
 
         test_cases = [
-            ({"channelWidth": 160}, "802.11ax"),
-            ({"channelWidth": 80}, "802.11ac"),
+            ({}, 160, "802.11ax"),
+            ({}, 80, "802.11ac"),
         ]
 
-        for radio_data, expected_standard in test_cases:
-            standard = processor._determine_wifi_standard(radio_data)
+        for radio_data, channel_width, expected_standard in test_cases:
+            standard = processor._determine_wifi_standard(radio_data, channel_width)
             assert standard == expected_standard
 
     def test_determine_wifi_standard_from_band(self):

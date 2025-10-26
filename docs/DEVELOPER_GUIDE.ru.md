@@ -26,7 +26,7 @@
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/nimbo78/EkahauBOM.git
+git clone https://github.com/htechno/EkahauBOM.git
 cd EkahauBOM
 
 # Создать виртуальное окружение
@@ -391,8 +391,8 @@ Closes #42
 
 ## Поддержка и ресурсы
 
-- **Проблемы**: https://github.com/nimbo78/EkahauBOM/issues
-- **Обсуждения**: https://github.com/nimbo78/EkahauBOM/discussions
+- **Проблемы**: https://github.com/htechno/EkahauBOM/issues
+- **Обсуждения**: https://github.com/htechno/EkahauBOM/discussions
 - **Telegram**: [@htechno](https://t.me/htechno)
 
 ---

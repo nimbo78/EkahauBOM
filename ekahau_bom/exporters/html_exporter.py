@@ -79,7 +79,8 @@ class HTMLExporter(BaseExporter):
             total_antennas,
             unique_vendors,
             unique_floors,
-            unique_colors
+            unique_colors,
+            project_data.metadata
         )
 
         aps_table_html = self._generate_aps_table(project_data.access_points)
@@ -130,12 +131,38 @@ class HTMLExporter(BaseExporter):
         total_antennas: int,
         unique_vendors: int,
         unique_floors: int,
-        unique_colors: int
+        unique_colors: int,
+        metadata = None
     ) -> str:
         """Generate summary statistics section."""
+        # Generate metadata section if available
+        metadata_html = ""
+        if metadata:
+            metadata_items = []
+            if metadata.name:
+                metadata_items.append(f"<div class='metadata-item'><strong>Project Name:</strong> {html.escape(metadata.name)}</div>")
+            if metadata.customer:
+                metadata_items.append(f"<div class='metadata-item'><strong>Customer:</strong> {html.escape(metadata.customer)}</div>")
+            if metadata.location:
+                metadata_items.append(f"<div class='metadata-item'><strong>Location:</strong> {html.escape(metadata.location)}</div>")
+            if metadata.responsible_person:
+                metadata_items.append(f"<div class='metadata-item'><strong>Responsible Person:</strong> {html.escape(metadata.responsible_person)}</div>")
+            if metadata.schema_version:
+                metadata_items.append(f"<div class='metadata-item'><strong>Schema Version:</strong> {html.escape(metadata.schema_version)}</div>")
+
+            if metadata_items:
+                metadata_html = f"""
+            <div class="project-metadata">
+                <h4>Project Information</h4>
+                {''.join(metadata_items)}
+            </div>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+            """
+
         return f"""
         <section class="summary">
             <h3>Summary</h3>
+            {metadata_html}
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value">{total_aps}</div>

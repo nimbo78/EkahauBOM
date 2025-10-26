@@ -171,8 +171,8 @@ Message: Release v2.5.0 - Production Ready
 
 ## 📚 Ссылки
 
-- **Repository**: https://github.com/nimbo78/EkahauBOM
-- **Tag v2.5.0**: https://github.com/nimbo78/EkahauBOM/releases/tag/v2.5.0
+- **Repository**: https://github.com/htechno/EkahauBOM
+- **Tag v2.5.0**: https://github.com/htechno/EkahauBOM/releases/tag/v2.5.0
 - **CHANGELOG**: [CHANGELOG.md](CHANGELOG.md)
 - **Release Notes**: [RELEASE_NOTES_v2.5.0.md](RELEASE_NOTES_v2.5.0.md)
 - **GitHub Release Instructions**: [GITHUB_RELEASE_INSTRUCTIONS.md](GITHUB_RELEASE_INSTRUCTIONS.md)

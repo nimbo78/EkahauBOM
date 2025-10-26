@@ -99,7 +99,8 @@ class PDFExporter(BaseExporter):
             total_antennas,
             unique_vendors,
             unique_floors,
-            unique_colors
+            unique_colors,
+            project_data.metadata
         )
 
         grouping_html = self._generate_grouping_section(project_data.access_points)
@@ -369,12 +370,37 @@ class PDFExporter(BaseExporter):
         total_antennas: int,
         unique_vendors: int,
         unique_floors: int,
-        unique_colors: int
+        unique_colors: int,
+        metadata = None
     ) -> str:
         """Generate summary statistics section."""
+        # Generate metadata section if available
+        metadata_html = ""
+        if metadata:
+            metadata_items = []
+            if metadata.name:
+                metadata_items.append(f"<p><strong>Project Name:</strong> {html_module.escape(metadata.name)}</p>")
+            if metadata.customer:
+                metadata_items.append(f"<p><strong>Customer:</strong> {html_module.escape(metadata.customer)}</p>")
+            if metadata.location:
+                metadata_items.append(f"<p><strong>Location:</strong> {html_module.escape(metadata.location)}</p>")
+            if metadata.responsible_person:
+                metadata_items.append(f"<p><strong>Responsible Person:</strong> {html_module.escape(metadata.responsible_person)}</p>")
+            if metadata.schema_version:
+                metadata_items.append(f"<p><strong>Schema Version:</strong> {html_module.escape(metadata.schema_version)}</p>")
+
+            if metadata_items:
+                metadata_html = f"""
+            <div class="project-metadata" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #2196F3;">
+                <h4 style="margin-top: 0;">Project Information</h4>
+                {''.join(metadata_items)}
+            </div>
+            """
+
         return f"""
         <section class="summary">
             <h3>Summary</h3>
+            {metadata_html}
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value">{total_aps}</div>

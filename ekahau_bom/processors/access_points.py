@@ -29,19 +29,31 @@ class AccessPointProcessor:
     def process(
         self,
         access_points_data: dict[str, Any],
-        floors: dict[str, Floor]
+        floors: dict[str, Floor],
+        simulated_radios_data: dict[str, Any] = None
     ) -> list[AccessPoint]:
         """Process raw access points data into AccessPoint objects.
 
         Args:
             access_points_data: Raw access points data from parser
             floors: Dictionary mapping floor IDs to Floor objects
+            simulated_radios_data: Optional simulated radios data for antenna parameters
 
         Returns:
             List of AccessPoint objects
         """
         access_points = []
         ap_list = access_points_data.get("accessPoints", [])
+
+        # Build radio lookup by access point ID for O(1) access
+        radios_by_ap = {}
+        if simulated_radios_data:
+            for radio in simulated_radios_data.get("simulatedRadios", []):
+                ap_id = radio.get("accessPointId")
+                if ap_id:
+                    if ap_id not in radios_by_ap:
+                        radios_by_ap[ap_id] = []
+                    radios_by_ap[ap_id].append(radio)
 
         logger.info(f"Processing {len(ap_list)} access points")
 
@@ -52,7 +64,11 @@ class AccessPointProcessor:
                 continue
 
             try:
-                ap = self._process_single_ap(ap_data, floors)
+                # Get radios for this AP
+                ap_id = ap_data.get("id")
+                ap_radios = radios_by_ap.get(ap_id, [])
+
+                ap = self._process_single_ap(ap_data, floors, ap_radios)
                 access_points.append(ap)
             except Exception as e:
                 logger.warning(f"Error processing AP {ap_data.get('name', 'Unknown')}: {e}")
@@ -64,17 +80,21 @@ class AccessPointProcessor:
     def _process_single_ap(
         self,
         ap_data: dict[str, Any],
-        floors: dict[str, Floor]
+        floors: dict[str, Floor],
+        radios: list[dict[str, Any]] = None
     ) -> AccessPoint:
         """Process a single access point.
 
         Args:
             ap_data: Raw access point data
             floors: Dictionary mapping floor IDs to Floor objects
+            radios: List of simulated radios for this AP (optional)
 
         Returns:
             AccessPoint object
         """
+        if radios is None:
+            radios = []
         vendor = ap_data.get("vendor", "Unknown")
         model = ap_data.get("model", "Unknown")
 
@@ -103,14 +123,23 @@ class AccessPointProcessor:
         location = ap_data.get("location", {})
         mounting_height = location.get("z")  # Height above floor in meters
 
-        # Extract antenna parameters
+        # Extract antenna parameters from simulated radios
+        # Use first radio's parameters if available (typically all radios of an AP have same mounting)
         azimuth = None
         tilt = None
         antenna_height = None
 
-        # Check if antenna properties are in the AP data
-        if "antennas" in ap_data and ap_data["antennas"]:
-            # Get first antenna configuration
+        if radios:
+            # Get first radio's antenna configuration
+            first_radio = radios[0]
+            azimuth = first_radio.get("antennaDirection")  # Azimuth in degrees
+            tilt = first_radio.get("antennaTilt")  # Tilt in degrees
+            antenna_height = first_radio.get("antennaHeight")  # Height in meters
+
+            logger.debug(f"AP {ap_data.get('name', 'Unknown')}: tilt={tilt}°, azimuth={azimuth}°, antenna_height={antenna_height}m")
+
+        # Fallback: Check if antenna properties are in the AP data (old format)
+        elif "antennas" in ap_data and ap_data["antennas"]:
             first_antenna = ap_data["antennas"][0]
             azimuth = first_antenna.get("azimuth")
             tilt = first_antenna.get("tilt")

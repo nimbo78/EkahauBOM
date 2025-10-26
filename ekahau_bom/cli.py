@@ -19,11 +19,13 @@ except ImportError:
     RICH_AVAILABLE = False
 
 from . import __version__
+from .config import Config, ConfigError
 from .parser import EkahauParser
 from .processors.access_points import AccessPointProcessor
 from .processors.antennas import AntennaProcessor
 from .processors.tags import TagProcessor
 from .processors.radios import RadioProcessor
+from .processors.metadata import ProjectMetadataProcessor
 from .filters import APFilter
 from .analytics import GroupingAnalytics
 from .exporters.csv_exporter import CSVExporter
@@ -61,6 +63,12 @@ def create_argument_parser() -> argparse.ArgumentParser:
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
         help=f'Output directory for generated files (default: {DEFAULT_OUTPUT_DIR})'
+    )
+
+    parser.add_argument(
+        '--config',
+        type=Path,
+        help='Path to configuration file (default: config/config.yaml)'
     )
 
     parser.add_argument(
@@ -422,6 +430,7 @@ def process_project(
             simulated_radios_data = parser.get_simulated_radios()
             antenna_types_data = parser.get_antenna_types()
             tag_keys_data = parser.get_tag_keys()
+            project_metadata_data = parser.get_project_metadata()
 
             # Build floor lookup dictionary (optimized for O(1) access)
             floors = {
@@ -430,6 +439,10 @@ def process_project(
             }
             logger.info(f"Found {len(floors)} floors")
 
+            # Process project metadata
+            metadata_processor = ProjectMetadataProcessor()
+            project_metadata = metadata_processor.process(project_metadata_data)
+
             # Process tags
             tag_processor = TagProcessor(tag_keys_data)
             if tag_processor.tag_keys:
@@ -437,7 +450,7 @@ def process_project(
 
             # Process access points
             ap_processor = AccessPointProcessor(color_db, tag_processor)
-            access_points = ap_processor.process(access_points_data, floors)
+            access_points = ap_processor.process(access_points_data, floors, simulated_radios_data)
 
             # Apply filters if specified
             if any([filter_floors, filter_colors, filter_vendors, filter_models, filter_tags,
@@ -496,7 +509,8 @@ def process_project(
                 antennas=antennas,
                 floors=floors,
                 project_name=esx_file.stem,
-                radios=radios
+                radios=radios,
+                metadata=project_metadata
             )
 
             # Display advanced analytics
@@ -701,61 +715,80 @@ def main(args: list[str] | None = None) -> int:
     parser = create_argument_parser()
     parsed_args = parser.parse_args(args)
 
-    # Setup logging
+    # Setup logging (using CLI args for now, will be updated after config merge)
     setup_logging(
         verbose=parsed_args.verbose,
         log_file=parsed_args.log_file
     )
 
-    # Parse filter arguments
-    def parse_comma_separated(value: str | None) -> list[str] | None:
-        """Parse comma-separated values into list."""
-        if not value:
-            return None
-        return [v.strip() for v in value.split(',') if v.strip()]
+    # Load configuration file
+    try:
+        config = Config.load(parsed_args.config)
+    except ConfigError as e:
+        logger.error(f"Configuration error: {e}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Configuration error:[/bold red] {e}")
+        return 1
 
-    filter_floors = parse_comma_separated(parsed_args.filter_floor)
-    filter_colors = parse_comma_separated(parsed_args.filter_color)
-    filter_vendors = parse_comma_separated(parsed_args.filter_vendor)
-    filter_models = parse_comma_separated(parsed_args.filter_model)
-    exclude_floors = parse_comma_separated(parsed_args.exclude_floor)
-    exclude_colors = parse_comma_separated(parsed_args.exclude_color)
-    exclude_vendors = parse_comma_separated(parsed_args.exclude_vendor)
+    # Merge configuration with CLI arguments (CLI takes precedence)
+    merged_config = config.merge_with_args(parsed_args)
+
+    # Update logging if config changed it
+    if merged_config.get('log_level') or merged_config.get('log_file'):
+        setup_logging(
+            verbose=(merged_config.get('log_level') == 'DEBUG'),
+            log_file=merged_config.get('log_file')
+        )
+
+    # Extract merged configuration values
+    filter_floors = merged_config.get('filter_floors')
+    filter_colors = merged_config.get('filter_colors')
+    filter_vendors = merged_config.get('filter_vendors')
+    filter_models = merged_config.get('filter_models')
+    exclude_floors = merged_config.get('exclude_floors')
+    exclude_colors = merged_config.get('exclude_colors')
+    exclude_vendors = merged_config.get('exclude_vendors')
 
     # Parse tag filters (format: "TagKey:TagValue")
     filter_tags = None
-    if parsed_args.filter_tag:
+    raw_filter_tags = merged_config.get('filter_tags')
+    if raw_filter_tags:
         filter_tags = {}
-        for tag_filter in parsed_args.filter_tag:
-            if ':' in tag_filter:
-                key, value = tag_filter.split(':', 1)
-                key = key.strip()
-                value = value.strip()
-                if key not in filter_tags:
-                    filter_tags[key] = []
-                filter_tags[key].append(value)
-            else:
-                logger.warning(f"Invalid tag filter format (expected 'Key:Value'): {tag_filter}")
+        # Handle both list and dict formats
+        if isinstance(raw_filter_tags, list):
+            for tag_filter in raw_filter_tags:
+                if ':' in tag_filter:
+                    key, value = tag_filter.split(':', 1)
+                    key = key.strip()
+                    value = value.strip()
+                    if key not in filter_tags:
+                        filter_tags[key] = []
+                    filter_tags[key].append(value)
+                else:
+                    logger.warning(f"Invalid tag filter format (expected 'Key:Value'): {tag_filter}")
+        elif isinstance(raw_filter_tags, dict):
+            filter_tags = raw_filter_tags
 
-    # Parse export formats
-    export_formats = [f.strip().lower() for f in parsed_args.format.split(',')]
+    # Export formats from merged config
+    export_formats = merged_config.get('export_formats', ['csv'])
 
     # Determine files to process
     files_to_process = []
 
-    if parsed_args.batch:
+    batch_dir = merged_config.get('batch')
+    if batch_dir:
         # Batch mode: find all .esx files in directory
         try:
-            files_to_process = find_esx_files(parsed_args.batch, parsed_args.recursive)
+            files_to_process = find_esx_files(batch_dir, merged_config.get('recursive', False))
             if not files_to_process:
-                logger.error(f"No .esx files found in {parsed_args.batch}")
+                logger.error(f"No .esx files found in {batch_dir}")
                 return 1
 
             if RICH_AVAILABLE and console:
                 console.print(f"\n[bold cyan]Batch Processing Mode[/bold cyan]")
                 console.print(f"Found [bold green]{len(files_to_process)}[/bold green] project file(s)")
-                console.print(f"Directory: [cyan]{parsed_args.batch}[/cyan]")
-                if parsed_args.recursive:
+                console.print(f"Directory: [cyan]{batch_dir}[/cyan]")
+                if merged_config.get('recursive'):
                     console.print("[yellow]Recursive search enabled[/yellow]")
                 console.print()
             else:
@@ -791,8 +824,8 @@ def main(args: list[str] | None = None) -> int:
         try:
             exit_code = process_project(
                 esx_file=esx_file,
-                output_dir=parsed_args.output_dir,
-                colors_config=parsed_args.colors_config,
+                output_dir=merged_config.get('output_dir'),
+                colors_config=merged_config.get('colors_config'),
                 export_formats=export_formats,
                 filter_floors=filter_floors,
                 filter_colors=filter_colors,
@@ -802,12 +835,12 @@ def main(args: list[str] | None = None) -> int:
                 exclude_floors=exclude_floors,
                 exclude_colors=exclude_colors,
                 exclude_vendors=exclude_vendors,
-                group_by=parsed_args.group_by,
-                tag_key=parsed_args.tag_key,
-                enable_pricing=parsed_args.enable_pricing,
-                pricing_file=parsed_args.pricing_file,
-                discount=parsed_args.discount,
-                no_volume_discounts=parsed_args.no_volume_discounts
+                group_by=merged_config.get('group_by'),
+                tag_key=merged_config.get('tag_key'),
+                enable_pricing=merged_config.get('enable_pricing'),
+                pricing_file=merged_config.get('pricing_file'),
+                discount=merged_config.get('discount', 0.0),
+                no_volume_discounts=merged_config.get('no_volume_discounts', False)
             )
 
             if exit_code != 0:

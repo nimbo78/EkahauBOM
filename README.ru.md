@@ -7,7 +7,7 @@ EkahauBOM извлекает данные об оборудовании из п�
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Code Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](tests/)
-[![Tests](https://img.shields.io/badge/tests-258%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-295%20passing-brightgreen.svg)](tests/)
 
 [English](README.md) | **Русский**
 
@@ -46,6 +46,16 @@ EkahauBOM извлекает данные об оборудовании из п�
 - Поддержка пользовательских скидок
 - Профессиональные отчеты по стоимости
 
+### 📄 **Метаданные проекта** _(Новое в v2.5.0)_
+- Извлечение **информации о проекте** (название, заказчик, местоположение, ответственное лицо)
+- Отслеживание **версии схемы** Ekahau
+- Метаданные отображаются во всех форматах экспорта:
+  - CSV: Комментарии в заголовке с информацией о проекте
+  - Excel: Выделенная секция "Информация о проекте"
+  - HTML: Отформатированная карточка с метаданными
+  - PDF: Профессиональная секция на титульной странице
+  - JSON: Структурированный объект метаданных
+
 ### 🏷️ **Поддержка тегов и фильтрация**
 - Полная поддержка **тегов Ekahau v10.2+**
 - Фильтрация по тегам (Расположение, Зона, Здание и т.д.)
@@ -83,7 +93,7 @@ EkahauBOM извлекает данные об оборудовании из п�
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/nimbo78/EkahauBOM.git
+git clone https://github.com/htechno/EkahauBOM.git
 cd EkahauBOM
 
 # Установить зависимости
@@ -641,7 +651,7 @@ mypy ekahau_bom/
 
 **Pavel Semenischev @htechno**
 
-- GitHub: [@nimbo78](https://github.com/nimbo78)
+- GitHub: [@htechno](https://github.com/htechno)
 - Telegram: [@htechno](https://t.me/htechno)
 
 ---
@@ -721,8 +731,8 @@ mypy ekahau_bom/
 
 ## 📞 Поддержка
 
-- **Проблемы**: [GitHub Issues](https://github.com/nimbo78/EkahauBOM/issues)
-- **Обсуждения**: [GitHub Discussions](https://github.com/nimbo78/EkahauBOM/discussions)
+- **Проблемы**: [GitHub Issues](https://github.com/htechno/EkahauBOM/issues)
+- **Обсуждения**: [GitHub Discussions](https://github.com/htechno/EkahauBOM/discussions)
 - **Telegram**: [@htechno](https://t.me/htechno)
 
 ---

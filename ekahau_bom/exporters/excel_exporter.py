@@ -191,9 +191,52 @@ class ExcelExporter(BaseExporter):
         ws['A1'].font = Font(bold=True, size=14, color="366092")
         ws.merge_cells('A1:B1')
 
-        # Project info
         row = 3
-        ws[f'A{row}'] = "Project Name:"
+
+        # Project metadata section (if available)
+        if project_data.metadata:
+            ws[f'A{row}'] = "Project Information"
+            ws[f'A{row}'].font = self.SECTION_FONT
+            row += 1
+
+            if project_data.metadata.name:
+                ws[f'A{row}'] = "Project Name:"
+                ws[f'B{row}'] = project_data.metadata.name
+                ws[f'A{row}'].font = Font(bold=True)
+                row += 1
+
+            if project_data.metadata.customer:
+                ws[f'A{row}'] = "Customer:"
+                ws[f'B{row}'] = project_data.metadata.customer
+                ws[f'A{row}'].font = Font(bold=True)
+                row += 1
+
+            if project_data.metadata.location:
+                ws[f'A{row}'] = "Location:"
+                ws[f'B{row}'] = project_data.metadata.location
+                ws[f'A{row}'].font = Font(bold=True)
+                row += 1
+
+            if project_data.metadata.responsible_person:
+                ws[f'A{row}'] = "Responsible Person:"
+                ws[f'B{row}'] = project_data.metadata.responsible_person
+                ws[f'A{row}'].font = Font(bold=True)
+                row += 1
+
+            if project_data.metadata.schema_version:
+                ws[f'A{row}'] = "Schema Version:"
+                ws[f'B{row}'] = project_data.metadata.schema_version
+                ws[f'A{row}'].font = Font(bold=True)
+                row += 1
+
+            row += 1  # Add spacing
+
+        # Project statistics section
+        ws[f'A{row}'] = "Project Statistics"
+        ws[f'A{row}'].font = self.SECTION_FONT
+        row += 1
+
+        ws[f'A{row}'] = "File Name:"
         ws[f'B{row}'] = project_data.project_name
         ws[f'A{row}'].font = Font(bold=True)
 

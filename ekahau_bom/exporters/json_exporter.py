@@ -102,13 +102,37 @@ class JSONExporter(BaseExporter):
         if project_data.radios:
             radio_metrics = RadioAnalytics.calculate_radio_metrics(project_data.radios)
 
+        # Build metadata section
+        metadata_section = {
+            "file_name": project_data.project_name,
+            "export_format": "json",
+            "version": "2.3.0"
+        }
+
+        # Add project metadata if available
+        if project_data.metadata:
+            project_info = {}
+            if project_data.metadata.name:
+                project_info["project_name"] = project_data.metadata.name
+            if project_data.metadata.customer:
+                project_info["customer"] = project_data.metadata.customer
+            if project_data.metadata.location:
+                project_info["location"] = project_data.metadata.location
+            if project_data.metadata.responsible_person:
+                project_info["responsible_person"] = project_data.metadata.responsible_person
+            if project_data.metadata.schema_version:
+                project_info["schema_version"] = project_data.metadata.schema_version
+            if project_data.metadata.note_ids:
+                project_info["note_ids"] = project_data.metadata.note_ids
+            if project_data.metadata.project_ancestors:
+                project_info["project_ancestors"] = project_data.metadata.project_ancestors
+
+            if project_info:
+                metadata_section["project_info"] = project_info
+
         # Build JSON structure
         json_structure = {
-            "metadata": {
-                "project_name": project_data.project_name,
-                "export_format": "json",
-                "version": "2.3.0"
-            },
+            "metadata": metadata_section,
             "summary": {
                 "total_access_points": len(project_data.access_points),
                 "total_antennas": len(project_data.antennas),

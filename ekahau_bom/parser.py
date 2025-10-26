@@ -15,8 +15,11 @@ from .constants import (
     ESX_SIMULATED_RADIOS_FILE,
     ESX_ANTENNA_TYPES_FILE,
     ESX_TAG_KEYS_FILE,
+    ESX_PROJECT_FILE,
     ESX_MEASURED_AREAS_FILE,
     ESX_NOTES_FILE,
+    ESX_CABLE_NOTES_FILE,
+    ESX_PICTURE_NOTES_FILE,
     ESX_ACCESS_POINT_MODELS_FILE,
 )
 
@@ -187,6 +190,52 @@ class EkahauParser:
         except KeyError:
             logger.debug(f"{ESX_ACCESS_POINT_MODELS_FILE} not found in project")
             return {"accessPointModels": []}
+
+    def get_project_metadata(self) -> dict[str, Any]:
+        """Get project metadata from the project.
+
+        Project metadata includes project name, customer, location, responsible person,
+        schema version, and other project-level information.
+
+        Returns:
+            Dictionary with project metadata. Returns empty dict if not found.
+        """
+        try:
+            data = self._read_json(ESX_PROJECT_FILE)
+            # project.json contains {"project": {...}} structure
+            return data.get("project", {})
+        except KeyError:
+            logger.warning(f"{ESX_PROJECT_FILE} not found in project")
+            return {}
+
+    def get_cable_notes(self) -> dict[str, Any]:
+        """Get cable notes data from the project.
+
+        Cable notes contain cabling infrastructure information with coordinates
+        and references to text notes.
+
+        Returns:
+            Dictionary with cable notes data. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_CABLE_NOTES_FILE)
+        except KeyError:
+            logger.debug(f"{ESX_CABLE_NOTES_FILE} not found in project")
+            return {"cableNotes": []}
+
+    def get_picture_notes(self) -> dict[str, Any]:
+        """Get picture notes data from the project.
+
+        Picture notes contain image annotations and related information.
+
+        Returns:
+            Dictionary with picture notes data. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_PICTURE_NOTES_FILE)
+        except KeyError:
+            logger.debug(f"{ESX_PICTURE_NOTES_FILE} not found in project")
+            return {"pictureNotes": []}
 
     def list_files(self) -> list[str]:
         """List all files in the .esx archive.

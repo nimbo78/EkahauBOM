@@ -77,7 +77,7 @@ class TestJSONExporter:
             data = json.load(f)
 
         assert "metadata" in data
-        assert data["metadata"]["project_name"] == "Test Project"
+        assert data["metadata"]["file_name"] == "Test Project"
         assert data["metadata"]["export_format"] == "json"
         assert "version" in data["metadata"]
 
@@ -313,7 +313,7 @@ class TestJSONExporter:
             data = json.load(f)
 
         # Should be able to parse without errors
-        assert data["metadata"]["project_name"] == "Test\"Project"
+        assert data["metadata"]["file_name"] == "Test\"Project"
 
     def test_json_unicode_support(self, tmp_path):
         """Test that JSON supports Unicode characters."""

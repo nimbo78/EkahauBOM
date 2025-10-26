@@ -31,9 +31,12 @@ ESX_FLOOR_PLANS_FILE = "floorPlans.json"
 ESX_SIMULATED_RADIOS_FILE = "simulatedRadios.json"
 ESX_ANTENNA_TYPES_FILE = "antennaTypes.json"
 ESX_TAG_KEYS_FILE = "tagKeys.json"
-ESX_PROJECT_METADATA_FILE = "projectMetadata.json"
+ESX_PROJECT_FILE = "project.json"
+ESX_PROJECT_METADATA_FILE = "projectMetadata.json"  # Legacy/alternative name
 ESX_MEASURED_AREAS_FILE = "measuredAreas.json"
 ESX_NOTES_FILE = "notes.json"
+ESX_CABLE_NOTES_FILE = "cableNotes.json"
+ESX_PICTURE_NOTES_FILE = "pictureNotes.json"
 ESX_ACCESS_POINT_MODELS_FILE = "accessPointModels.json"
 
 # Export settings

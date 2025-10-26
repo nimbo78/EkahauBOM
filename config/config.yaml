@@ -1,0 +1,139 @@
+# EkahauBOM Configuration File
+# This file contains default settings for the application
+# CLI arguments will override these settings
+
+# Color database configuration
+colors:
+  # Path to colors database file (relative to config directory or absolute path)
+  database: colors.yaml
+  # Warn about unknown colors
+  warn_unknown: true
+  # Fallback to hex code if color name not found
+  use_hex_fallback: true
+
+# Pricing configuration
+pricing:
+  # Enable pricing by default
+  enabled: false
+  # Path to pricing database file (relative to config directory or absolute path)
+  database: pricing.yaml
+  # Apply volume discounts automatically
+  volume_discounts: true
+  # Default discount percentage (0-100)
+  default_discount: 0.0
+
+# Export settings
+export:
+  # Default output directory
+  output_dir: output
+  # Default export formats (can be: csv, excel, html, json, pdf)
+  # Multiple formats can be specified as a list
+  formats:
+    - csv
+  # Include timestamp in output filenames
+  timestamp: false
+
+# Filtering defaults
+filters:
+  # Default floors to include (empty = all)
+  include_floors: []
+  # Default floors to exclude
+  exclude_floors: []
+  # Default colors to include (empty = all)
+  include_colors: []
+  # Default colors to exclude
+  exclude_colors: []
+  # Default vendors to include (empty = all)
+  include_vendors: []
+  # Default vendors to exclude
+  exclude_vendors: []
+  # Default models to include (empty = all)
+  include_models: []
+  # Default tags to filter by (format: "TagKey:TagValue")
+  tags: []
+
+# Grouping defaults
+grouping:
+  # Default grouping dimension (floor, color, vendor, model, tag)
+  # Set to null to disable grouping by default
+  group_by: null
+  # Tag key to use for tag-based grouping
+  tag_key: null
+
+# Logging configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: INFO
+  # Log file path (null = no file logging)
+  file: null
+  # Format string for log messages
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  # Date format for log timestamps
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+# Excel export settings
+excel:
+  # Add charts to Excel workbooks
+  add_charts: true
+  # Freeze header row
+  freeze_header: true
+  # Enable auto-filter on data tables
+  auto_filter: true
+  # Auto-adjust column widths
+  auto_width: true
+  # Maximum column width in characters
+  max_column_width: 50
+
+# HTML export settings
+html:
+  # Include Chart.js visualizations
+  include_charts: true
+  # Use responsive design
+  responsive: true
+  # Dark mode support
+  dark_mode_support: false
+
+# PDF export settings
+pdf:
+  # Paper size: A4, Letter, Legal
+  paper_size: A4
+  # Orientation: portrait, landscape
+  orientation: portrait
+  # Include page numbers
+  page_numbers: true
+
+# Batch processing settings
+batch:
+  # Process files recursively in subdirectories
+  recursive: false
+  # Continue processing on errors
+  continue_on_error: true
+  # Generate summary report for batch processing
+  summary_report: true
+
+# Analytics settings
+analytics:
+  # Include coverage analytics
+  coverage: true
+  # Include mounting analytics
+  mounting: true
+  # Include radio analytics
+  radio: true
+  # Include grouping analytics
+  grouping: true
+
+# Performance settings
+performance:
+  # Use optimized algorithms (dictionary lookups)
+  optimized_lookups: true
+  # Cache parsed data for faster reprocessing
+  cache_parsed_data: false
+
+# Advanced settings
+advanced:
+  # Strict mode: fail on any warnings
+  strict_mode: false
+  # Validate all data structures
+  validate_data: true
+  # Maximum number of access points to process (0 = unlimited)
+  max_access_points: 0

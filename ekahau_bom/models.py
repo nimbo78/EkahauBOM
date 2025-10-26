@@ -8,6 +8,33 @@ from typing import Optional
 
 
 @dataclass
+class ProjectMetadata:
+    """Represents project-level metadata from Ekahau project.
+
+    Contains high-level information about the project such as name, customer,
+    location, responsible person, and schema version.
+
+    Attributes:
+        name: Project name
+        title: Project title (usually same as name)
+        customer: Customer/client name
+        location: Project location/address
+        responsible_person: Person responsible for the project
+        schema_version: Ekahau project file schema version
+        note_ids: List of note IDs attached to the project
+        project_ancestors: List of ancestor project IDs (for project history)
+    """
+    name: str = ""
+    title: str = ""
+    customer: str = ""
+    location: str = ""
+    responsible_person: str = ""
+    schema_version: str = ""
+    note_ids: list[str] = field(default_factory=list)
+    project_ancestors: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Tag:
     """Represents a tag key-value pair in Ekahau project.
 
@@ -187,9 +214,11 @@ class ProjectData:
         floors: Dictionary mapping floor IDs to Floor objects
         project_name: Name of the project file
         radios: List of radio configurations in the project
+        metadata: Project metadata (name, customer, location, etc.)
     """
     access_points: list[AccessPoint]
     antennas: list[Antenna]
     floors: dict[str, Floor]
     project_name: str
     radios: list[Radio] = field(default_factory=list)
+    metadata: Optional[ProjectMetadata] = None

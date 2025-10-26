@@ -45,7 +45,8 @@ class CSVExporter(BaseExporter):
         # Export access points BOM (aggregated)
         ap_file = self._export_access_points(
             project_data.access_points,
-            project_data.project_name
+            project_data.project_name,
+            project_data.metadata
         )
         files.append(ap_file)
 
@@ -78,13 +79,15 @@ class CSVExporter(BaseExporter):
     def _export_access_points(
         self,
         access_points: list[AccessPoint],
-        project_name: str
+        project_name: str,
+        metadata = None
     ) -> Path:
         """Export access points to CSV file.
 
         Args:
             access_points: List of access points to export
             project_name: Name of the project
+            metadata: Optional project metadata
 
         Returns:
             Path to created CSV file
@@ -104,6 +107,19 @@ class CSVExporter(BaseExporter):
         logger.info(f"Exporting {len(access_points)} access points ({len(ap_counts)} unique)")
 
         with open(output_file, 'w', newline='', encoding='utf-8') as f:
+            # Write metadata as comments if available
+            if metadata:
+                f.write("# Ekahau BOM - Access Points Bill of Materials\n")
+                if metadata.name:
+                    f.write(f"# Project Name: {metadata.name}\n")
+                if metadata.customer:
+                    f.write(f"# Customer: {metadata.customer}\n")
+                if metadata.location:
+                    f.write(f"# Location: {metadata.location}\n")
+                if metadata.responsible_person:
+                    f.write(f"# Responsible Person: {metadata.responsible_person}\n")
+                f.write("#\n")
+
             writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
 
             # Write header

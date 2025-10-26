@@ -7,9 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.5.0] - 2025-01-25 (Production Ready Release)
+## [2.5.0] - 2025-10-26 (Production Ready Release)
 
 ### Added
+- **Project Metadata Support** (Phase 8.1 - NEW!)
+  - ProjectMetadata dataclass with comprehensive project information
+  - Extraction of project name, customer, location, responsible person
+  - Schema version tracking for Ekahau compatibility
+  - Note IDs and project ancestors support
+  - ProjectMetadataProcessor for data processing and validation
+  - Integration into all export formats:
+    - CSV: Project info in header comments
+    - Excel: "Project Information" section in Summary sheet
+    - HTML: Formatted metadata card with project details
+    - PDF: Professional project information box
+    - JSON: Structured metadata.project_info object
+  - 10 new unit tests (tests/test_metadata_processor.py)
+
 - **PDF Export** (Phase 3 - Iteration 5)
   - Professional print-ready PDF reports using WeasyPrint
   - Print-optimized layout (A4 page size, proper margins)
@@ -44,9 +58,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Russian translations for all documentation
 
 ### Fixed
+- **Radio Processing Bug** (Critical)
+  - Fixed ERROR: `'>=' not supported between instances of 'list' and 'int'`
+  - Ekahau sends channel/channelWidth as lists (e.g., `[11]`), not integers
+  - Added `_extract_value()` method to handle list/int/float formats
+  - Updated `_determine_wifi_standard()` with channel_width parameter
+  - Added support for `technology` field from Ekahau data
+  - Result: 6/6 radios processed successfully (was 0/6)
+  - 14 new tests in tests/test_radio_processor.py
+
+- **Tilt/Azimuth Extraction Bug** (Critical)
+  - Fixed missing tilt, azimuth, and antenna_height in exports
+  - Data is in simulatedRadios.json, not accessPoints.json
+  - Updated AccessPointProcessor to accept simulated_radios_data
+  - Created radio lookup dictionary for O(1) access by accessPointId
+  - Proper extraction of antennaTilt, antennaDirection, antennaHeight
+  - Backward compatibility with old format maintained
+  - Verified with real projects (maga.esx: 4/7 APs with tilt = -10.0°)
+
+- **Windows Filename Sanitization** (Platform-specific)
+  - Fixed OSError on Windows with special characters in project names
+  - Windows doesn't allow `<>:"/\|?*` in filenames
+  - Added `_sanitize_filename()` method to BaseExporter
+  - Invalid characters replaced with underscores
+  - Leading/trailing dots and spaces removed
+  - All 295 tests now pass on Windows
+
+- **Test Compatibility Fixes**
+  - test_excel_exporter.py: Updated for new Summary sheet structure
+  - test_imports.py: Version updated to 2.5.0
+  - test_json_exporter.py: Fixed project_name → file_name
+  - test_processors.py: Updated _determine_wifi_standard() signature
+
 - **Testing & Quality** (Phase 1 - Iteration 5)
-  - All 258 tests passing (100% pass rate)
-  - Test coverage increased from 40% to 70%
+  - All 295 tests passing (was 258, +37 new tests)
+  - Test coverage maintained at 70%
   - Fixed AccessPoint model edge cases
   - Enhanced error handling in analytics modules
   - Fixed height range boundaries in mounting analytics
@@ -330,7 +376,7 @@ python EkahauBOM.py project.esx --filter-floor "Floor 1"
 
 ## Contributors
 
-- **Pavel Semenischev** (@nimbo78) - Creator and maintainer
+- **Pavel Semenischev** (@htechno) - Creator and maintainer
 
 ---
 

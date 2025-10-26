@@ -9,6 +9,7 @@
 - [Фильтрация](#фильтрация)
 - [Группировка и аналитика](#группировка-и-аналитика)
 - [Форматы экспорта](#форматы-экспорта)
+- [Метаданные проекта](#метаданные-проекта-новое-в-v250) _(Новое в v2.5.0)_
 - [Расчет стоимости](#расчет-стоимости)
 - [Расширенное использование](#расширенное-использование)
 - [Устранение неполадок](#устранение-неполадок)
@@ -258,6 +259,83 @@ ekahau-bom project.esx \
 
 ---
 
+## Метаданные проекта _(Новое в v2.5.0)_
+
+### Автоматическое извлечение информации о проекте
+
+EkahauBOM автоматически извлекает метаданные проекта из файла Ekahau и включает их во все форматы экспорта:
+
+**Извлекаемые данные:**
+- Название проекта
+- Заказчик
+- Местоположение
+- Ответственное лицо
+- Версия схемы Ekahau
+
+### Отображение метаданных в разных форматах
+
+**CSV:**
+```csv
+# Ekahau BOM - Access Points Bill of Materials
+# Project Name: Corporate Office WiFi
+# Customer: ACME Corporation
+# Location: New York HQ, Building A
+# Responsible Person: John Smith
+#
+"Vendor","Model","Floor","Color","Tags","Quantity"
+...
+```
+
+**Excel:**
+- Секция "Project Information" в Summary листе
+- Четко отформатированная с жирным текстом
+- Автоматически включается если данные доступны
+
+**HTML:**
+- Отформатированная карточка с метаданными в начале отчета
+- Профессиональный внешний вид
+- Адаптивный дизайн
+
+**JSON:**
+```json
+{
+  "metadata": {
+    "file_name": "corporate_office",
+    "export_format": "json",
+    "version": "2.5.0",
+    "project_info": {
+      "project_name": "Corporate Office WiFi",
+      "customer": "ACME Corporation",
+      "location": "New York HQ, Building A",
+      "responsible_person": "John Smith",
+      "schema_version": "1.4.0"
+    }
+  }
+}
+```
+
+**PDF:**
+- Секция с информацией о проекте на титульной странице
+- Профессиональное форматирование
+- Готово для печати
+
+### Заполнение метаданных в Ekahau
+
+Для получения полных метаданных в экспорте, убедитесь что вы заполнили информацию о проекте в Ekahau:
+
+1. Откройте проект в Ekahau AI Pro
+2. Перейдите в Project Properties / Project Info
+3. Заполните поля:
+   - Project Name (Название проекта)
+   - Customer (Заказчик)
+   - Location (Местоположение)
+   - Responsible Person (Ответственное лицо)
+4. Сохраните изменения
+
+Метаданные будут автоматически извлечены и включены во все экспортированные отчеты.
+
+---
+
 ## Расчет стоимости
 
 ### Базовый расчет стоимости
@@ -475,8 +553,8 @@ ekahau-bom project.esx \
 ## Поддержка и ресурсы
 
 - **Документация**: См. README.ru.md для обзора функций
-- **Проблемы**: https://github.com/nimbo78/EkahauBOM/issues
-- **Обсуждения**: https://github.com/nimbo78/EkahauBOM/discussions
+- **Проблемы**: https://github.com/htechno/EkahauBOM/issues
+- **Обсуждения**: https://github.com/htechno/EkahauBOM/discussions
 - **Telegram**: [@htechno](https://t.me/htechno)
 
 ---

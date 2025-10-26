@@ -6,7 +6,7 @@
 
 1. Откройте браузер и перейдите на:
    ```
-   https://github.com/nimbo78/EkahauBOM/releases
+   https://github.com/htechno/EkahauBOM/releases
    ```
 
 2. Нажмите кнопку **"Draft a new release"** (или "Create a new release")
@@ -93,9 +93,9 @@ Optional:
 
 ## 🔗 Links
 
-- [Full Changelog](https://github.com/nimbo78/EkahauBOM/blob/main/CHANGELOG.md)
-- [User Guide](https://github.com/nimbo78/EkahauBOM/blob/main/docs/USER_GUIDE.md)
-- [Developer Guide](https://github.com/nimbo78/EkahauBOM/blob/main/docs/DEVELOPER_GUIDE.md)
+- [Full Changelog](https://github.com/htechno/EkahauBOM/blob/main/CHANGELOG.md)
+- [User Guide](https://github.com/htechno/EkahauBOM/blob/main/docs/USER_GUIDE.md)
+- [Developer Guide](https://github.com/htechno/EkahauBOM/blob/main/docs/DEVELOPER_GUIDE.md)
 
 ---
 
@@ -143,7 +143,7 @@ c:\Users\igors\OneDrive\Документы\Claude\EkahauBOM\dist\
 
 После публикации проверьте:
 
-1. Release виден на странице: https://github.com/nimbo78/EkahauBOM/releases
+1. Release виден на странице: https://github.com/htechno/EkahauBOM/releases
 2. Дистрибутивы доступны для скачивания
 3. Release notes отображаются корректно
 4. Тег `v2.5.0` отображается в списке тегов

@@ -56,12 +56,15 @@ class RadioProcessor:
         radio_id = radio_data.get("id", "")
         access_point_id = radio_data.get("accessPointId", "")
 
-        # Extract channel and frequency band
-        channel = radio_data.get("channel")
+        # Extract channel - handle both int and list[int] formats
+        channel_raw = radio_data.get("channel")
+        channel = self._extract_value(channel_raw)
+
         frequency_band = self._determine_frequency_band(radio_data, channel)
 
-        # Extract channel width (in MHz)
-        channel_width = radio_data.get("channelWidth")
+        # Extract channel width (in MHz) - handle both int and list[int] formats
+        channel_width_raw = radio_data.get("channelWidth")
+        channel_width = self._extract_value(channel_width_raw)
 
         # Extract transmit power (in dBm)
         tx_power = radio_data.get("transmitPower")
@@ -70,7 +73,7 @@ class RadioProcessor:
         antenna_type_id = radio_data.get("antennaTypeId")
 
         # Determine Wi-Fi standard
-        standard = self._determine_wifi_standard(radio_data)
+        standard = self._determine_wifi_standard(radio_data, channel_width)
 
         return Radio(
             id=radio_id,
@@ -82,6 +85,23 @@ class RadioProcessor:
             antenna_type_id=antenna_type_id,
             standard=standard
         )
+
+    def _extract_value(self, value: Any) -> int | float | None:
+        """Extract numeric value from various formats.
+
+        Args:
+            value: Can be int, float, list[int], list[float], or None
+
+        Returns:
+            First element if list, value itself if int/float, None otherwise
+        """
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return value
+        if isinstance(value, list) and len(value) > 0:
+            return value[0]
+        return None
 
     def _determine_frequency_band(self, radio_data: dict[str, Any], channel: int | None) -> str | None:
         """Determine frequency band from radio data.
@@ -114,11 +134,12 @@ class RadioProcessor:
 
         return None
 
-    def _determine_wifi_standard(self, radio_data: dict[str, Any]) -> str | None:
+    def _determine_wifi_standard(self, radio_data: dict[str, Any], channel_width: int | float | None = None) -> str | None:
         """Determine Wi-Fi standard from radio data.
 
         Args:
             radio_data: Raw radio data
+            channel_width: Channel width in MHz (optional)
 
         Returns:
             Wi-Fi standard string (802.11a/b/g/n/ac/ax/be) or None
@@ -127,17 +148,31 @@ class RadioProcessor:
         if "standard" in radio_data:
             return radio_data["standard"]
 
-        # Try to infer from other fields if available
-        # This is a simplification - actual detection would need more data
-        frequency_band = radio_data.get("band")
-        channel_width = radio_data.get("channelWidth")
+        # Check technology field (e.g., "N", "AC", "AX")
+        technology = radio_data.get("technology")
+        if technology:
+            tech_mapping = {
+                "A": "802.11a",
+                "B": "802.11b",
+                "G": "802.11g",
+                "N": "802.11n",
+                "AC": "802.11ac",
+                "AX": "802.11ax",
+                "BE": "802.11be"
+            }
+            if technology in tech_mapping:
+                return tech_mapping[technology]
 
-        # Basic inference (simplified)
-        if channel_width and channel_width >= 160:
-            return "802.11ax"  # Wi-Fi 6/6E supports 160 MHz
-        elif channel_width and channel_width >= 80:
-            return "802.11ac"  # Wi-Fi 5 supports 80 MHz
-        elif frequency_band == "FIVE_GHZ":
+        # Try to infer from channel width
+        if channel_width:
+            if channel_width >= 160:
+                return "802.11ax"  # Wi-Fi 6/6E supports 160 MHz
+            elif channel_width >= 80:
+                return "802.11ac"  # Wi-Fi 5 supports 80 MHz
+
+        # Try to infer from band
+        frequency_band = radio_data.get("band")
+        if frequency_band == "FIVE_GHZ":
             return "802.11ac"  # Default for 5 GHz
         elif frequency_band == "TWO_DOT_FOUR_GHZ":
             return "802.11n"  # Default for 2.4 GHz

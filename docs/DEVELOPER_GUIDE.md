@@ -28,7 +28,7 @@ Guide for contributors and developers working on EkahauBOM.
 
 ```bash
 # Clone the repository
-git clone https://github.com/nimbo78/EkahauBOM.git
+git clone https://github.com/htechno/EkahauBOM.git
 cd EkahauBOM
 
 # Create virtual environment
@@ -393,8 +393,8 @@ Closes #42
 
 ## Support & Resources
 
-- **Issues**: https://github.com/nimbo78/EkahauBOM/issues
-- **Discussions**: https://github.com/nimbo78/EkahauBOM/discussions
+- **Issues**: https://github.com/htechno/EkahauBOM/issues
+- **Discussions**: https://github.com/htechno/EkahauBOM/discussions
 - **Email**: (add if available)
 
 ---

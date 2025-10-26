@@ -13,6 +13,9 @@ Complete guide for using EkahauBOM to generate Bill of Materials from Ekahau pro
 - [Export Formats](#export-formats)
 - [Cost Calculation](#cost-calculation)
 - [Advanced Usage](#advanced-usage)
+  - [Configuration File](#configuration-file)
+  - [Custom Colors Configuration](#custom-colors-configuration)
+  - [Multiple Projects Workflow](#multiple-projects-workflow)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -304,6 +307,62 @@ volume_discounts:
 
 ## Advanced Usage
 
+### Configuration File
+
+Create a configuration file to set default values for all options:
+
+```yaml
+# config/config.yaml or ~/.ekahau_bom/config.yaml
+
+# Export settings
+export:
+  output_dir: reports
+  formats:
+    - excel
+    - html
+
+# Pricing configuration
+pricing:
+  enabled: true
+  default_discount: 10.0
+  volume_discounts: true
+
+# Filters (optional defaults)
+filters:
+  exclude_colors:
+    - Gray  # Exclude grey APs by default
+
+# Logging
+logging:
+  level: INFO
+  file: logs/ekahau_bom.log
+
+# Excel export settings
+excel:
+  add_charts: true
+  freeze_header: true
+  auto_filter: true
+```
+
+Use custom configuration:
+
+```bash
+# Use specific config file
+ekahau-bom project.esx --config my_config.yaml
+
+# Use default config (config/config.yaml)
+ekahau-bom project.esx
+```
+
+**Note:** CLI arguments always override configuration file values.
+
+Example with config + CLI override:
+
+```bash
+# Config sets format: excel, but CLI overrides to HTML
+ekahau-bom project.esx --format html
+```
+
 ### Custom Colors Configuration
 
 Create custom colors file:
@@ -477,8 +536,8 @@ ekahau-bom project.esx \
 ## Support & Resources
 
 - **Documentation**: See README.md for feature overview
-- **Issues**: https://github.com/nimbo78/EkahauBOM/issues
-- **Discussions**: https://github.com/nimbo78/EkahauBOM/discussions
+- **Issues**: https://github.com/htechno/EkahauBOM/issues
+- **Discussions**: https://github.com/htechno/EkahauBOM/discussions
 
 ---
 
