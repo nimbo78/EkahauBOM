@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **GitHub Actions CI/CD** (Phase 9.2 - NEW!)
+  - Automated release workflow (`release.yml`)
+    - Triggers on version tag push (v*.*.*)
+    - Builds Python package (wheel and source distribution)
+    - Extracts changelog for the version
+    - Creates GitHub release with artifacts
+    - Uploads build artifacts
+  - PyPI publishing workflow (`publish-pypi.yml`)
+    - Triggers on GitHub release publication
+    - Supports manual trigger
+    - Validates package with twine
+    - Publishes to PyPI
+  - Continuous testing workflow (`tests.yml`)
+    - Runs on push and pull requests to main/develop
+    - Tests on multiple OS (Ubuntu, Windows, macOS)
+    - Tests Python versions 3.8-3.12
+    - Generates coverage reports
+    - Uploads to Codecov
+  - Code quality workflow (`code-quality.yml`)
+    - Checks code formatting with black
+    - Lints with flake8
+    - Type checks with mypy
+  - Comprehensive release process documentation ([RELEASE_PROCESS.md](RELEASE_PROCESS.md))
+  - GitHub Actions badges in README.md
+
 - **Unit Tests Coverage Improvements** (Phase 9.1 - NEW!)
   - Added 29 new unit tests (+9% increase)
   - Fixed 16 failing tests (all tests now passing: 367/367)
