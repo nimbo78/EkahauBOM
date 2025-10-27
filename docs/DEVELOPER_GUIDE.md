@@ -399,5 +399,5 @@ Closes #42
 
 ---
 
-**Version**: 2.4.0  
+**Version**: 2.4.0
 **Last Updated**: 2024

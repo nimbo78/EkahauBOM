@@ -53,7 +53,11 @@ class TestPriceInfo:
     def test_price_info_creation(self):
         """Test PriceInfo calculates correctly."""
         price = PriceInfo(
-            vendor="Cisco", model="AP-515", unit_price=1000, quantity=5, discount_percent=10
+            vendor="Cisco",
+            model="AP-515",
+            unit_price=1000,
+            quantity=5,
+            discount_percent=10,
         )
 
         assert price.subtotal == 5000
@@ -63,7 +67,11 @@ class TestPriceInfo:
     def test_price_info_no_discount(self):
         """Test PriceInfo without discount."""
         price = PriceInfo(
-            vendor="Cisco", model="AP-515", unit_price=1000, quantity=3, discount_percent=0
+            vendor="Cisco",
+            model="AP-515",
+            unit_price=1000,
+            quantity=3,
+            discount_percent=0,
         )
 
         assert price.subtotal == 3000
@@ -118,17 +126,31 @@ class TestCostCalculator:
         """Test calculating cost for access points."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             ),
             AccessPoint(
-                id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap2",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             ),
             AccessPoint(
-                id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2"
+                id="ap3",
+                vendor="Cisco",
+                model="AP-635",
+                color="Red",
+                floor_name="Floor 2",
             ),
         ]
 
-        calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=False)
+        calculator = CostCalculator(
+            pricing_db, custom_discount=0, apply_volume_discounts=False
+        )
         summary = calculator.calculate_access_points_cost(aps)
 
         assert summary.items_with_prices == 2
@@ -141,12 +163,18 @@ class TestCostCalculator:
         # Create 25 APs to trigger 10% discount
         aps = [
             AccessPoint(
-                id=f"ap{i}", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id=f"ap{i}",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             )
             for i in range(25)
         ]
 
-        calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=True)
+        calculator = CostCalculator(
+            pricing_db, custom_discount=0, apply_volume_discounts=True
+        )
         summary = calculator.calculate_access_points_cost(aps)
 
         assert summary.subtotal == 25000  # 25*1000
@@ -157,12 +185,18 @@ class TestCostCalculator:
         """Test calculating with custom discount."""
         aps = [
             AccessPoint(
-                id=f"ap{i}", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id=f"ap{i}",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             )
             for i in range(5)
         ]
 
-        calculator = CostCalculator(pricing_db, custom_discount=15, apply_volume_discounts=False)
+        calculator = CostCalculator(
+            pricing_db, custom_discount=15, apply_volume_discounts=False
+        )
         summary = calculator.calculate_access_points_cost(aps)
 
         assert summary.subtotal == 5000
@@ -188,17 +222,27 @@ class TestCostCalculator:
         """Test calculating total project cost."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             ),
             AccessPoint(
-                id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap2",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             ),
         ]
         antennas = [
             Antenna("ANT-20", "ant1"),
         ]
 
-        calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=False)
+        calculator = CostCalculator(
+            pricing_db, custom_discount=0, apply_volume_discounts=False
+        )
         ap_summary, antenna_summary, combined_summary = calculator.calculate_total_cost(
             aps, antennas
         )
@@ -212,7 +256,11 @@ class TestCostCalculator:
         """Test that unknown equipment gets $0 price."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Unknown", model="Model123", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Unknown",
+                model="Model123",
+                color="Yellow",
+                floor_name="Floor 1",
             )
         ]
 
@@ -227,10 +275,18 @@ class TestCostCalculator:
         """Test coverage percentage calculation."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             ),  # Known
             AccessPoint(
-                id="ap2", vendor="Unknown", model="Model", color="Yellow", floor_name="Floor 1"
+                id="ap2",
+                vendor="Unknown",
+                model="Model",
+                color="Yellow",
+                floor_name="Floor 1",
             ),  # Unknown
         ]
 

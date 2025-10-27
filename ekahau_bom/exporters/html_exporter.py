@@ -13,7 +13,12 @@ from pathlib import Path
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
+from ..analytics import (
+    GroupingAnalytics,
+    CoverageAnalytics,
+    MountingAnalytics,
+    RadioAnalytics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +48,9 @@ class HTMLExporter(BaseExporter):
         Returns:
             List containing path to the created HTML file
         """
-        output_file = self._get_output_filename(project_data.project_name, "report.html")
+        output_file = self._get_output_filename(
+            project_data.project_name, "report.html"
+        )
 
         html_content = self._generate_html(project_data)
 
@@ -70,7 +77,9 @@ class HTMLExporter(BaseExporter):
         # Count unique values
         unique_vendors = len(set(ap.vendor for ap in project_data.access_points))
         unique_floors = len(set(ap.floor_name for ap in project_data.access_points))
-        unique_colors = len(set(ap.color for ap in project_data.access_points if ap.color))
+        unique_colors = len(
+            set(ap.color for ap in project_data.access_points if ap.color)
+        )
 
         # Generate sections
         summary_html = self._generate_summary(
@@ -84,7 +93,9 @@ class HTMLExporter(BaseExporter):
         )
 
         aps_table_html = self._generate_aps_table(project_data.access_points)
-        detailed_aps_table_html = self._generate_detailed_aps_table(project_data.access_points)
+        detailed_aps_table_html = self._generate_detailed_aps_table(
+            project_data.access_points
+        )
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
         grouping_html = self._generate_grouping_section(project_data.access_points)
         analytics_html = self._generate_analytics_section(
@@ -204,7 +215,9 @@ class HTMLExporter(BaseExporter):
         # Count by vendor/model/floor/color/tags
         ap_counts = Counter()
         for ap in access_points:
-            tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key))
+            tags_str = "; ".join(
+                str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)
+            )
             key = (ap.vendor, ap.model, ap.floor_name, ap.color or "", tags_str)
             ap_counts[key] += 1
 
@@ -266,7 +279,9 @@ class HTMLExporter(BaseExporter):
             # Format numeric values with appropriate precision
             location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else "—"
             location_y = f"{ap.location_y:.2f}" if ap.location_y is not None else "—"
-            mounting_height = f"{ap.mounting_height:.2f}" if ap.mounting_height is not None else "—"
+            mounting_height = (
+                f"{ap.mounting_height:.2f}" if ap.mounting_height is not None else "—"
+            )
             azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else "—"
             tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else "—"
             enabled_status = "✓" if ap.enabled else "✗"
@@ -389,7 +404,9 @@ class HTMLExporter(BaseExporter):
             }};
         </script>"""
 
-    def _prepare_chart_data(self, grouped_data: dict, title: str, chart_type: str) -> str:
+    def _prepare_chart_data(
+        self, grouped_data: dict, title: str, chart_type: str
+    ) -> str:
         """Prepare chart data as JSON string.
 
         Args:
@@ -922,7 +939,9 @@ class HTMLExporter(BaseExporter):
         });
     </script>"""
 
-    def _generate_analytics_section(self, access_points: list[AccessPoint], radios: list) -> str:
+    def _generate_analytics_section(
+        self, access_points: list[AccessPoint], radios: list
+    ) -> str:
         """Generate analytics section with mounting and radio metrics.
 
         Args:
@@ -946,9 +965,13 @@ class HTMLExporter(BaseExporter):
         height_distribution = None
         installation_summary = None
         if has_height_data:
-            mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+            mounting_metrics = MountingAnalytics.calculate_mounting_metrics(
+                access_points
+            )
             height_distribution = MountingAnalytics.group_by_height_range(access_points)
-            installation_summary = MountingAnalytics.get_installation_summary(access_points)
+            installation_summary = MountingAnalytics.get_installation_summary(
+                access_points
+            )
 
         # Calculate radio metrics
         radio_metrics = None
@@ -960,7 +983,14 @@ class HTMLExporter(BaseExporter):
             # Prepare height distribution data for Chart.js
             height_labels = []
             height_counts = []
-            for range_name in ["< 2.5m", "2.5-3.5m", "3.5-4.5m", "4.5-6.0m", "> 6.0m", "Unknown"]:
+            for range_name in [
+                "< 2.5m",
+                "2.5-3.5m",
+                "3.5-4.5m",
+                "4.5-6.0m",
+                "> 6.0m",
+                "Unknown",
+            ]:
                 count = height_distribution.get(range_name, 0)
                 if count > 0:
                     height_labels.append(range_name)
@@ -1151,7 +1181,9 @@ class HTMLExporter(BaseExporter):
             # Prepare channel width data
             width_labels = []
             width_counts = []
-            for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+            for width, count in sorted(
+                radio_metrics.channel_width_distribution.items()
+            ):
                 width_labels.append(f"{width} MHz" if width else "Unknown")
                 width_counts.append(count)
 
@@ -1162,7 +1194,13 @@ class HTMLExporter(BaseExporter):
             tx_power_dist = RadioAnalytics.get_tx_power_distribution(radios)
             tx_power_labels = []
             tx_power_counts = []
-            for range_name in ["< 10 dBm", "10-15 dBm", "15-20 dBm", "20-25 dBm", "> 25 dBm"]:
+            for range_name in [
+                "< 10 dBm",
+                "10-15 dBm",
+                "15-20 dBm",
+                "20-25 dBm",
+                "> 25 dBm",
+            ]:
                 count = tx_power_dist.get(range_name, 0)
                 if count > 0:
                     tx_power_labels.append(range_name)
@@ -1237,7 +1275,9 @@ class HTMLExporter(BaseExporter):
                         </thead>
                         <tbody>"""
 
-            for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+            for width, count in sorted(
+                radio_metrics.channel_width_distribution.items()
+            ):
                 percentage = (
                     (count / radio_metrics.total_radios * 100)
                     if radio_metrics.total_radios > 0

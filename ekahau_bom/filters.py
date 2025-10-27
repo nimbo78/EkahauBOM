@@ -21,7 +21,9 @@ class APFilter:
     """
 
     @staticmethod
-    def by_floors(access_points: list[AccessPoint], floors: list[str]) -> list[AccessPoint]:
+    def by_floors(
+        access_points: list[AccessPoint], floors: list[str]
+    ) -> list[AccessPoint]:
         """Filter access points by floor names.
 
         Args:
@@ -41,7 +43,9 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def by_colors(access_points: list[AccessPoint], colors: list[str]) -> list[AccessPoint]:
+    def by_colors(
+        access_points: list[AccessPoint], colors: list[str]
+    ) -> list[AccessPoint]:
         """Filter access points by colors.
 
         Args:
@@ -61,7 +65,9 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def by_vendors(access_points: list[AccessPoint], vendors: list[str]) -> list[AccessPoint]:
+    def by_vendors(
+        access_points: list[AccessPoint], vendors: list[str]
+    ) -> list[AccessPoint]:
         """Filter access points by vendors.
 
         Args:
@@ -81,7 +87,9 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def by_models(access_points: list[AccessPoint], models: list[str]) -> list[AccessPoint]:
+    def by_models(
+        access_points: list[AccessPoint], models: list[str]
+    ) -> list[AccessPoint]:
         """Filter access points by model names.
 
         Args:
@@ -153,7 +161,9 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def exclude_floors(access_points: list[AccessPoint], floors: list[str]) -> list[AccessPoint]:
+    def exclude_floors(
+        access_points: list[AccessPoint], floors: list[str]
+    ) -> list[AccessPoint]:
         """Exclude access points on specific floors.
 
         Args:
@@ -173,7 +183,9 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def exclude_colors(access_points: list[AccessPoint], colors: list[str]) -> list[AccessPoint]:
+    def exclude_colors(
+        access_points: list[AccessPoint], colors: list[str]
+    ) -> list[AccessPoint]:
         """Exclude access points with specific colors.
 
         Args:
@@ -193,7 +205,9 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def exclude_vendors(access_points: list[AccessPoint], vendors: list[str]) -> list[AccessPoint]:
+    def exclude_vendors(
+        access_points: list[AccessPoint], vendors: list[str]
+    ) -> list[AccessPoint]:
         """Exclude access points from specific vendors.
 
         Args:

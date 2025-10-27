@@ -8,14 +8,18 @@ from pathlib import Path
 
 # Read the README file
 readme_file = Path(__file__).parent / "README.md"
-long_description = readme_file.read_text(encoding="utf-8") if readme_file.exists() else ""
+long_description = (
+    readme_file.read_text(encoding="utf-8") if readme_file.exists() else ""
+)
 
 # Read requirements
 requirements_file = Path(__file__).parent / "requirements.txt"
 requirements = []
 if requirements_file.exists():
     requirements = requirements_file.read_text(encoding="utf-8").splitlines()
-    requirements = [r.strip() for r in requirements if r.strip() and not r.startswith("#")]
+    requirements = [
+        r.strip() for r in requirements if r.strip() and not r.startswith("#")
+    ]
 
 setup(
     name="ekahau-bom",

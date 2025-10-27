@@ -98,6 +98,8 @@ class BaseExporter(ABC):
         Args:
             files: List of exported files
         """
-        logger.info(f"{self.format_name} export completed: {len(files)} file(s) created")
+        logger.info(
+            f"{self.format_name} export completed: {len(files)} file(s) created"
+        )
         for file in files:
             logger.info(f"  - {file}")

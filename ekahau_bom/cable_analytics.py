@@ -76,7 +76,9 @@ class CableAnalytics:
 
     @staticmethod
     def calculate_cable_metrics(
-        cable_notes: list[CableNote], floors: dict[str, Floor], scale_factor: Optional[float] = None
+        cable_notes: list[CableNote],
+        floors: dict[str, Floor],
+        scale_factor: Optional[float] = None,
     ) -> CableMetrics:
         """Calculate comprehensive cable infrastructure metrics.
 
@@ -105,9 +107,13 @@ class CableAnalytics:
             # Track by floor
             floor_id = cable.floor_plan_id
             if floor_id:
-                floor_name = floors.get(floor_id).name if floor_id in floors else floor_id
+                floor_name = (
+                    floors.get(floor_id).name if floor_id in floors else floor_id
+                )
                 cables_by_floor[floor_name] += 1
-                length_by_floor[floor_name] = length_by_floor.get(floor_name, 0.0) + length
+                length_by_floor[floor_name] = (
+                    length_by_floor.get(floor_name, 0.0) + length
+                )
 
         # Calculate aggregate metrics
         total_length = sum(cable_lengths)

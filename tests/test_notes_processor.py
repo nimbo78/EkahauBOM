@@ -8,7 +8,15 @@ from __future__ import annotations
 
 import pytest
 from ekahau_bom.processors.notes import NotesProcessor
-from ekahau_bom.models import Note, NoteHistory, CableNote, PictureNote, Point, Location, Floor
+from ekahau_bom.models import (
+    Note,
+    NoteHistory,
+    CableNote,
+    PictureNote,
+    Point,
+    Location,
+    Floor,
+)
 
 
 class TestNotesProcessor:
@@ -44,7 +52,10 @@ class TestNotesProcessor:
                 {
                     "id": "note1",
                     "text": "Test note",
-                    "history": {"createdAt": "2021-06-15T20:14:11.234Z", "createdBy": "Test User"},
+                    "history": {
+                        "createdAt": "2021-06-15T20:14:11.234Z",
+                        "createdBy": "Test User",
+                    },
                     "imageIds": [],
                     "status": "CREATED",
                 }
@@ -66,7 +77,14 @@ class TestNotesProcessor:
     def test_process_note_without_history(self, processor):
         """Test processing note without history."""
         notes_data = {
-            "notes": [{"id": "note1", "text": "Test note", "imageIds": [], "status": "CREATED"}]
+            "notes": [
+                {
+                    "id": "note1",
+                    "text": "Test note",
+                    "imageIds": [],
+                    "status": "CREATED",
+                }
+            ]
         }
 
         result = processor.process_notes(notes_data)
@@ -179,7 +197,10 @@ class TestNotesProcessor:
             "pictureNotes": [
                 {
                     "id": "pic1",
-                    "location": {"floorPlanId": "floor1", "coord": {"x": 300.5, "y": 400.7}},
+                    "location": {
+                        "floorPlanId": "floor1",
+                        "coord": {"x": 300.5, "y": 400.7},
+                    },
                     "noteIds": ["note1", "note2"],
                     "status": "CREATED",
                 }
@@ -201,7 +222,9 @@ class TestNotesProcessor:
 
     def test_process_picture_note_without_location(self, processor, sample_floors):
         """Test processing picture note without location."""
-        picture_notes_data = {"pictureNotes": [{"id": "pic1", "noteIds": [], "status": "CREATED"}]}
+        picture_notes_data = {
+            "pictureNotes": [{"id": "pic1", "noteIds": [], "status": "CREATED"}]
+        }
 
         result = processor.process_picture_notes(picture_notes_data, sample_floors)
 
@@ -234,7 +257,10 @@ class TestNotesProcessor:
             "pictureNotes": [
                 {
                     "id": f"pic{i}",
-                    "location": {"floorPlanId": "floor1", "coord": {"x": i * 10.0, "y": i * 20.0}},
+                    "location": {
+                        "floorPlanId": "floor1",
+                        "coord": {"x": i * 10.0, "y": i * 20.0},
+                    },
                     "noteIds": [],
                     "status": "CREATED",
                 }
@@ -346,13 +372,19 @@ class TestNotesProcessor:
             "pictureNotes": [
                 {
                     "id": "valid-picture",
-                    "location": {"floorPlanId": "floor1", "coord": {"x": 100, "y": 200}},
+                    "location": {
+                        "floorPlanId": "floor1",
+                        "coord": {"x": 100, "y": 200},
+                    },
                     "noteIds": ["note1"],
                     "status": "CREATED",
                 },
                 {
                     "id": "bad-picture",
-                    "location": {"floorPlanId": "floor1", "coord": {"x": 150, "y": 250}},
+                    "location": {
+                        "floorPlanId": "floor1",
+                        "coord": {"x": 150, "y": 250},
+                    },
                     "status": "CREATED",
                 },
             ]
@@ -368,7 +400,9 @@ class TestNotesProcessor:
                 raise ValueError("Simulated picture note processing error")
             return original_method(note_data, floors_dict)
 
-        with patch.object(processor, "_process_single_picture_note", side_effect=mock_process):
+        with patch.object(
+            processor, "_process_single_picture_note", side_effect=mock_process
+        ):
             result = processor.process_picture_notes(picture_notes_data, floors)
 
         # Should have 1 valid picture note (second one failed)

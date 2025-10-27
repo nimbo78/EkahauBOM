@@ -781,6 +781,32 @@ Integration tests: E2E validation for all export formats
 
 ### Code Quality
 
+#### Pre-commit Hooks (Recommended)
+
+Автоматические проверки перед каждым commit:
+
+```bash
+# Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+
+# Run on all files manually
+pre-commit run --all-files
+
+# Hooks will run automatically on git commit
+```
+
+Pre-commit hooks automatically check:
+- ✅ Black code formatting
+- ✅ Trailing whitespace
+- ✅ End-of-file fixer
+- ✅ Large files check
+- ✅ Merge conflicts
+- ✅ Debug statements
+- ✅ Line endings (LF)
+
+#### Manual Code Quality Checks
+
 ```bash
 # Format code with black
 black ekahau_bom/

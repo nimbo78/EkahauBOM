@@ -146,7 +146,12 @@ class TestRadioProcessor:
         simulated_radios_data = {
             "simulatedRadios": [
                 {"id": "invalid-1"},  # Missing required fields
-                {"id": "valid-1", "accessPointId": "ap-1", "channel": [11], "technology": "N"},
+                {
+                    "id": "valid-1",
+                    "accessPointId": "ap-1",
+                    "channel": [11],
+                    "technology": "N",
+                },
             ]
         }
 
@@ -163,8 +168,18 @@ class TestRadioProcessor:
 
         simulated_radios_data = {
             "simulatedRadios": [
-                {"id": "radio-1", "accessPointId": "ap-1", "channel": [11], "technology": "N"},
-                {"id": "radio-2", "accessPointId": "ap-2", "channel": [36], "technology": "AC"},
+                {
+                    "id": "radio-1",
+                    "accessPointId": "ap-1",
+                    "channel": [11],
+                    "technology": "N",
+                },
+                {
+                    "id": "radio-2",
+                    "accessPointId": "ap-2",
+                    "channel": [36],
+                    "technology": "AC",
+                },
             ]
         }
 

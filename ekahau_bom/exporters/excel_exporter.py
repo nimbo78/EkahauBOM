@@ -18,7 +18,12 @@ from openpyxl.chart import PieChart, BarChart, Reference
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
+from ..analytics import (
+    GroupingAnalytics,
+    CoverageAnalytics,
+    MountingAnalytics,
+    RadioAnalytics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +43,9 @@ class ExcelExporter(BaseExporter):
 
     # Styles for headers
     HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
-    HEADER_FILL = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    HEADER_FILL = PatternFill(
+        start_color="366092", end_color="366092", fill_type="solid"
+    )
     HEADER_ALIGNMENT = Alignment(horizontal="center", vertical="center")
 
     # Styles for summary section headers
@@ -84,18 +91,26 @@ class ExcelExporter(BaseExporter):
 
         # Create sheets in order
         self._create_summary_sheet(wb, project_data)
-        self._create_access_points_sheet(wb, project_data.access_points, project_data.project_name)
+        self._create_access_points_sheet(
+            wb, project_data.access_points, project_data.project_name
+        )
         self._create_detailed_access_points_sheet(
             wb, project_data.access_points, project_data.project_name
         )
-        self._create_antennas_sheet(wb, project_data.antennas, project_data.project_name)
+        self._create_antennas_sheet(
+            wb, project_data.antennas, project_data.project_name
+        )
         self._create_grouped_sheets(wb, project_data.access_points)
 
         # Create analytics sheet if data available
-        has_mounting_data = any(ap.mounting_height is not None for ap in project_data.access_points)
+        has_mounting_data = any(
+            ap.mounting_height is not None for ap in project_data.access_points
+        )
         has_radio_data = len(project_data.radios) > 0
         if has_mounting_data or has_radio_data:
-            self._create_analytics_sheet(wb, project_data.access_points, project_data.radios)
+            self._create_analytics_sheet(
+                wb, project_data.access_points, project_data.radios
+            )
 
         # Save workbook
         try:
@@ -162,7 +177,12 @@ class ExcelExporter(BaseExporter):
         ws.freeze_panes = ws[f"A{row}"]
 
     def _apply_borders(
-        self, ws, min_row: int = 1, max_row: int = None, min_col: int = 1, max_col: int = None
+        self,
+        ws,
+        min_row: int = 1,
+        max_row: int = None,
+        min_col: int = 1,
+        max_col: int = None,
     ):
         """Apply borders to range of cells.
 
@@ -178,7 +198,9 @@ class ExcelExporter(BaseExporter):
         if max_col is None:
             max_col = ws.max_column
 
-        for row in ws.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
+        for row in ws.iter_rows(
+            min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col
+        ):
             for cell in row:
                 cell.border = self.THIN_BORDER
 
@@ -274,7 +296,9 @@ class ExcelExporter(BaseExporter):
         self._apply_header_style(ws, row)
 
         total_aps = len(project_data.access_points)
-        for vendor, count in sorted(vendor_counts.items(), key=lambda x: x[1], reverse=True):
+        for vendor, count in sorted(
+            vendor_counts.items(), key=lambda x: x[1], reverse=True
+        ):
             row += 1
             percentage = (count / total_aps * 100) if total_aps > 0 else 0
             ws[f"A{row}"] = vendor
@@ -293,7 +317,9 @@ class ExcelExporter(BaseExporter):
         ws[f"C{row}"] = "Percentage"
         self._apply_header_style(ws, row)
 
-        for floor, count in sorted(floor_counts.items(), key=lambda x: x[1], reverse=True):
+        for floor, count in sorted(
+            floor_counts.items(), key=lambda x: x[1], reverse=True
+        ):
             row += 1
             percentage = (count / total_aps * 100) if total_aps > 0 else 0
             ws[f"A{row}"] = floor
@@ -322,7 +348,13 @@ class ExcelExporter(BaseExporter):
 
         # Group and count APs
         ap_tuples = [
-            (ap.vendor, ap.model, ap.floor_name, ap.color, frozenset(str(tag) for tag in ap.tags))
+            (
+                ap.vendor,
+                ap.model,
+                ap.floor_name,
+                ap.color,
+                frozenset(str(tag) for tag in ap.tags),
+            )
             for ap in access_points
         ]
         ap_counts = Counter(ap_tuples)
@@ -391,7 +423,9 @@ class ExcelExporter(BaseExporter):
             # Prepare numeric values (will be None if not set)
             location_x = ap.location_x if ap.location_x is not None else None
             location_y = ap.location_y if ap.location_y is not None else None
-            mounting_height = ap.mounting_height if ap.mounting_height is not None else None
+            mounting_height = (
+                ap.mounting_height if ap.mounting_height is not None else None
+            )
             azimuth = ap.azimuth if ap.azimuth is not None else None
             tilt = ap.tilt if ap.tilt is not None else None
 
@@ -436,7 +470,9 @@ class ExcelExporter(BaseExporter):
 
         logger.info("Detailed AP installation sheet created")
 
-    def _create_antennas_sheet(self, wb: Workbook, antennas: list[Antenna], project_name: str):
+    def _create_antennas_sheet(
+        self, wb: Workbook, antennas: list[Antenna], project_name: str
+    ):
         """Create antennas sheet.
 
         Args:
@@ -455,7 +491,9 @@ class ExcelExporter(BaseExporter):
         antenna_names = [antenna.name for antenna in antennas]
         antenna_counts = Counter(antenna_names)
 
-        logger.info(f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique) to Excel")
+        logger.info(
+            f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique) to Excel"
+        )
 
         # Write data
         for antenna_name, count in sorted(antenna_counts.items()):
@@ -495,7 +533,9 @@ class ExcelExporter(BaseExporter):
         total = sum(grouped_data.values())
 
         # Write data sorted by count (descending)
-        for key, count in sorted(grouped_data.items(), key=lambda x: x[1], reverse=True):
+        for key, count in sorted(
+            grouped_data.items(), key=lambda x: x[1], reverse=True
+        ):
             percentage = (count / total * 100) if total > 0 else 0
             ws.append([str(key), count, f"{percentage:.1f}%"])
 
@@ -570,7 +610,9 @@ class ExcelExporter(BaseExporter):
 
         logger.info("Created 4 grouped sheets with charts")
 
-    def _create_analytics_sheet(self, wb: Workbook, access_points: list[AccessPoint], radios: list):
+    def _create_analytics_sheet(
+        self, wb: Workbook, access_points: list[AccessPoint], radios: list
+    ):
         """Create analytics sheet with mounting, coverage and radio metrics.
 
         Args:
@@ -662,7 +704,14 @@ class ExcelExporter(BaseExporter):
         dist_start_row = row + 1
         row += 1
 
-        for range_name in ["< 2.5m", "2.5-3.5m", "3.5-4.5m", "4.5-6.0m", "> 6.0m", "Unknown"]:
+        for range_name in [
+            "< 2.5m",
+            "2.5-3.5m",
+            "3.5-4.5m",
+            "4.5-6.0m",
+            "> 6.0m",
+            "Unknown",
+        ]:
             count = height_distribution.get(range_name, 0)
             if count > 0:
                 ws.cell(row, 1, range_name)
@@ -682,8 +731,12 @@ class ExcelExporter(BaseExporter):
             chart.x_axis.title = "Height Range"
 
             # Data references
-            data = Reference(ws, min_col=2, min_row=dist_start_row - 1, max_row=dist_end_row)
-            categories = Reference(ws, min_col=1, min_row=dist_start_row, max_row=dist_end_row)
+            data = Reference(
+                ws, min_col=2, min_row=dist_start_row - 1, max_row=dist_end_row
+            )
+            categories = Reference(
+                ws, min_col=1, min_row=dist_start_row, max_row=dist_end_row
+            )
 
             chart.add_data(data, titles_from_data=True)
             chart.set_categories(categories)
@@ -808,7 +861,9 @@ class ExcelExporter(BaseExporter):
                     data = Reference(
                         ws, min_col=2, min_row=band_start_row - 1, max_row=band_end_row
                     )
-                    labels = Reference(ws, min_col=1, min_row=band_start_row, max_row=band_end_row)
+                    labels = Reference(
+                        ws, min_col=1, min_row=band_start_row, max_row=band_end_row
+                    )
                     chart.add_data(data, titles_from_data=True)
                     chart.set_categories(labels)
                     chart.height = 10
@@ -830,7 +885,9 @@ class ExcelExporter(BaseExporter):
                 standard_start_row = row + 1
                 row += 1
 
-                for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                for standard, count in sorted(
+                    radio_metrics.standard_distribution.items()
+                ):
                     percentage = (
                         (count / radio_metrics.total_radios * 100)
                         if radio_metrics.total_radios > 0
@@ -850,10 +907,16 @@ class ExcelExporter(BaseExporter):
                     chart.title = "Wi-Fi Standards Distribution"
                     chart.y_axis.title = "Number of Radios"
                     data = Reference(
-                        ws, min_col=2, min_row=standard_start_row - 1, max_row=standard_end_row
+                        ws,
+                        min_col=2,
+                        min_row=standard_start_row - 1,
+                        max_row=standard_end_row,
                     )
                     categories = Reference(
-                        ws, min_col=1, min_row=standard_start_row, max_row=standard_end_row
+                        ws,
+                        min_col=1,
+                        min_row=standard_start_row,
+                        max_row=standard_end_row,
                     )
                     chart.add_data(data, titles_from_data=True)
                     chart.set_categories(categories)
@@ -875,7 +938,9 @@ class ExcelExporter(BaseExporter):
                 width_start_row = row + 1
                 row += 1
 
-                for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+                for width, count in sorted(
+                    radio_metrics.channel_width_distribution.items()
+                ):
                     ws.cell(row, 1, f"{width} MHz")
                     ws.cell(row, 2, count)
                     row += 1
@@ -886,4 +951,6 @@ class ExcelExporter(BaseExporter):
         # Auto-size columns
         self._auto_size_columns(ws)
 
-        logger.info("Analytics sheet created with mounting and radio metrics and charts")
+        logger.info(
+            "Analytics sheet created with mounting and radio metrics and charts"
+        )

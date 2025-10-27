@@ -104,7 +104,9 @@ class TestAPFilter:
         result = APFilter.by_tag(sample_aps, "Location", ["Building A"])
         assert len(result) == 2
         for ap in result:
-            assert any(tag.key == "Location" and tag.value == "Building A" for tag in ap.tags)
+            assert any(
+                tag.key == "Location" and tag.value == "Building A" for tag in ap.tags
+            )
 
     def test_by_tag_multiple_values(self, sample_aps):
         """Test filtering by tag with multiple values."""
@@ -157,7 +159,9 @@ class TestAPFilter:
 
     def test_apply_filters_with_tags(self, sample_aps):
         """Test applying filters with tag filtering."""
-        result = APFilter.apply_filters(sample_aps, include_tags={"Location": ["Building A"]})
+        result = APFilter.apply_filters(
+            sample_aps, include_tags={"Location": ["Building A"]}
+        )
         assert len(result) == 2
 
     def test_apply_filters_empty(self, sample_aps):

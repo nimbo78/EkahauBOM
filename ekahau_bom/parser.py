@@ -52,7 +52,9 @@ class EkahauParser:
             raise FileNotFoundError(f"File not found: {self.esx_file}")
 
         if self.esx_file.suffix.lower() != ".esx":
-            raise ValueError(f"Invalid file extension. Expected .esx, got {self.esx_file.suffix}")
+            raise ValueError(
+                f"Invalid file extension. Expected .esx, got {self.esx_file.suffix}"
+            )
 
         self._zip_file: ZipFile | None = None
         self._data_cache: dict[str, Any] = {}
@@ -64,7 +66,9 @@ class EkahauParser:
             logger.info(f"Opened .esx file: {self.esx_file}")
             return self
         except BadZipFile as e:
-            raise ValueError(f"Invalid .esx file (not a valid ZIP): {self.esx_file}") from e
+            raise ValueError(
+                f"Invalid .esx file (not a valid ZIP): {self.esx_file}"
+            ) from e
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
@@ -98,9 +102,13 @@ class EkahauParser:
             logger.debug(f"Successfully parsed {filename}")
             return parsed
         except KeyError as e:
-            raise KeyError(f"Required file '{filename}' not found in .esx archive") from e
+            raise KeyError(
+                f"Required file '{filename}' not found in .esx archive"
+            ) from e
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"Invalid JSON in {filename}: {e.msg}", e.doc, e.pos) from e
+            raise json.JSONDecodeError(
+                f"Invalid JSON in {filename}: {e.msg}", e.doc, e.pos
+            ) from e
 
     def get_access_points(self) -> dict[str, Any]:
         """Get access points data from the project.

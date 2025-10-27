@@ -43,10 +43,20 @@ def sample_project_data():
             tags=[Tag("Location", "Building A", "tag1")],
         ),
         AccessPoint(
-            id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2", tags=[]
+            id="ap3",
+            vendor="Cisco",
+            model="AP-635",
+            color="Red",
+            floor_name="Floor 2",
+            tags=[],
         ),
         AccessPoint(
-            id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+            id="ap4",
+            vendor="Aruba",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            tags=[],
         ),
         AccessPoint(
             id="ap5",
@@ -258,7 +268,9 @@ class TestJSONExporter:
             data = json.load(f)
 
         vendor_analytics = data["analytics"]["by_vendor"]
-        total_percentage = sum(group["percentage"] for group in vendor_analytics["groups"])
+        total_percentage = sum(
+            group["percentage"] for group in vendor_analytics["groups"]
+        )
 
         # Should sum to approximately 100%
         assert 99.9 <= total_percentage <= 100.1
@@ -362,7 +374,9 @@ class TestJSONExporter:
         )
 
         exporter = JSONExporter(tmp_path)
-        files = exporter.export(project_data)  # Use project_data instead of sample_project_data
+        files = exporter.export(
+            project_data
+        )  # Use project_data instead of sample_project_data
 
         with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -374,7 +388,11 @@ class TestJSONExporter:
         """Test JSON export with project metadata."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             )
         ]
         metadata = ProjectMetadata(
@@ -387,7 +405,11 @@ class TestJSONExporter:
             project_ancestors=["ancestor1"],
         )
         project_data = ProjectData(
-            access_points=aps, antennas=[], floors={}, project_name="Test", metadata=metadata
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Test",
+            metadata=metadata,
         )
 
         exporter = JSONExporter(tmp_path)
@@ -412,7 +434,11 @@ class TestJSONExporter:
         """Test JSON export with radios data."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             )
         ]
         radios = [
@@ -420,7 +446,11 @@ class TestJSONExporter:
             Radio(id="radio2", access_point_id="ap1", frequency_band="5GHz"),
         ]
         project_data = ProjectData(
-            access_points=aps, antennas=[], floors={}, project_name="Test", radios=radios
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Test",
+            radios=radios,
         )
 
         exporter = JSONExporter(tmp_path)
@@ -446,7 +476,11 @@ class TestJSONExporter:
         """Test JSON export with cable notes."""
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
             )
         ]
         cable_notes = [

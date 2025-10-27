@@ -18,7 +18,9 @@ class NetworkSettingsProcessor:
     """Process network capacity settings from Ekahau project."""
 
     @staticmethod
-    def process_network_settings(settings_data: dict[str, Any]) -> list[NetworkCapacitySettings]:
+    def process_network_settings(
+        settings_data: dict[str, Any]
+    ) -> list[NetworkCapacitySettings]:
         """Process network capacity settings.
 
         Args:
@@ -48,7 +50,9 @@ class NetworkSettingsProcessor:
         return processed_settings
 
     @staticmethod
-    def _process_single_setting(setting_data: dict[str, Any]) -> NetworkCapacitySettings:
+    def _process_single_setting(
+        setting_data: dict[str, Any]
+    ) -> NetworkCapacitySettings:
         """Process a single network capacity setting.
 
         Args:
@@ -61,14 +65,17 @@ class NetworkSettingsProcessor:
         band_map = {"TWO": "2.4GHz", "FIVE": "5GHz", "SIX": "6GHz"}
 
         frequency_band = band_map.get(
-            setting_data.get("frequencyBand", ""), setting_data.get("frequencyBand", "Unknown")
+            setting_data.get("frequencyBand", ""),
+            setting_data.get("frequencyBand", "Unknown"),
         )
 
         # Process data rates
         data_rates = []
         for rate_data in setting_data.get("abgRates", []):
             data_rates.append(
-                DataRate(rate=rate_data.get("rate", ""), state=rate_data.get("state", ""))
+                DataRate(
+                    rate=rate_data.get("rate", ""), state=rate_data.get("state", "")
+                )
             )
 
         return NetworkCapacitySettings(
@@ -113,7 +120,9 @@ class NetworkSettingsProcessor:
         }
 
     @staticmethod
-    def get_data_rate_summary(settings: list[NetworkCapacitySettings]) -> dict[str, Any]:
+    def get_data_rate_summary(
+        settings: list[NetworkCapacitySettings],
+    ) -> dict[str, Any]:
         """Get summary of data rate configuration.
 
         Args:
@@ -126,8 +135,12 @@ class NetworkSettingsProcessor:
 
         for setting in settings:
             band = setting.frequency_band
-            mandatory_rates = [r.rate for r in setting.data_rates if r.state == "MANDATORY"]
-            disabled_rates = [r.rate for r in setting.data_rates if r.state == "DISABLED"]
+            mandatory_rates = [
+                r.rate for r in setting.data_rates if r.state == "MANDATORY"
+            ]
+            disabled_rates = [
+                r.rate for r in setting.data_rates if r.state == "DISABLED"
+            ]
 
             summary[band] = {
                 "mandatory_rates": mandatory_rates,

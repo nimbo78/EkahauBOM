@@ -9,7 +9,15 @@ from __future__ import annotations
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.excel_exporter import ExcelExporter
-from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, ProjectMetadata, Radio
+from ekahau_bom.models import (
+    ProjectData,
+    AccessPoint,
+    Antenna,
+    Tag,
+    Floor,
+    ProjectMetadata,
+    Radio,
+)
 
 
 @pytest.fixture
@@ -456,7 +464,9 @@ class TestExcelExporter:
         assert "Project Statistics" in content
         assert "Total Access Points:" in content
 
-    def test_export_with_radios_creates_analytics_sheet(self, detailed_project_data, tmp_path):
+    def test_export_with_radios_creates_analytics_sheet(
+        self, detailed_project_data, tmp_path
+    ):
         """Test that Analytics sheet is created when radios data is available."""
         try:
             from openpyxl import load_workbook
@@ -472,7 +482,9 @@ class TestExcelExporter:
         # Analytics sheet should exist because we have radios
         assert "Analytics" in sheet_names
 
-    def test_export_without_radios_no_analytics_sheet(self, sample_project_data, tmp_path):
+    def test_export_without_radios_no_analytics_sheet(
+        self, sample_project_data, tmp_path
+    ):
         """Test that Analytics sheet is NOT created when no radios/mounting data."""
         try:
             from openpyxl import load_workbook
@@ -591,7 +603,11 @@ class TestExcelExporter:
 
         aps = [
             AccessPoint(
-                vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
+                tags=[],
             )
         ]
         project_data = ProjectData(
@@ -601,7 +617,9 @@ class TestExcelExporter:
         exporter = ExcelExporter(tmp_path)
 
         # Mock workbook.save to raise an exception
-        with patch("openpyxl.Workbook.save", side_effect=PermissionError("File is locked")):
+        with patch(
+            "openpyxl.Workbook.save", side_effect=PermissionError("File is locked")
+        ):
             with pytest.raises(IOError, match="Failed to save Excel file"):
                 exporter.export(project_data)
 
@@ -611,7 +629,11 @@ class TestExcelExporter:
 
         aps = [
             AccessPoint(
-                vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
+                tags=[],
             )
         ]
         project_data = ProjectData(
@@ -760,7 +782,9 @@ class TestExcelExporter:
         problem_cell = ws["C1"]
 
         # Create a mock that raises exception when value property is accessed
-        with patch.object(type(problem_cell), "value", new_callable=PropertyMock) as mock_value:
+        with patch.object(
+            type(problem_cell), "value", new_callable=PropertyMock
+        ) as mock_value:
             mock_value.side_effect = RuntimeError("Simulated cell value error")
 
             # This should not raise, exception should be caught by except block

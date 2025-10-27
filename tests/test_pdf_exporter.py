@@ -295,7 +295,9 @@ class TestPDFExporterAvailable:
             or "5 GHz" in html_content
         )
 
-    def test_detailed_aps_table_includes_installation_params(self, sample_project_data, tmp_path):
+    def test_detailed_aps_table_includes_installation_params(
+        self, sample_project_data, tmp_path
+    ):
         """Test detailed APs table includes installation parameters."""
         pytest.importorskip("weasyprint")
 
@@ -327,7 +329,11 @@ class TestPDFExporterAvailable:
 
         aps = [AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1")]
         project_data = ProjectData(
-            access_points=aps, antennas=[], floors={}, project_name="Test", metadata=metadata
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Test",
+            metadata=metadata,
         )
 
         exporter = PDFExporter(tmp_path)
@@ -358,7 +364,9 @@ class TestPDFExporterAvailable:
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", mine=True, floor_id="f1"),
+            AccessPoint(
+                "Cisco", "AP-515", "Yellow", "Floor 1", mine=True, floor_id="f1"
+            ),
             AccessPoint("Aruba", "AP-635", "Red", "Floor 2", mine=True, floor_id="f2"),
         ]
 

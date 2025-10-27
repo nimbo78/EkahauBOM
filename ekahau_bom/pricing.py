@@ -220,7 +220,9 @@ class CostCalculator:
         self.custom_discount = custom_discount
         self.apply_volume_discounts = apply_volume_discounts
 
-    def calculate_access_points_cost(self, access_points: list[AccessPoint]) -> CostSummary:
+    def calculate_access_points_cost(
+        self, access_points: list[AccessPoint]
+    ) -> CostSummary:
         """Calculate cost for access points.
 
         Args:
@@ -362,7 +364,8 @@ class CostCalculator:
         combined = CostSummary(
             items=ap_summary.items + antenna_summary.items,
             currency=self.pricing_db.currency,
-            items_with_prices=ap_summary.items_with_prices + antenna_summary.items_with_prices,
+            items_with_prices=ap_summary.items_with_prices
+            + antenna_summary.items_with_prices,
             items_without_prices=ap_summary.items_without_prices
             + antenna_summary.items_without_prices,
         )

@@ -38,7 +38,9 @@ def load_color_database(config_file: Optional[Path] = None) -> dict[str, str]:
         with open(config_file, "r", encoding="utf-8") as f:
             colors = yaml.safe_load(f)
             if not isinstance(colors, dict):
-                logger.warning(f"Invalid color config format in {config_file}, using defaults")
+                logger.warning(
+                    f"Invalid color config format in {config_file}, using defaults"
+                )
                 return DEFAULT_COLORS.copy()
             logger.info(f"Loaded {len(colors)} colors from {config_file}")
             return colors

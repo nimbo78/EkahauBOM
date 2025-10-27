@@ -13,7 +13,13 @@ from pathlib import Path
 
 try:
     from rich.console import Console
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+    from rich.progress import (
+        Progress,
+        SpinnerColumn,
+        TextColumn,
+        BarColumn,
+        TaskProgressColumn,
+    )
     from rich.table import Table
     from rich.panel import Panel
     from rich import box
@@ -71,20 +77,29 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--config", type=Path, help="Path to configuration file (default: config/config.yaml)"
+        "--config",
+        type=Path,
+        help="Path to configuration file (default: config/config.yaml)",
     )
 
     parser.add_argument(
-        "--colors-config", type=Path, help="Path to custom colors configuration file (YAML)"
+        "--colors-config",
+        type=Path,
+        help="Path to custom colors configuration file (YAML)",
     )
 
     parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Enable verbose logging (DEBUG level)"
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose logging (DEBUG level)",
     )
 
     parser.add_argument("--log-file", type=Path, help="Path to log file (optional)")
 
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
 
     parser.add_argument(
         "--format",
@@ -103,15 +118,21 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     filter_group.add_argument(
-        "--filter-color", type=str, help='Filter by colors (comma-separated): "Yellow,Red,Blue"'
+        "--filter-color",
+        type=str,
+        help='Filter by colors (comma-separated): "Yellow,Red,Blue"',
     )
 
     filter_group.add_argument(
-        "--filter-vendor", type=str, help='Filter by vendors (comma-separated): "Cisco,Aruba"'
+        "--filter-vendor",
+        type=str,
+        help='Filter by vendors (comma-separated): "Cisco,Aruba"',
     )
 
     filter_group.add_argument(
-        "--filter-model", type=str, help='Filter by models (comma-separated): "AP-515,AP-635"'
+        "--filter-model",
+        type=str,
+        help='Filter by models (comma-separated): "AP-515,AP-635"',
     )
 
     filter_group.add_argument(
@@ -124,7 +145,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "--exclude-floor", type=str, help="Exclude floor names (comma-separated)"
     )
 
-    filter_group.add_argument("--exclude-color", type=str, help="Exclude colors (comma-separated)")
+    filter_group.add_argument(
+        "--exclude-color", type=str, help="Exclude colors (comma-separated)"
+    )
 
     filter_group.add_argument(
         "--exclude-vendor", type=str, help="Exclude vendors (comma-separated)"
@@ -141,7 +164,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     group_group.add_argument(
-        "--tag-key", type=str, help="Tag key name to use when --group-by tag is selected"
+        "--tag-key",
+        type=str,
+        help="Tag key name to use when --group-by tag is selected",
     )
 
     # Pricing options
@@ -200,7 +225,9 @@ def create_argument_parser() -> argparse.ArgumentParser:
     )
 
     viz_group.add_argument(
-        "--no-ap-names", action="store_true", help="Hide AP names on floor plan visualizations"
+        "--no-ap-names",
+        action="store_true",
+        help="Hide AP names on floor plan visualizations",
     )
 
     viz_group.add_argument(
@@ -234,14 +261,23 @@ def print_header():
 
 
 def print_summary_table(
-    access_points, antennas, radios, floors, notes=None, cable_notes=None, picture_notes=None
+    access_points,
+    antennas,
+    radios,
+    floors,
+    notes=None,
+    cable_notes=None,
+    picture_notes=None,
 ):
     """Print summary statistics table with Rich."""
     if not RICH_AVAILABLE or not console:
         return
 
     table = Table(
-        title="Project Summary", box=box.ROUNDED, show_header=True, header_style="bold cyan"
+        title="Project Summary",
+        box=box.ROUNDED,
+        show_header=True,
+        header_style="bold cyan",
     )
     table.add_column("Metric", style="cyan", no_wrap=True)
     table.add_column("Count", justify="right", style="green")
@@ -272,7 +308,9 @@ def print_grouping_table(title, data_dict):
         return
 
     total = sum(data_dict.values())
-    table = Table(title=title, box=box.SIMPLE, show_header=True, header_style="bold magenta")
+    table = Table(
+        title=title, box=box.SIMPLE, show_header=True, header_style="bold magenta"
+    )
     table.add_column("Name", style="yellow")
     table.add_column("Count", justify="right", style="cyan")
     table.add_column("Percentage", justify="right", style="green")
@@ -289,7 +327,9 @@ def print_analytics_table(analytics_data):
     if not RICH_AVAILABLE or not console or not analytics_data:
         return
 
-    table = Table(title="Analytics", box=box.ROUNDED, show_header=True, header_style="bold yellow")
+    table = Table(
+        title="Analytics", box=box.ROUNDED, show_header=True, header_style="bold yellow"
+    )
     table.add_column("Metric", style="yellow")
     table.add_column("Value", justify="right", style="cyan")
 
@@ -308,16 +348,22 @@ def print_cost_summary(cost_summary):
         return
 
     table = Table(
-        title="💰 Cost Summary", box=box.DOUBLE, show_header=True, header_style="bold green"
+        title="💰 Cost Summary",
+        box=box.DOUBLE,
+        show_header=True,
+        header_style="bold green",
     )
     table.add_column("Item", style="cyan")
     table.add_column("Amount", justify="right", style="green")
 
     table.add_row("Access Points", f"${cost_summary.grand_total:,.2f}")
     if hasattr(cost_summary, "total_discount") and cost_summary.total_discount > 0:
-        table.add_row("Total Savings", f"[red]-${cost_summary.total_discount:,.2f}[/red]")
+        table.add_row(
+            "Total Savings", f"[red]-${cost_summary.total_discount:,.2f}[/red]"
+        )
     table.add_row(
-        "[bold]Total[/bold]", f"[bold green]${cost_summary.grand_total:,.2f}[/bold green]"
+        "[bold]Total[/bold]",
+        f"[bold green]${cost_summary.grand_total:,.2f}[/bold green]",
     )
 
     console.print(table)
@@ -329,7 +375,10 @@ def print_export_summary(exported_files):
         return
 
     table = Table(
-        title="📄 Generated Files", box=box.ROUNDED, show_header=True, header_style="bold blue"
+        title="📄 Generated Files",
+        box=box.ROUNDED,
+        show_header=True,
+        header_style="bold blue",
     )
     table.add_column("File", style="cyan")
     table.add_column("Size", justify="right", style="yellow")
@@ -455,7 +504,9 @@ def process_project(
                 TextColumn("[progress.description]{task.description}"),
                 console=console,
             ) as progress:
-                task = progress.add_task(f"[cyan]Processing project: {esx_file.name}", total=None)
+                task = progress.add_task(
+                    f"[cyan]Processing project: {esx_file.name}", total=None
+                )
                 parser_context = EkahauParser(esx_file)
                 progress.update(task, completed=True)
         else:
@@ -494,7 +545,9 @@ def process_project(
 
             # Process access points
             ap_processor = AccessPointProcessor(color_db, tag_processor)
-            access_points = ap_processor.process(access_points_data, floors, simulated_radios_data)
+            access_points = ap_processor.process(
+                access_points_data, floors, simulated_radios_data
+            )
 
             # Apply filters if specified
             if any(
@@ -509,7 +562,9 @@ def process_project(
                     exclude_vendors,
                 ]
             ):
-                logger.info(f"Applying filters to {len(access_points)} access points...")
+                logger.info(
+                    f"Applying filters to {len(access_points)} access points..."
+                )
                 access_points = APFilter.apply_filters(
                     access_points,
                     include_floors=filter_floors,
@@ -524,7 +579,9 @@ def process_project(
 
             # Apply grouping if specified
             if group_by:
-                logger.info(f"Grouping {len(access_points)} access points by: {group_by}")
+                logger.info(
+                    f"Grouping {len(access_points)} access points by: {group_by}"
+                )
 
                 if group_by == "floor":
                     grouped = GroupingAnalytics.group_by_floor(access_points)
@@ -550,7 +607,9 @@ def process_project(
 
             # Process antennas
             antenna_processor = AntennaProcessor()
-            antennas = antenna_processor.process(simulated_radios_data, antenna_types_data)
+            antennas = antenna_processor.process(
+                simulated_radios_data, antenna_types_data
+            )
 
             # Process radios
             radio_processor = RadioProcessor()
@@ -560,7 +619,9 @@ def process_project(
             notes_processor = NotesProcessor()
             notes = notes_processor.process_notes(notes_data)
             cable_notes = notes_processor.process_cable_notes(cable_notes_data, floors)
-            picture_notes = notes_processor.process_picture_notes(picture_notes_data, floors)
+            picture_notes = notes_processor.process_picture_notes(
+                picture_notes_data, floors
+            )
             logger.info(
                 f"Found {len(notes)} text notes, {len(cable_notes)} cable notes, {len(picture_notes)} picture notes"
             )
@@ -609,7 +670,9 @@ def process_project(
                 logger.info("=" * 60)
                 logger.info("Installation & Mounting Analytics")
                 logger.info("=" * 60)
-                mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
+                mounting_metrics = MountingAnalytics.calculate_mounting_metrics(
+                    access_points
+                )
                 # Display height distribution
                 height_dist = MountingAnalytics.group_by_height_range(access_points)
                 logger.info("Height Distribution:")
@@ -637,7 +700,9 @@ def process_project(
                 # Wi-Fi standards
                 if radio_metrics.standard_distribution:
                     logger.info("Wi-Fi Standards:")
-                    for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                    for standard, count in sorted(
+                        radio_metrics.standard_distribution.items()
+                    ):
                         percentage = (
                             (count / radio_metrics.total_radios * 100)
                             if radio_metrics.total_radios > 0
@@ -659,7 +724,9 @@ def process_project(
                     logger.info("Channel Distribution:")
                     # Show top 10 most used channels
                     top_channels = sorted(
-                        radio_metrics.channel_distribution.items(), key=lambda x: x[1], reverse=True
+                        radio_metrics.channel_distribution.items(),
+                        key=lambda x: x[1],
+                        reverse=True,
                     )[:10]
                     for channel, count in top_channels:
                         logger.info(f"  Channel {channel}: {count} radios")
@@ -678,7 +745,9 @@ def process_project(
                 logger.info("Network Configuration:")
 
                 # SSID summary
-                ssid_summary = NetworkSettingsProcessor.get_ssid_summary(network_settings)
+                ssid_summary = NetworkSettingsProcessor.get_ssid_summary(
+                    network_settings
+                )
                 if ssid_summary:
                     logger.info("  SSID Configuration:")
                     if ssid_summary.get("ssids_2_4ghz"):
@@ -697,20 +766,28 @@ def process_project(
                 logger.info("=" * 60)
                 logger.info("Cable Infrastructure Analytics")
                 logger.info("=" * 60)
-                cable_metrics = CableAnalytics.calculate_cable_metrics(cable_notes, floors)
+                cable_metrics = CableAnalytics.calculate_cable_metrics(
+                    cable_notes, floors
+                )
 
                 # Cable counts by floor
                 if cable_metrics.cables_by_floor:
                     logger.info("Cable Routes by Floor:")
-                    for floor_name, count in sorted(cable_metrics.cables_by_floor.items()):
+                    for floor_name, count in sorted(
+                        cable_metrics.cables_by_floor.items()
+                    ):
                         length = cable_metrics.length_by_floor.get(floor_name, 0.0)
-                        logger.info(f"  {floor_name}: {count} routes ({length:.1f} units)")
+                        logger.info(
+                            f"  {floor_name}: {count} routes ({length:.1f} units)"
+                        )
 
                 # Cable BOM
                 cable_bom = CableAnalytics.generate_cable_bom(cable_metrics)
                 logger.info("Cable Bill of Materials:")
                 for item in cable_bom:
-                    logger.info(f"  {item['description']}: {item['quantity']} {item['unit']}")
+                    logger.info(
+                        f"  {item['description']}: {item['quantity']} {item['unit']}"
+                    )
 
             # Calculate costs if enabled
             cost_summary = None
@@ -732,7 +809,9 @@ def process_project(
                 logger.info(f"Cost Summary:")
                 logger.info(f"  Access Points: ${ap_costs.grand_total:,.2f}")
                 logger.info(f"  Antennas: ${antenna_costs.grand_total:,.2f}")
-                logger.info(f"  Total: ${total_costs.grand_total:,.2f} {total_costs.currency}")
+                logger.info(
+                    f"  Total: ${total_costs.grand_total:,.2f} {total_costs.currency}"
+                )
                 if total_costs.total_discount > 0:
                     logger.info(f"  Total Savings: ${total_costs.total_discount:,.2f}")
 
@@ -841,7 +920,9 @@ def process_project(
                         logger.warning("No floor plan visualizations were generated")
 
                 except ImportError as e:
-                    logger.error(f"Floor plan visualization requires Pillow library: {e}")
+                    logger.error(
+                        f"Floor plan visualization requires Pillow library: {e}"
+                    )
                     logger.error("Install with: pip install Pillow")
                 except Exception as e:
                     logger.error(f"Error generating floor plan visualizations: {e}")
@@ -851,9 +932,17 @@ def process_project(
 
             # Print summary with Rich
             if RICH_AVAILABLE and console:
-                console.print("\n[bold green]✓ Processing completed successfully![/bold green]\n")
+                console.print(
+                    "\n[bold green]✓ Processing completed successfully![/bold green]\n"
+                )
                 print_summary_table(
-                    access_points, antennas, radios, floors, notes, cable_notes, picture_notes
+                    access_points,
+                    antennas,
+                    radios,
+                    floors,
+                    notes,
+                    cable_notes,
+                    picture_notes,
                 )
                 # Combine exported files and visualization files for summary
                 all_files = exported_files + visualization_files
@@ -885,7 +974,9 @@ def process_project(
         return 1
     except KeyError as e:
         if RICH_AVAILABLE and console:
-            console.print(f"[bold red]✗ Error:[/bold red] Missing required data in .esx file: {e}")
+            console.print(
+                f"[bold red]✗ Error:[/bold red] Missing required data in .esx file: {e}"
+            )
         else:
             logger.error(f"Missing required data in .esx file: {e}")
         return 1
@@ -983,7 +1074,9 @@ def main(args: list[str] | None = None) -> int:
     if batch_dir:
         # Batch mode: find all .esx files in directory
         try:
-            files_to_process = find_esx_files(batch_dir, merged_config.get("recursive", False))
+            files_to_process = find_esx_files(
+                batch_dir, merged_config.get("recursive", False)
+            )
             if not files_to_process:
                 logger.error(f"No .esx files found in {batch_dir}")
                 return 1
@@ -1063,7 +1156,9 @@ def main(args: list[str] | None = None) -> int:
         except Exception as e:
             logger.error(f"Failed to process {esx_file.name}: {e}")
             if RICH_AVAILABLE and console:
-                console.print(f"[bold red]✗ Failed to process {esx_file.name}:[/bold red] {e}")
+                console.print(
+                    f"[bold red]✗ Failed to process {esx_file.name}:[/bold red] {e}"
+                )
             failed_files.append(esx_file.name)
 
     # Print summary for batch mode
@@ -1074,7 +1169,10 @@ def main(args: list[str] | None = None) -> int:
             console.print(f"[bold blue]{'='*60}[/bold blue]\n")
 
             table = Table(
-                title="Results", box=box.ROUNDED, show_header=True, header_style="bold cyan"
+                title="Results",
+                box=box.ROUNDED,
+                show_header=True,
+                header_style="bold cyan",
             )
             table.add_column("Metric", style="cyan")
             table.add_column("Count", justify="right", style="green")

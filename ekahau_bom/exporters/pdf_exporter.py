@@ -21,7 +21,12 @@ except ImportError:
 
 from .base import BaseExporter
 from ..models import ProjectData, AccessPoint, Antenna
-from ..analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
+from ..analytics import (
+    GroupingAnalytics,
+    CoverageAnalytics,
+    MountingAnalytics,
+    RadioAnalytics,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +96,9 @@ class PDFExporter(BaseExporter):
         # Count unique values
         unique_vendors = len(set(ap.vendor for ap in project_data.access_points))
         unique_floors = len(set(ap.floor_name for ap in project_data.access_points))
-        unique_colors = len(set(ap.color for ap in project_data.access_points if ap.color))
+        unique_colors = len(
+            set(ap.color for ap in project_data.access_points if ap.color)
+        )
 
         # Generate sections
         summary_html = self._generate_summary(
@@ -109,7 +116,9 @@ class PDFExporter(BaseExporter):
             project_data.access_points, project_data.radios
         )
         aps_table_html = self._generate_aps_table(project_data.access_points)
-        detailed_aps_table_html = self._generate_detailed_aps_table(project_data.access_points)
+        detailed_aps_table_html = self._generate_detailed_aps_table(
+            project_data.access_points
+        )
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
 
         # Assemble complete HTML document
@@ -447,9 +456,7 @@ class PDFExporter(BaseExporter):
         by_color = GroupingAnalytics.group_by_color(access_points)
         by_model = GroupingAnalytics.group_by_model(access_points)
 
-        html = (
-            '<section class="grouping"><h3>Distribution Statistics</h3><div class="grouping-stats">'
-        )
+        html = '<section class="grouping"><h3>Distribution Statistics</h3><div class="grouping-stats">'
 
         # Vendor grouping
         html += self._generate_grouping_table("By Vendor", by_vendor)
@@ -486,7 +493,9 @@ class PDFExporter(BaseExporter):
         html += "</tbody></table></div>"
         return html
 
-    def _generate_analytics_section(self, access_points: list[AccessPoint], radios: list) -> str:
+    def _generate_analytics_section(
+        self, access_points: list[AccessPoint], radios: list
+    ) -> str:
         """Generate analytics section with mounting and radio stats."""
         html = '<section class="analytics"><h3>Analytics</h3>'
 
@@ -525,7 +534,9 @@ class PDFExporter(BaseExporter):
             if by_standard:
                 html += '<h4 style="margin-top: 1em;">Wi-Fi Standards</h4>'
                 total_radios = sum(by_standard.values())
-                for std, count in sorted(by_standard.items(), key=lambda x: x[1], reverse=True)[:5]:
+                for std, count in sorted(
+                    by_standard.items(), key=lambda x: x[1], reverse=True
+                )[:5]:
                     pct = (count / total_radios * 100) if total_radios > 0 else 0
                     html += f'<div class="metric-row"><span class="metric-label">{html_module.escape(std)}:</span><span class="metric-value">{count} ({pct:.1f}%)</span></div>'
 
@@ -577,9 +588,15 @@ class PDFExporter(BaseExporter):
                 else "N/A"
             )
             azimuth = (
-                f"{ap.azimuth:.1f}" if hasattr(ap, "azimuth") and ap.azimuth is not None else "N/A"
+                f"{ap.azimuth:.1f}"
+                if hasattr(ap, "azimuth") and ap.azimuth is not None
+                else "N/A"
             )
-            tilt = f"{ap.tilt:.1f}" if hasattr(ap, "tilt") and ap.tilt is not None else "N/A"
+            tilt = (
+                f"{ap.tilt:.1f}"
+                if hasattr(ap, "tilt") and ap.tilt is not None
+                else "N/A"
+            )
 
             html += f'<tr><td>{html_module.escape(name)}</td><td>{html_module.escape(ap.vendor)}</td><td>{html_module.escape(ap.model)}</td><td>{html_module.escape(ap.floor_name)}</td><td class="text-right">{loc_x}</td><td class="text-right">{loc_y}</td><td class="text-right">{height}</td><td class="text-right">{azimuth}</td><td class="text-right">{tilt}</td></tr>'
 

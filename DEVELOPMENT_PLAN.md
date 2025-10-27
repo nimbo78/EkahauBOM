@@ -1117,24 +1117,38 @@ FLOOR = "FLOOR"      # Напольный монтаж (квадрат)
 
 **Время фактическое:** 1 день (Iteration 6, Phase 9.2)
 
-### 9.3 Линтинг и форматирование
+### 9.3 Линтинг и форматирование ✅ COMPLETED
 **Инструменты:** black, flake8, pylint, mypy
 
-**Статус:**
+**Статус:** ✅ ЗАВЕРШЕНО (2025-10-27)
+
+**Реализовано:**
 - ✅ black - настроен в pyproject.toml
 - ✅ flake8 - настроен в pyproject.toml
 - ✅ mypy - настроен в pyproject.toml
 - ✅ CI/CD интеграция (GitHub Actions) - code-quality.yml workflow
-- [ ] Pre-commit hooks - TODO
+- ✅ **Pre-commit hooks** - .pre-commit-config.yaml создан и протестирован
 
 **Задачи:**
 - [x] Настройка black для форматирования
 - [x] Настройка flake8/pylint
 - [x] Type checking с mypy
-- [ ] Pre-commit hooks
+- [x] **Pre-commit hooks** ✅
+  - ✅ Создан .pre-commit-config.yaml
+  - ✅ Установлен pre-commit library
+  - ✅ Установлены git hooks (pre-commit install)
+  - ✅ Включены хуки: black, trailing-whitespace, end-of-file-fixer, large files check, merge conflicts, debug statements, line endings (LF)
+  - ✅ Flake8 и MyPy вынесены в CI/CD (чтобы не замедлять коммиты)
+  - ✅ Документация добавлена в README.md и README.ru.md
 - [x] CI/CD интеграция (GitHub Actions)
 
-**Время:** 1-2 дня
+**Технические детали:**
+- Pre-commit hooks автоматически запускаются перед каждым commit
+- Black форматирование применяется автоматически
+- Line endings автоматически исправляются на LF (Unix)
+- Строгие проверки (flake8, mypy) остаются в CI/CD для более быстрых коммитов
+
+**Время фактическое:** 1 день (2025-10-27)
 **Сложность:** Низкая
 
 ---

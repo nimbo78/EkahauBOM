@@ -9,7 +9,15 @@ from __future__ import annotations
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.html_exporter import HTMLExporter
-from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, ProjectMetadata, Radio
+from ekahau_bom.models import (
+    ProjectData,
+    AccessPoint,
+    Antenna,
+    Tag,
+    Floor,
+    ProjectMetadata,
+    Radio,
+)
 
 
 @pytest.fixture
@@ -33,10 +41,20 @@ def sample_project_data():
             tags=[Tag("Location", "Building A", "tag1")],
         ),
         AccessPoint(
-            id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2", tags=[]
+            id="ap3",
+            vendor="Cisco",
+            model="AP-635",
+            color="Red",
+            floor_name="Floor 2",
+            tags=[],
         ),
         AccessPoint(
-            id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+            id="ap4",
+            vendor="Aruba",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            tags=[],
         ),
         AccessPoint(
             id="ap5",
@@ -299,7 +317,11 @@ class TestHTMLExporter:
             ),
         ]
         project_data = ProjectData(
-            access_points=aps, antennas=[], floors={}, project_name="Test", metadata=metadata
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Test",
+            metadata=metadata,
         )
 
         exporter = HTMLExporter(tmp_path)
@@ -423,7 +445,11 @@ class TestHTMLExporter:
             ),
         ]
         project_data = ProjectData(
-            access_points=aps, antennas=[], floors={}, project_name="Radio Test", radios=radios
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Radio Test",
+            radios=radios,
         )
 
         exporter = HTMLExporter(tmp_path)
@@ -518,7 +544,11 @@ class TestHTMLExporter:
             ),
         ]
         project_data = ProjectData(
-            access_points=aps, antennas=[], floors={}, project_name="Test", metadata=metadata
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Test",
+            metadata=metadata,
         )
 
         exporter = HTMLExporter(tmp_path)

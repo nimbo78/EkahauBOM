@@ -119,7 +119,9 @@ class Config:
             level = self._data["logging"]["level"]
             valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
             if level not in valid_levels:
-                raise ConfigError(f"Invalid logging level: {level}. Must be one of: {valid_levels}")
+                raise ConfigError(
+                    f"Invalid logging level: {level}. Must be one of: {valid_levels}"
+                )
 
         # Validate grouping dimension
         if "grouping" in self._data and "group_by" in self._data["grouping"]:
@@ -252,9 +254,9 @@ class Config:
         else:
             merged["discount"] = self.get("pricing.default_discount", 0.0)
 
-        merged["no_volume_discounts"] = getattr(args, "no_volume_discounts", False) or not self.get(
-            "pricing.volume_discounts", True
-        )
+        merged["no_volume_discounts"] = getattr(
+            args, "no_volume_discounts", False
+        ) or not self.get("pricing.volume_discounts", True)
 
         # Filters
         merged["filter_floors"] = self._merge_list_arg(
@@ -269,7 +271,9 @@ class Config:
         merged["filter_models"] = self._merge_list_arg(
             args, "filter_model", self.get("filters.include_models", [])
         )
-        merged["filter_tags"] = getattr(args, "filter_tag", None) or self.get("filters.tags", None)
+        merged["filter_tags"] = getattr(args, "filter_tag", None) or self.get(
+            "filters.tags", None
+        )
 
         merged["exclude_floors"] = self._merge_list_arg(
             args, "exclude_floor", self.get("filters.exclude_floors", [])
@@ -321,7 +325,9 @@ class Config:
 
         return merged
 
-    def _merge_list_arg(self, args: Any, arg_name: str, config_default: list) -> list[str] | None:
+    def _merge_list_arg(
+        self, args: Any, arg_name: str, config_default: list
+    ) -> list[str] | None:
         """Merge list argument from CLI with config default.
 
         Args:

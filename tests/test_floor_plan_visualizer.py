@@ -137,7 +137,9 @@ class TestFloorPlanVisualizer:
         """Test visualization when floor plan image is not found."""
         # Create a mock archive that doesn't have the floor plan image
         with patch("zipfile.ZipFile"):
-            with patch.object(FloorPlanVisualizer, "_get_floor_plan_image", return_value=None):
+            with patch.object(
+                FloorPlanVisualizer, "_get_floor_plan_image", return_value=None
+            ):
                 viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
 
                 result = viz.visualize_floor(
@@ -175,14 +177,18 @@ class TestFloorPlanVisualizer:
             ):
                 viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
 
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 # Should still create the image even if no APs are drawn
                 assert result is not None
                 assert result.exists()
                 viz.close()
 
-    def test_visualize_all_floors_empty(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_visualize_all_floors_empty(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test visualization with no access points."""
         with patch("zipfile.ZipFile"):
             viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
@@ -258,7 +264,9 @@ class TestFloorPlanVisualizer:
             ):
                 viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
 
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 assert result is not None
                 assert result.exists()
@@ -288,11 +296,15 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, ap_circle_radius=30)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, ap_circle_radius=30
+                )
 
                 assert viz.ap_circle_radius == 30
 
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 assert result is not None
                 viz.close()
@@ -321,16 +333,22 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_ap_names=False)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_ap_names=False
+                )
 
                 assert viz.show_ap_names is False
 
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 assert result is not None
                 viz.close()
 
-    def test_wall_mounted_aps_with_azimuth(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_wall_mounted_aps_with_azimuth(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test visualization of wall-mounted APs with rectangle markers."""
         from PIL import Image
         from ekahau_bom.models import Radio
@@ -368,10 +386,16 @@ class TestFloorPlanVisualizer:
         # Create Radio objects with mounting type and azimuth
         radios = [
             Radio(
-                id="radio1", access_point_id="ap1", antenna_mounting="WALL", antenna_direction=45.0
+                id="radio1",
+                access_point_id="ap1",
+                antenna_mounting="WALL",
+                antenna_direction=45.0,
             ),
             Radio(
-                id="radio2", access_point_id="ap2", antenna_mounting="WALL", antenna_direction=90.0
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="WALL",
+                antenna_direction=90.0,
             ),
         ]
 
@@ -444,7 +468,9 @@ class TestFloorPlanVisualizer:
                 assert result.exists()
                 viz.close()
 
-    def test_azimuth_arrows_visualization(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_azimuth_arrows_visualization(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test visualization with azimuth arrows enabled."""
         from PIL import Image
         from ekahau_bom.models import Radio
@@ -487,7 +513,10 @@ class TestFloorPlanVisualizer:
                 antenna_direction=45.0,
             ),
             Radio(
-                id="radio2", access_point_id="ap2", antenna_mounting="WALL", antenna_direction=135.0
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="WALL",
+                antenna_direction=135.0,
             ),
         ]
 
@@ -495,7 +524,9 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_azimuth_arrows=True
+                )
 
                 assert viz.show_azimuth_arrows is True
 
@@ -533,8 +564,12 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_azimuth_arrows=True
+                )
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 assert result is not None
                 viz.close()
@@ -589,7 +624,10 @@ class TestFloorPlanVisualizer:
         radios = [
             Radio(id="radio1", access_point_id="ap1", antenna_mounting="CEILING"),
             Radio(
-                id="radio2", access_point_id="ap2", antenna_mounting="WALL", antenna_direction=90.0
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="WALL",
+                antenna_direction=90.0,
             ),
             Radio(id="radio3", access_point_id="ap3", antenna_mounting="FLOOR"),
         ]
@@ -632,11 +670,15 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, ap_opacity=0.5)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, ap_opacity=0.5
+                )
 
                 assert viz.ap_opacity == 0.5
 
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 assert result is not None
                 viz.close()
@@ -691,7 +733,9 @@ class TestFloorPlanVisualizer:
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
                 viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 assert result is not None
                 viz.close()
@@ -715,9 +759,13 @@ class TestFloorPlanVisualizer:
 
         with patch("zipfile.ZipFile"):
             # Simulate image loading failure
-            with patch.object(FloorPlanVisualizer, "_get_floor_plan_image", return_value=None):
+            with patch.object(
+                FloorPlanVisualizer, "_get_floor_plan_image", return_value=None
+            ):
                 viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
-                result = viz.visualize_floor(floor=sample_floors["floor1"], access_points=aps)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"], access_points=aps
+                )
 
                 # Should return None when image cannot be loaded
                 assert result is None
@@ -744,7 +792,9 @@ class TestFloorPlanVisualizer:
             assert result is None
             viz.close()
 
-    def test_get_floor_plan_image_no_image_id(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_get_floor_plan_image_no_image_id(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test _get_floor_plan_image when floor plan has no imageId."""
         import json
 
@@ -780,7 +830,9 @@ class TestFloorPlanVisualizer:
         # Mock archive with floor plan but image file missing
         mock_archive = Mock()
         floor_plans_data = {
-            "floorPlans": [{"id": "floor1", "name": "Floor 1", "imageId": "test-image-123"}]
+            "floorPlans": [
+                {"id": "floor1", "name": "Floor 1", "imageId": "test-image-123"}
+            ]
         }
         mock_archive.read.return_value = json.dumps(floor_plans_data).encode()
         mock_archive.namelist.return_value = []  # Empty - image file not found
@@ -819,7 +871,9 @@ class TestFloorPlanVisualizer:
 
         # Mock ImageFont.truetype to always fail with OSError
         with patch("zipfile.ZipFile"):
-            with patch.object(ImageFont, "truetype", side_effect=OSError("Font not found")):
+            with patch.object(
+                ImageFont, "truetype", side_effect=OSError("Font not found")
+            ):
                 with patch.object(ImageFont, "load_default", return_value=Mock()):
                     viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
 
@@ -833,9 +887,13 @@ class TestFloorPlanVisualizer:
 
         # Mock ImageFont.load_default to raise exception
         with patch("zipfile.ZipFile"):
-            with patch.object(ImageFont, "truetype", side_effect=OSError("Font not found")):
+            with patch.object(
+                ImageFont, "truetype", side_effect=OSError("Font not found")
+            ):
                 with patch.object(
-                    ImageFont, "load_default", side_effect=Exception("Font system error")
+                    ImageFont,
+                    "load_default",
+                    side_effect=Exception("Font system error"),
                 ):
                     viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
 
@@ -876,7 +934,9 @@ class TestFloorPlanVisualizer:
 
             viz.close()
 
-    def test_draw_azimuth_arrow_with_default_length(self, temp_esx_path, temp_output_dir):
+    def test_draw_azimuth_arrow_with_default_length(
+        self, temp_esx_path, temp_output_dir
+    ):
         """Test _draw_azimuth_arrow with default arrow_length (None)."""
         from PIL import Image, ImageDraw
 
@@ -943,7 +1003,9 @@ class TestFloorPlanVisualizer:
 
             viz.close()
 
-    def test_wifi_6e_detection_in_arrows(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_wifi_6e_detection_in_arrows(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test Wi-Fi 6E detection in azimuth arrows."""
         from PIL import Image
         from ekahau_bom.models import Radio
@@ -979,13 +1041,17 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_azimuth_arrows=True
+                )
                 result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
 
                 assert result is not None
                 viz.close()
 
-    def test_wifi_6_detection_in_arrows(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_wifi_6_detection_in_arrows(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test Wi-Fi 6 detection in azimuth arrows."""
         from PIL import Image
         from ekahau_bom.models import Radio
@@ -1021,13 +1087,17 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_azimuth_arrows=True
+                )
                 result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
 
                 assert result is not None
                 viz.close()
 
-    def test_wifi_ac_detection_in_arrows(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_wifi_ac_detection_in_arrows(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test Wi-Fi 5 (802.11ac) detection in azimuth arrows."""
         from PIL import Image
         from ekahau_bom.models import Radio
@@ -1063,7 +1133,9 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_azimuth_arrows=True
+                )
                 result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
 
                 assert result is not None
@@ -1104,7 +1176,9 @@ class TestFloorPlanVisualizer:
                 assert result == []
                 viz.close()
 
-    def test_get_floor_plan_image_success(self, temp_esx_path, temp_output_dir, sample_floors):
+    def test_get_floor_plan_image_success(
+        self, temp_esx_path, temp_output_dir, sample_floors
+    ):
         """Test _get_floor_plan_image successful image loading."""
         import json
         from PIL import Image
@@ -1119,7 +1193,9 @@ class TestFloorPlanVisualizer:
         # Mock archive with complete valid data
         mock_archive = Mock()
         floor_plans_data = {
-            "floorPlans": [{"id": "floor1", "name": "Floor 1", "imageId": "test-image-123"}]
+            "floorPlans": [
+                {"id": "floor1", "name": "Floor 1", "imageId": "test-image-123"}
+            ]
         }
 
         def mock_read(filename):
@@ -1179,7 +1255,9 @@ class TestFloorPlanVisualizer:
             with patch.object(
                 FloorPlanVisualizer, "_get_floor_plan_image", return_value=test_image
             ):
-                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                viz = FloorPlanVisualizer(
+                    temp_esx_path, temp_output_dir, show_azimuth_arrows=True
+                )
                 result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
 
                 assert result is not None

@@ -397,7 +397,7 @@ done
 - name: Generate BOM
   run: |
     python EkahauBOM.py project.esx --format excel,html
-    
+
 - name: Upload Reports
   uses: actions/upload-artifact@v2
   with:
@@ -541,5 +541,5 @@ ekahau-bom project.esx \
 
 ---
 
-**Version**: 2.4.0  
+**Version**: 2.4.0
 **Last Updated**: 2024

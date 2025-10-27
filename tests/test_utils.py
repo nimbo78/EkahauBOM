@@ -11,7 +11,12 @@ import pytest
 from pathlib import Path
 import yaml
 
-from ekahau_bom.utils import load_color_database, get_color_name, ensure_output_dir, setup_logging
+from ekahau_bom.utils import (
+    load_color_database,
+    get_color_name,
+    ensure_output_dir,
+    setup_logging,
+)
 from ekahau_bom.constants import DEFAULT_COLORS
 
 

@@ -380,7 +380,9 @@ class TestAntennaProcessor:
             ]
         }
 
-        antenna_types_data = {"antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]}
+        antenna_types_data = {
+            "antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]
+        }
 
         result = processor.process(simulated_radios_data, antenna_types_data)
 
@@ -399,7 +401,9 @@ class TestAntennaProcessor:
             ]
         }
 
-        antenna_types_data = {"antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]}
+        antenna_types_data = {
+            "antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]
+        }
 
         result = processor.process(simulated_radios_data, antenna_types_data)
 
@@ -419,7 +423,9 @@ class TestAntennaProcessor:
         """Test processing when no antenna types are defined."""
         processor = AntennaProcessor()
 
-        simulated_radios_data = {"simulatedRadios": [{"id": "radio-1", "antennaTypeId": "ant-1"}]}
+        simulated_radios_data = {
+            "simulatedRadios": [{"id": "radio-1", "antennaTypeId": "ant-1"}]
+        }
 
         antenna_types_data = {"antennaTypes": []}
 
@@ -584,7 +590,12 @@ class TestRadioProcessor:
 
         simulated_radios_data = {
             "simulatedRadios": [
-                {"id": "radio-1", "accessPointId": "ap-1", "channel": 36, "band": "FIVE_GHZ"},
+                {
+                    "id": "radio-1",
+                    "accessPointId": "ap-1",
+                    "channel": 36,
+                    "band": "FIVE_GHZ",
+                },
                 {
                     # Malformed - could cause errors
                     "id": None,  # Invalid ID
