@@ -216,6 +216,42 @@ After installation, use the `ekahau-bom` command globally:
 ekahau-bom project.esx
 ```
 
+### Optional: PDF Export Support
+
+PDF export requires WeasyPrint library and GTK3 system libraries.
+
+#### Linux (Ubuntu/Debian)
+```bash
+# Install system dependencies
+sudo apt-get install python3-pip python3-cffi python3-brotli libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfribidi0
+
+# Install WeasyPrint
+pip install weasyprint
+```
+
+#### macOS
+```bash
+# Install system dependencies via Homebrew
+brew install python3 cairo pango gdk-pixbuf libffi
+
+# Install WeasyPrint
+pip install weasyprint
+```
+
+#### Windows
+```bash
+# Step 1: Install WeasyPrint
+pip install weasyprint
+
+# Step 2: Download and install GTK3 Runtime
+# Download from: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
+# Run the installer and follow the installation wizard
+#
+# Step 3: Restart your terminal/command prompt
+```
+
+**Note:** Without GTK3 libraries, CSV, JSON, Excel, and HTML exports will work normally. PDF export will show a clear error message with installation instructions if GTK3 is not available.
+
 ---
 
 ## 🚀 Quick Start
