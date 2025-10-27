@@ -3,6 +3,9 @@
 
 """Floor plan visualization with AP placement overlay."""
 
+from __future__ import annotations
+
+
 import logging
 import zipfile
 from pathlib import Path

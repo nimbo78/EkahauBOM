@@ -3,6 +3,9 @@
 
 """Pricing and cost calculation module for equipment BOM."""
 
+from __future__ import annotations
+
+
 import logging
 import yaml
 from pathlib import Path

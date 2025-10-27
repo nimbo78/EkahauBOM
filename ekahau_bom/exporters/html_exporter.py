@@ -3,6 +3,9 @@
 
 """HTML exporter with interactive tables and charts."""
 
+from __future__ import annotations
+
+
 import html
 import logging
 from collections import Counter

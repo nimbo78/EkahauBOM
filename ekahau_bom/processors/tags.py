@@ -3,6 +3,9 @@
 
 """Processor for tags data from Ekahau projects."""
 
+from __future__ import annotations
+
+
 import logging
 from typing import Any
 

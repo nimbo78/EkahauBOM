@@ -3,6 +3,9 @@
 
 """Process network capacity settings from Ekahau project data."""
 
+from __future__ import annotations
+
+
 import logging
 from typing import Any
 

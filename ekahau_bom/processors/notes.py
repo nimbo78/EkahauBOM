@@ -3,6 +3,9 @@
 
 """Processor for Ekahau project notes (text, cable, and picture notes)."""
 
+from __future__ import annotations
+
+
 import logging
 from typing import Any
 

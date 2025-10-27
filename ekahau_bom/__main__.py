@@ -1,5 +1,8 @@
 """Entry point for python -m ekahau_bom."""
 
+from __future__ import annotations
+
+
 import sys
 from .cli import main
 

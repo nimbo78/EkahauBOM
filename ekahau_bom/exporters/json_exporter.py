@@ -3,6 +3,9 @@
 
 """JSON exporter for machine-readable output and integrations."""
 
+from __future__ import annotations
+
+
 import json
 import logging
 from collections import Counter

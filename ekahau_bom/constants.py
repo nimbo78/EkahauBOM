@@ -3,6 +3,9 @@
 
 """Constants and configuration for EkahauBOM."""
 
+from __future__ import annotations
+
+
 from pathlib import Path
 
 # Default color database

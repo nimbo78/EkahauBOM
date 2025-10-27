@@ -3,6 +3,9 @@
 
 """Analytics and grouping utilities for access points."""
 
+from __future__ import annotations
+
+
 import logging
 from collections import Counter, defaultdict
 from typing import Any, Optional

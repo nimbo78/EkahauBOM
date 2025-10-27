@@ -3,6 +3,9 @@
 
 """PDF exporter using WeasyPrint for professional reports."""
 
+from __future__ import annotations
+
+
 import html as html_module
 import logging
 from collections import Counter

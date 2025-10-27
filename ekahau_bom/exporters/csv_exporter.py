@@ -3,6 +3,9 @@
 
 """CSV exporter for project data."""
 
+from __future__ import annotations
+
+
 import csv
 import logging
 from collections import Counter

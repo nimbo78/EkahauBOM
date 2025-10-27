@@ -3,6 +3,9 @@
 
 """Cable analytics and calculations for Ekahau projects."""
 
+from __future__ import annotations
+
+
 import logging
 import math
 from dataclasses import dataclass, field
