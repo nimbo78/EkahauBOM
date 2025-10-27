@@ -3,6 +3,9 @@
 
 """Unit tests for pricing module."""
 
+from __future__ import annotations
+
+
 import pytest
 from pathlib import Path
 from ekahau_bom.pricing import PricingDatabase, CostCalculator, PriceInfo, CostSummary

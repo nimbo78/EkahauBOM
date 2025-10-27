@@ -3,6 +3,8 @@
 
 """Test that all modules can be imported without errors."""
 
+from __future__ import annotations
+
 
 def test_import_main():
     """Test main package import."""

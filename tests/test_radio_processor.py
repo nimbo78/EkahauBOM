@@ -3,6 +3,9 @@
 
 """Tests for RadioProcessor."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.processors.radios import RadioProcessor
 from ekahau_bom.models import Radio

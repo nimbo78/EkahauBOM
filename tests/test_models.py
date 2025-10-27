@@ -1,5 +1,8 @@
 """Tests for models module."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.models import Tag, Radio, AccessPoint, Antenna
 

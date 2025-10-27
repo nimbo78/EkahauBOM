@@ -3,6 +3,9 @@
 
 """Unit tests for PDF exporter."""
 
+from __future__ import annotations
+
+
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock

@@ -3,6 +3,9 @@
 
 """Unit tests for base exporter module."""
 
+from __future__ import annotations
+
+
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.base import BaseExporter

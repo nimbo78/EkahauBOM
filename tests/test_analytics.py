@@ -3,6 +3,9 @@
 
 """Unit tests for analytics module."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.models import AccessPoint, Tag, Radio
 from ekahau_bom.analytics import (

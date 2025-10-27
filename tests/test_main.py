@@ -3,6 +3,9 @@
 
 """Unit tests for __main__ entry point."""
 
+from __future__ import annotations
+
+
 import pytest
 import sys
 import subprocess

@@ -3,6 +3,9 @@
 
 """Tests for NotesProcessor."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.processors.notes import NotesProcessor
 from ekahau_bom.models import Note, NoteHistory, CableNote, PictureNote, Point, Location, Floor

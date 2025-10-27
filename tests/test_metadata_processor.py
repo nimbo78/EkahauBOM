@@ -3,6 +3,9 @@
 
 """Tests for ProjectMetadataProcessor."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.processors.metadata import ProjectMetadataProcessor
 from ekahau_bom.models import ProjectMetadata

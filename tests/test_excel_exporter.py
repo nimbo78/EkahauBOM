@@ -3,6 +3,9 @@
 
 """Unit tests for Excel exporter."""
 
+from __future__ import annotations
+
+
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.excel_exporter import ExcelExporter

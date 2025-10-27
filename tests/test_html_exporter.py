@@ -3,6 +3,9 @@
 
 """Unit tests for HTML exporter."""
 
+from __future__ import annotations
+
+
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.html_exporter import HTMLExporter

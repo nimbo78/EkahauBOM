@@ -3,6 +3,9 @@
 
 """Unit tests for filters module."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.models import AccessPoint, Tag
 from ekahau_bom.filters import APFilter

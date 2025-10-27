@@ -3,6 +3,9 @@
 
 """Unit tests for NetworkSettingsProcessor."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.processors.network_settings import NetworkSettingsProcessor
 from ekahau_bom.models import NetworkCapacitySettings, DataRate

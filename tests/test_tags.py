@@ -3,6 +3,9 @@
 
 """Unit tests for tag processor module."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.processors.tags import TagProcessor
 from ekahau_bom.models import Tag, TagKey

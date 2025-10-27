@@ -3,6 +3,9 @@
 
 """Unit tests for advanced analytics (coverage and mounting)."""
 
+from __future__ import annotations
+
+
 import pytest
 from ekahau_bom.analytics import (
     CoverageAnalytics,

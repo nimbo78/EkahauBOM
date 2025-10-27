@@ -3,6 +3,9 @@
 
 """Tests for CableAnalytics."""
 
+from __future__ import annotations
+
+
 import pytest
 import math
 from ekahau_bom.cable_analytics import CableAnalytics, CableMetrics

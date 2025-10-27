@@ -3,6 +3,9 @@
 
 """Tests for data processors."""
 
+from __future__ import annotations
+
+
 import pytest
 
 from ekahau_bom.processors.access_points import AccessPointProcessor

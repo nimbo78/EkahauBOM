@@ -1,5 +1,8 @@
 """Tests for config module."""
 
+from __future__ import annotations
+
+
 import pytest
 from pathlib import Path
 import tempfile

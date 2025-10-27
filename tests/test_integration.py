@@ -8,6 +8,9 @@ These tests perform end-to-end testing with real .esx files,
 validating the complete workflow: parsing → processing → exporting.
 """
 
+from __future__ import annotations
+
+
 import pytest
 import json
 import csv
