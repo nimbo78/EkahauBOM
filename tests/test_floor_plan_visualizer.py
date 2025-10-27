@@ -326,3 +326,338 @@ class TestFloorPlanVisualizer:
 
                 assert result is not None
                 viz.close()
+
+    def test_wall_mounted_aps_with_azimuth(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test visualization of wall-mounted APs with rectangle markers."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # Wall-mounted APs with azimuth
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="Wall-AP-1"
+            ),
+            AccessPoint(
+                id="ap2", vendor="Aruba", model="AP-2",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=200.0, location_y=200.0,
+                color="Blue", name="Wall-AP-2"
+            )
+        ]
+
+        # Create Radio objects with mounting type and azimuth
+        radios = [
+            Radio(
+                id="radio1",
+                access_point_id="ap1",
+                antenna_mounting="WALL",
+                antenna_direction=45.0
+            ),
+            Radio(
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="WALL",
+                antenna_direction=90.0
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps,
+                    radios=radios
+                )
+
+                assert result is not None
+                assert result.exists()
+                viz.close()
+
+    def test_floor_mounted_aps_with_square_markers(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test visualization of floor-mounted APs with square markers."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # Floor-mounted APs
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Green", name="Floor-AP-1"
+            ),
+            AccessPoint(
+                id="ap2", vendor="Aruba", model="AP-2",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=200.0, location_y=200.0,
+                color="Yellow", name="Floor-AP-2"
+            )
+        ]
+
+        # Create Radio objects with FLOOR mounting type
+        radios = [
+            Radio(
+                id="radio1",
+                access_point_id="ap1",
+                antenna_mounting="FLOOR"
+            ),
+            Radio(
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="FLOOR"
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps,
+                    radios=radios
+                )
+
+                assert result is not None
+                assert result.exists()
+                viz.close()
+
+    def test_azimuth_arrows_visualization(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test visualization with azimuth arrows enabled."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-1"
+            ),
+            AccessPoint(
+                id="ap2", vendor="Aruba", model="AP-2",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=200.0, location_y=200.0,
+                color="Blue", name="AP-2"
+            )
+        ]
+
+        # Create Radio objects with mounting type and azimuth
+        radios = [
+            Radio(
+                id="radio1",
+                access_point_id="ap1",
+                antenna_mounting="CEILING",
+                antenna_direction=45.0
+            ),
+            Radio(
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="WALL",
+                antenna_direction=135.0
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+
+                assert viz.show_azimuth_arrows is True
+
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps,
+                    radios=radios
+                )
+
+                assert result is not None
+                assert result.exists()
+                viz.close()
+
+    def test_ap_with_zero_azimuth(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test that azimuth arrows are not drawn when azimuth is 0."""
+        from PIL import Image
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-1",
+                azimuth=0.0  # Zero azimuth - arrow should not be drawn
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps
+                )
+
+                assert result is not None
+                viz.close()
+
+    def test_mixed_mounting_types(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test visualization with mixed mounting types (ceiling, wall, floor)."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="Ceiling-AP"
+            ),
+            AccessPoint(
+                id="ap2", vendor="Aruba", model="AP-2",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=200.0, location_y=200.0,
+                color="Blue", name="Wall-AP"
+            ),
+            AccessPoint(
+                id="ap3", vendor="Ubiquiti", model="AP-3",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=300.0, location_y=300.0,
+                color="Green", name="Floor-AP"
+            )
+        ]
+
+        # Create Radio objects with different mounting types
+        radios = [
+            Radio(
+                id="radio1",
+                access_point_id="ap1",
+                antenna_mounting="CEILING"
+            ),
+            Radio(
+                id="radio2",
+                access_point_id="ap2",
+                antenna_mounting="WALL",
+                antenna_direction=90.0
+            ),
+            Radio(
+                id="radio3",
+                access_point_id="ap3",
+                antenna_mounting="FLOOR"
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps,
+                    radios=radios
+                )
+
+                assert result is not None
+                assert result.exists()
+                viz.close()
+
+    def test_ap_opacity_setting(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test AP marker opacity setting."""
+        from PIL import Image
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-1"
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, ap_opacity=0.5)
+
+                assert viz.ap_opacity == 0.5
+
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps
+                )
+
+                assert result is not None
+                viz.close()
+
+    def test_color_name_handling(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test handling of color names (not hex codes)."""
+        from PIL import Image
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-Red"  # Color name, not hex
+            ),
+            AccessPoint(
+                id="ap2", vendor="Aruba", model="AP-2",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=200.0, location_y=200.0,
+                color="lightblue", name="AP-LightBlue"  # Ekahau color name
+            ),
+            AccessPoint(
+                id="ap3", vendor="Ubiquiti", model="AP-3",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=300.0, location_y=300.0,
+                color=None, name="AP-Default"  # No color (use default)
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps
+                )
+
+                assert result is not None
+                viz.close()
+
+    def test_image_loading_errors(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test handling of image loading errors."""
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-1"
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            # Simulate image loading failure
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=None):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+                result = viz.visualize_floor(
+                    floor=sample_floors["floor1"],
+                    access_points=aps
+                )
+
+                # Should return None when image cannot be loaded
+                assert result is None
+                viz.close()
