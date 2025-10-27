@@ -315,3 +315,121 @@ class TestNotesProcessor:
         assert len(result) == 1
         assert result[0].text == "Проход над подвесным потолком"
         assert result[0].history.created_by == "Network Team"
+
+    def test_process_notes_with_error_handling(self):
+        """Test that notes processor handles errors gracefully."""
+        from unittest.mock import patch
+        processor = NotesProcessor()
+
+        notes_data = {
+            "notes": [
+                {
+                    "id": "valid-note",
+                    "text": "Valid note",
+                    "status": "CREATED"
+                },
+                {
+                    "id": "bad-note",
+                    "text": "This will fail",
+                    "status": "CREATED"
+                }
+            ]
+        }
+
+        # Mock _process_single_note to raise exception for second note
+        original_method = processor._process_single_note
+        call_count = [0]
+
+        def mock_process(note_data):
+            call_count[0] += 1
+            if call_count[0] == 2:  # Second call raises error
+                raise ValueError("Simulated processing error")
+            return original_method(note_data)
+
+        with patch.object(processor, '_process_single_note', side_effect=mock_process):
+            result = processor.process_notes(notes_data)
+
+        # Should have 1 valid note (second one failed)
+        assert len(result) == 1
+        assert result[0].id == "valid-note"
+
+    def test_process_cable_notes_with_error_handling(self):
+        """Test that cable notes processor handles errors gracefully."""
+        processor = NotesProcessor()
+        floors = {"floor1": Floor(id="floor1", name="Floor 1")}
+
+        cable_notes_data = {
+            "cableNotes": [
+                {
+                    "id": "valid-cable",
+                    "floorPlanId": "floor1",
+                    "points": [{"x": 0, "y": 0}, {"x": 10, "y": 10}],
+                    "color": "#FF0000",
+                    "status": "CREATED"
+                },
+                {
+                    "id": "invalid-cable",
+                    # Missing floorPlanId which might cause issues
+                    "points": None,  # Invalid points
+                    "status": "CREATED"
+                },
+                {
+                    "id": "another-valid-cable",
+                    "floorPlanId": "floor1",
+                    "points": [{"x": 5, "y": 5}],
+                    "color": "#00FF00",
+                    "status": "CREATED"
+                }
+            ]
+        }
+
+        # Should process valid cable notes and skip invalid ones
+        result = processor.process_cable_notes(cable_notes_data, floors)
+
+        # Should have at least 1 valid cable note (invalid ones skipped)
+        assert len(result) >= 1
+
+    def test_process_picture_notes_with_error_handling(self):
+        """Test that picture notes processor handles errors gracefully."""
+        from unittest.mock import patch
+        processor = NotesProcessor()
+        floors = {"floor1": Floor(id="floor1", name="Floor 1")}
+
+        picture_notes_data = {
+            "pictureNotes": [
+                {
+                    "id": "valid-picture",
+                    "location": {
+                        "floorPlanId": "floor1",
+                        "coord": {"x": 100, "y": 200}
+                    },
+                    "noteIds": ["note1"],
+                    "status": "CREATED"
+                },
+                {
+                    "id": "bad-picture",
+                    "location": {
+                        "floorPlanId": "floor1",
+                        "coord": {"x": 150, "y": 250}
+                    },
+                    "status": "CREATED"
+                }
+            ]
+        }
+
+        # Mock _process_single_picture_note to raise exception for second note
+        original_method = processor._process_single_picture_note
+        call_count = [0]
+
+        def mock_process(note_data, floors_dict):
+            call_count[0] += 1
+            if call_count[0] == 2:  # Second call raises error
+                raise ValueError("Simulated picture note processing error")
+            return original_method(note_data, floors_dict)
+
+        with patch.object(processor, '_process_single_picture_note', side_effect=mock_process):
+            result = processor.process_picture_notes(picture_notes_data, floors)
+
+        # Should have 1 valid picture note (second one failed)
+        assert len(result) == 1
+        assert result[0].id == "valid-picture"

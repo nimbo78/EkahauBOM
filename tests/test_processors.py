@@ -283,6 +283,69 @@ class TestAccessPointProcessor:
         # Should process the valid APs
         assert len(result) >= 2
 
+    def test_process_with_exception_in_processing(self, color_database, sample_floors):
+        """Test that exceptions during AP processing are handled."""
+        from unittest.mock import patch
+        processor = AccessPointProcessor(color_database)
+
+        access_points_data = {
+            "accessPoints": [
+                {
+                    "id": "ap-1",
+                    "name": "AP-01",
+                    "vendor": "Cisco",
+                    "model": "C9120AXI",
+                    "mine": True,
+                    "location": {"floorPlanId": "floor-1"}
+                },
+                {
+                    "id": "ap-2",
+                    "name": "AP-02",
+                    "vendor": "Aruba",
+                    "model": "AP-515",
+                    "mine": True,
+                    "location": {"floorPlanId": "floor-1"}
+                }
+            ]
+        }
+
+        # Mock _process_single_ap to raise exception for second AP
+        original_method = processor._process_single_ap
+        call_count = [0]
+
+        def mock_process(ap_data, floors, radios=None):
+            call_count[0] += 1
+            if call_count[0] == 2:  # Second call raises error
+                raise ValueError("Simulated AP processing error")
+            return original_method(ap_data, floors, radios)
+
+        with patch.object(processor, '_process_single_ap', side_effect=mock_process):
+            result = processor.process(access_points_data, sample_floors)
+
+        # Should have 1 valid AP (second one failed)
+        assert len(result) == 1
+        assert result[0].name == "AP-01"
+
+    def test_process_single_ap_with_none_radios(self, color_database, sample_floors):
+        """Test _process_single_ap with radios=None."""
+        processor = AccessPointProcessor(color_database)
+
+        ap_data = {
+            "id": "ap-1",
+            "name": "AP-Test",
+            "vendor": "Cisco",
+            "model": "C9120AXI",
+            "mine": True,
+            "location": {"floorPlanId": "floor-1"}
+        }
+
+        # Call _process_single_ap directly with radios=None
+        result = processor._process_single_ap(ap_data, sample_floors, radios=None)
+
+        assert result.name == "AP-Test"
+        assert result.vendor == "Cisco"
+        # Verify radios=None is handled (should default to [])
+
 
 class TestAntennaProcessor:
     """Test AntennaProcessor."""

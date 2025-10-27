@@ -161,3 +161,41 @@ class TestRadioProcessor:
         # At least the valid one should be processed
         assert len(radios) >= 1
         assert any(r.id == "valid-1" for r in radios)
+
+    def test_process_with_exception_in_processing(self, processor):
+        """Test that exceptions during radio processing are handled."""
+        from unittest.mock import patch
+
+        simulated_radios_data = {
+            "simulatedRadios": [
+                {
+                    "id": "radio-1",
+                    "accessPointId": "ap-1",
+                    "channel": [11],
+                    "technology": "N"
+                },
+                {
+                    "id": "radio-2",
+                    "accessPointId": "ap-2",
+                    "channel": [36],
+                    "technology": "AC"
+                }
+            ]
+        }
+
+        # Mock _process_single_radio to raise exception for second radio
+        original_method = processor._process_single_radio
+        call_count = [0]
+
+        def mock_process(radio_data):
+            call_count[0] += 1
+            if call_count[0] == 2:  # Second call raises error
+                raise ValueError("Simulated radio processing error")
+            return original_method(radio_data)
+
+        with patch.object(processor, '_process_single_radio', side_effect=mock_process):
+            radios = processor.process(simulated_radios_data)
+
+        # Should have 1 valid radio (second one failed)
+        assert len(radios) == 1
+        assert radios[0].id == "radio-1"

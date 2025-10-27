@@ -739,3 +739,69 @@ class TestCSVExporter:
         assert '"Cisco, Inc."' in content
         # In CSV, double quotes are escaped as double-double-quotes
         assert 'Model ""X""' in content
+
+    def test_export_access_points_with_full_metadata(self, tmp_path):
+        """Test CSV export with complete metadata."""
+        from ekahau_bom.models import ProjectMetadata
+        output_dir = tmp_path / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        aps = [AccessPoint(vendor="Cisco", model="AP-515", color="Red", floor_name="Floor 1", tags=[])]
+        metadata = ProjectMetadata(
+            name="Enterprise WiFi Project",
+            customer="Acme Corporation",
+            location="Building A, Floor 3",
+            responsible_person="John Doe",
+            schema_version="1.0"
+        )
+
+        exporter = CSVExporter(output_dir)
+        output_file = exporter._export_access_points(aps, "Test", metadata=metadata)
+
+        with open(output_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Should have metadata as comments
+        assert "# Project Name: Enterprise WiFi Project" in content
+        assert "# Customer: Acme Corporation" in content
+        assert "# Location: Building A, Floor 3" in content
+        assert "# Responsible Person: John Doe" in content
+
+    def test_export_detailed_access_points_with_antenna_height_fallback(self, tmp_path):
+        """Test detailed CSV export with mounting height from radio antenna_height."""
+        from ekahau_bom.models import Radio
+        output_dir = tmp_path / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # AP without mounting_height
+        aps = [
+            AccessPoint(
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Red",
+                floor_name="Floor 1",
+                name="AP-Office-01",
+                tags=[],
+                mounting_height=None  # No mounting height on AP
+            )
+        ]
+
+        # Radio with antenna_height
+        radios = [
+            Radio(
+                id="radio1",
+                access_point_id="ap1",
+                antenna_height=2.5  # Should be used as fallback
+            )
+        ]
+
+        exporter = CSVExporter(output_dir)
+        # Correct signature: _export_detailed_access_points(access_points, radios, project_name)
+        output_file = exporter._export_detailed_access_points(aps, radios, "Test")
+
+        with open(output_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Should have antenna_height as mounting height
+        assert "2.50" in content  # Formatted antenna_height
