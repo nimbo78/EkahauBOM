@@ -4,6 +4,7 @@
 """Tests for FloorPlanVisualizer."""
 
 import pytest
+import sys
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from ekahau_bom.visualizers.floor_plan import FloorPlanVisualizer, PIL_AVAILABLE
@@ -660,4 +661,410 @@ class TestFloorPlanVisualizer:
 
                 # Should return None when image cannot be loaded
                 assert result is None
+                viz.close()
+
+    def test_get_floor_plan_image_floor_not_found(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test _get_floor_plan_image when floor plan is not found in metadata."""
+        import json
+
+        # Mock archive with floorPlans.json that doesn't contain our floor
+        mock_archive = Mock()
+        floor_plans_data = {'floorPlans': []}  # Empty list - floor not found
+        mock_archive.read.return_value = json.dumps(floor_plans_data).encode()
+
+        with patch('zipfile.ZipFile', return_value=mock_archive):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+            viz.archive = mock_archive
+
+            result = viz._get_floor_plan_image(sample_floors["floor1"])
+
+            # Should return None when floor plan not found
+            assert result is None
+            viz.close()
+
+    def test_get_floor_plan_image_no_image_id(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test _get_floor_plan_image when floor plan has no imageId."""
+        import json
+
+        # Mock archive with floor plan but no imageId
+        mock_archive = Mock()
+        floor_plans_data = {
+            'floorPlans': [{
+                'id': 'floor1',
+                'name': 'Floor 1'
+                # Missing 'imageId' field
+            }]
+        }
+        mock_archive.read.return_value = json.dumps(floor_plans_data).encode()
+
+        with patch('zipfile.ZipFile', return_value=mock_archive):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+            viz.archive = mock_archive
+
+            result = viz._get_floor_plan_image(sample_floors["floor1"])
+
+            # Should return None when no imageId
+            assert result is None
+            viz.close()
+
+    def test_get_floor_plan_image_file_not_in_archive(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test _get_floor_plan_image when image file is not in archive."""
+        import json
+
+        # Mock archive with floor plan but image file missing
+        mock_archive = Mock()
+        floor_plans_data = {
+            'floorPlans': [{
+                'id': 'floor1',
+                'name': 'Floor 1',
+                'imageId': 'test-image-123'
+            }]
+        }
+        mock_archive.read.return_value = json.dumps(floor_plans_data).encode()
+        mock_archive.namelist.return_value = []  # Empty - image file not found
+
+        with patch('zipfile.ZipFile', return_value=mock_archive):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+            viz.archive = mock_archive
+
+            result = viz._get_floor_plan_image(sample_floors["floor1"])
+
+            # Should return None when image file not in archive
+            assert result is None
+            viz.close()
+
+    def test_get_floor_plan_image_general_exception(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test _get_floor_plan_image when general exception occurs."""
+        # Mock archive that raises exception when reading
+        mock_archive = Mock()
+        mock_archive.read.side_effect = Exception("Archive read error")
+
+        with patch('zipfile.ZipFile', return_value=mock_archive):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+            viz.archive = mock_archive
+
+            result = viz._get_floor_plan_image(sample_floors["floor1"])
+
+            # Should return None when exception occurs
+            assert result is None
+            viz.close()
+
+    def test_font_loading_all_fonts_fail(self, temp_esx_path, temp_output_dir):
+        """Test font loading when all TrueType fonts fail to load."""
+        from PIL import ImageFont
+
+        # Mock ImageFont.truetype to always fail with OSError
+        with patch('zipfile.ZipFile'):
+            with patch.object(ImageFont, 'truetype', side_effect=OSError("Font not found")):
+                with patch.object(ImageFont, 'load_default', return_value=Mock()):
+                    viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+                    # Font should fall back to default
+                    assert viz.font is not None
+                    viz.close()
+
+    def test_font_loading_exception_in_outer_try(self, temp_esx_path, temp_output_dir):
+        """Test font loading when exception occurs in outer try block."""
+        from PIL import ImageFont
+
+        # Mock ImageFont.load_default to raise exception
+        with patch('zipfile.ZipFile'):
+            with patch.object(ImageFont, 'truetype', side_effect=OSError("Font not found")):
+                with patch.object(ImageFont, 'load_default', side_effect=Exception("Font system error")):
+                    viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+                    # Font should be None when all loading fails
+                    assert viz.font is None
+                    viz.close()
+
+    def test_color_typo_fixing(self, temp_esx_path, temp_output_dir):
+        """Test color name typo fixing (e.g., RRReeeddd -> Red)."""
+        with patch('zipfile.ZipFile'):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+            # Test typo fixing with 3+ consecutive characters (rrr, eee, ddd)
+            result = viz._hex_to_rgb("RRReeeddd")
+            assert result == (255, 0, 0)  # Should be recognized as Red
+
+            viz.close()
+
+    def test_draw_ap_marker_unknown_mounting_type(self, temp_esx_path, temp_output_dir):
+        """Test _draw_ap_marker with unknown mounting type defaults to circle."""
+        from PIL import Image, ImageDraw
+
+        with patch('zipfile.ZipFile'):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+            # Create test image
+            test_image = Image.new('RGBA', (500, 500), color=(255, 255, 255, 255))
+            draw = ImageDraw.Draw(test_image)
+
+            # Draw with unknown mounting type
+            viz._draw_ap_marker(
+                draw, 100, 100,
+                fill_color=(255, 0, 0, 255),
+                mounting_type="UNKNOWN"  # Unknown type - should default to circle
+            )
+
+            viz.close()
+
+    def test_draw_azimuth_arrow_with_default_length(self, temp_esx_path, temp_output_dir):
+        """Test _draw_azimuth_arrow with default arrow_length (None)."""
+        from PIL import Image, ImageDraw
+
+        with patch('zipfile.ZipFile'):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+            # Create test image
+            test_image = Image.new('RGBA', (500, 500), color=(255, 255, 255, 255))
+            draw = ImageDraw.Draw(test_image)
+
+            # Draw arrow with arrow_length=None (should use default)
+            viz._draw_azimuth_arrow(
+                draw, 100, 100, azimuth=45.0,
+                arrow_length=None  # None - should use default calculation
+            )
+
+            viz.close()
+
+    def test_draw_legend_empty_access_points(self, temp_esx_path, temp_output_dir):
+        """Test _draw_legend with empty access points list."""
+        from PIL import Image, ImageDraw
+
+        with patch('zipfile.ZipFile'):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+            # Create test image
+            test_image = Image.new('RGB', (500, 500), color=(255, 255, 255))
+            draw = ImageDraw.Draw(test_image)
+
+            # Draw legend with empty list - should return early
+            viz._draw_legend(draw, [], (500, 500))
+
+            viz.close()
+
+    def test_draw_legend_with_non_rgba_image(self, temp_esx_path, temp_output_dir):
+        """Test _draw_legend with non-RGBA image (RGB mode)."""
+        from PIL import Image, ImageDraw
+
+        with patch('zipfile.ZipFile'):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+
+            # Create RGB image (not RGBA)
+            test_image = Image.new('RGB', (500, 500), color=(255, 255, 255))
+            draw = ImageDraw.Draw(test_image)
+
+            aps = [
+                AccessPoint(
+                    vendor="Cisco", model="AP-1",
+                    floor_id="floor1", floor_name="Floor 1",
+                    location_x=100.0, location_y=100.0,
+                    color="Red", name="AP-1"
+                )
+            ]
+
+            # Draw legend on RGB image - should convert to RGBA
+            viz._draw_legend(draw, aps, (500, 500))
+
+            viz.close()
+
+    def test_wifi_6e_detection_in_arrows(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test Wi-Fi 6E detection in azimuth arrows."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # AP with Wi-Fi 6E model name
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="Catalyst 9136-WI-FI 6E",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-6E"
+            )
+        ]
+
+        radios = [
+            Radio(
+                id="radio1", access_point_id="ap1",
+                antenna_mounting="CEILING",
+                antenna_direction=45.0
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
+
+                assert result is not None
+                viz.close()
+
+    def test_wifi_6_detection_in_arrows(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test Wi-Fi 6 detection in azimuth arrows."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # AP with Wi-Fi 6 model name
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="Catalyst 9120AXI-WI-FI 6",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Blue", name="AP-6"
+            )
+        ]
+
+        radios = [
+            Radio(
+                id="radio1", access_point_id="ap1",
+                antenna_mounting="CEILING",
+                antenna_direction=90.0
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
+
+                assert result is not None
+                viz.close()
+
+    def test_wifi_ac_detection_in_arrows(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test Wi-Fi 5 (802.11ac) detection in azimuth arrows."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # AP with 802.11ac model name
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="Catalyst 9120AX-AC",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Green", name="AP-AC"
+            )
+        ]
+
+        radios = [
+            Radio(
+                id="radio1", access_point_id="ap1",
+                antenna_mounting="CEILING",
+                antenna_direction=135.0
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
+
+                assert result is not None
+                viz.close()
+
+    def test_visualize_all_floors_floor_id_not_found(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test visualize_all_floors when AP references non-existent floor."""
+        from PIL import Image
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # AP with non-existent floor_id
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-1",
+                floor_id="nonexistent_floor",  # Floor ID not in floors dict
+                floor_name="Unknown Floor", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Red", name="AP-1"
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+                result = viz.visualize_all_floors(sample_floors, aps)
+
+                # Should return empty list (floor not found)
+                assert result == []
+                viz.close()
+
+    def test_get_floor_plan_image_success(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test _get_floor_plan_image successful image loading."""
+        import json
+        from PIL import Image
+        from io import BytesIO
+
+        # Create a valid PNG image
+        test_image = Image.new('RGB', (100, 100), color='white')
+        image_bytes = BytesIO()
+        test_image.save(image_bytes, format='PNG')
+        image_data = image_bytes.getvalue()
+
+        # Mock archive with complete valid data
+        mock_archive = Mock()
+        floor_plans_data = {
+            'floorPlans': [{
+                'id': 'floor1',
+                'name': 'Floor 1',
+                'imageId': 'test-image-123'
+            }]
+        }
+
+        def mock_read(filename):
+            if filename == 'floorPlans.json':
+                return json.dumps(floor_plans_data).encode()
+            elif filename == 'image-test-image-123':
+                return image_data
+            raise KeyError(f"File not found: {filename}")
+
+        mock_archive.read.side_effect = mock_read
+        mock_archive.namelist.return_value = ['floorPlans.json', 'image-test-image-123']
+
+        with patch('zipfile.ZipFile', return_value=mock_archive):
+            viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir)
+            viz.archive = mock_archive
+
+            result = viz._get_floor_plan_image(sample_floors["floor1"])
+
+            # Should successfully return image
+            assert result is not None
+            assert result.size == (100, 100)
+            viz.close()
+
+    def test_wifi_ac_in_model_name(self, temp_esx_path, temp_output_dir, sample_floors):
+        """Test Wi-Fi 5 (802.11ac) detection with 'ac' in model name."""
+        from PIL import Image
+        from ekahau_bom.models import Radio
+
+        test_image = Image.new('RGB', (500, 500), color='white')
+
+        # AP with 'ac' in model name (lowercase)
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AIR-AP1815I-AC-K9",
+                floor_id="floor1", floor_name="Floor 1", mine=True,
+                location_x=100.0, location_y=100.0,
+                color="Yellow", name="AP-AC-K9"
+            )
+        ]
+
+        radios = [
+            Radio(
+                id="radio1", access_point_id="ap1",
+                antenna_mounting="CEILING",
+                antenna_direction=180.0
+            )
+        ]
+
+        with patch('zipfile.ZipFile'):
+            with patch.object(FloorPlanVisualizer, '_get_floor_plan_image', return_value=test_image):
+                viz = FloorPlanVisualizer(temp_esx_path, temp_output_dir, show_azimuth_arrows=True)
+                result = viz.visualize_floor(sample_floors["floor1"], aps, radios)
+
+                assert result is not None
                 viz.close()
