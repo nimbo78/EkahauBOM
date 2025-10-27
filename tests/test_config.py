@@ -313,3 +313,101 @@ class TestConfigResolvePath:
         # This will resolve relative to config directory
         path = config.resolve_path('test_file.yaml')
         assert path.is_absolute()
+
+
+class TestConfigValidationExtended:
+    """Extended tests for Config validation to improve coverage."""
+
+    def test_load_config_with_none_path_uses_default(self):
+        """Test that load with None uses DEFAULT_CONFIG_FILE."""
+        # Since DEFAULT_CONFIG_FILE likely doesn't exist, should return default config
+        config = Config.load(None)
+        assert isinstance(config, Config)
+
+    def test_validate_formats_not_list(self):
+        """Test validation error when formats is not a list."""
+        config_data = {
+            'export': {
+                'formats': 'csv'  # Should be a list, not a string
+            }
+        }
+        with pytest.raises(ConfigError, match="export.formats must be a list"):
+            config = Config(config_data)
+            config._validate()
+
+    def test_validate_discount_not_number(self):
+        """Test validation error when discount is not a number."""
+        config_data = {
+            'pricing': {
+                'default_discount': 'ten percent'  # Should be a number
+            }
+        }
+        with pytest.raises(ConfigError, match="pricing.default_discount must be a number"):
+            config = Config(config_data)
+            config._validate()
+
+    def test_validate_pdf_paper_size(self):
+        """Test PDF paper size validation."""
+        # Valid paper size
+        config_data = {
+            'pdf': {
+                'paper_size': 'A4'
+            }
+        }
+        config = Config(config_data)
+        config._validate()  # Should not raise
+
+        # Invalid paper size
+        config_data_invalid = {
+            'pdf': {
+                'paper_size': 'B5'  # Not in valid sizes
+            }
+        }
+        with pytest.raises(ConfigError, match="Invalid PDF paper size"):
+            config_invalid = Config(config_data_invalid)
+            config_invalid._validate()
+
+    def test_validate_pdf_orientation(self):
+        """Test PDF orientation validation."""
+        # Valid orientation
+        config_data = {
+            'pdf': {
+                'orientation': 'landscape'
+            }
+        }
+        config = Config(config_data)
+        config._validate()  # Should not raise
+
+        # Invalid orientation
+        config_data_invalid = {
+            'pdf': {
+                'orientation': 'vertical'  # Not in valid orientations
+            }
+        }
+        with pytest.raises(ConfigError, match="Invalid PDF orientation"):
+            config_invalid = Config(config_data_invalid)
+            config_invalid._validate()
+
+    def test_validate_pdf_all_settings(self):
+        """Test PDF validation with all settings."""
+        config_data = {
+            'pdf': {
+                'paper_size': 'Letter',
+                'orientation': 'portrait'
+            }
+        }
+        config = Config(config_data)
+        config._validate()  # Should not raise any errors
+
+        assert config.get('pdf.paper_size') == 'Letter'
+        assert config.get('pdf.orientation') == 'portrait'
+
+    def test_load_config_with_non_dict_yaml(self, tmp_path):
+        """Test error when YAML file contains non-dict data."""
+        config_file = tmp_path / "config.yaml"
+
+        # Write YAML that's a list instead of dict
+        config_file.write_text("- item1\n- item2\n", encoding='utf-8')
+
+        with pytest.raises(ConfigError, match="Invalid configuration file format"):
+            Config.load(config_file)

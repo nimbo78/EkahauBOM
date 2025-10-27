@@ -369,3 +369,201 @@ class TestCoverageAnalytics:
         metrics = CoverageAnalytics.calculate_coverage_metrics([], None)
 
         assert metrics.ap_count == 0
+
+    def test_get_summary_statistics_empty(self):
+        """Test get_summary_statistics with empty AP list."""
+        stats = GroupingAnalytics.get_summary_statistics([])
+
+        assert stats["total"] == 0
+        assert stats["unique_vendors"] == 0
+        assert stats["unique_models"] == 0
+        assert stats["unique_floors"] == 0
+        assert stats["unique_colors"] == 0
+        assert stats["with_tags"] == 0
+
+    def test_get_summary_statistics_with_data(self, sample_aps):
+        """Test get_summary_statistics with AP data."""
+        stats = GroupingAnalytics.get_summary_statistics(sample_aps)
+
+        assert stats["total"] == 4
+        assert stats["unique_vendors"] == 2  # Cisco, Aruba
+        assert stats["unique_models"] == 2  # AP-515, AP-635
+        assert stats["unique_floors"] == 2  # Floor 1, Floor 2
+        assert stats["unique_colors"] == 2  # Yellow, Red
+        assert stats["with_tags"] == 4  # All have tags
+
+    def test_print_grouped_results_with_data(self, caplog):
+        """Test print_grouped_results with data."""
+        import logging
+        caplog.set_level(logging.INFO)
+
+        grouped_data = {"Cisco": 10, "Aruba": 5, "Ubiquiti": 3}
+        GroupingAnalytics.print_grouped_results(
+            grouped_data,
+            title="Test Grouping",
+            show_percentages=True
+        )
+
+        # Check that logger was called with correct messages
+        assert "Test Grouping" in caplog.text
+        assert "Cisco:" in caplog.text
+        assert "Aruba:" in caplog.text
+        assert "Ubiquiti:" in caplog.text
+
+    def test_print_grouped_results_empty(self, caplog):
+        """Test print_grouped_results with empty data."""
+        import logging
+        caplog.set_level(logging.INFO)
+
+        GroupingAnalytics.print_grouped_results({}, title="Empty Test")
+
+        assert "Empty Test" in caplog.text
+        assert "No data to display" in caplog.text
+
+    def test_print_grouped_results_without_percentages(self, caplog):
+        """Test print_grouped_results without percentages."""
+        import logging
+        caplog.set_level(logging.INFO)
+
+        grouped_data = {"Cisco": 10, "Aruba": 5}
+        GroupingAnalytics.print_grouped_results(
+            grouped_data,
+            title="No Percentages",
+            show_percentages=False
+        )
+
+        assert "No Percentages" in caplog.text
+        assert "Cisco:" in caplog.text
+
+
+class TestRadioAnalyticsExtended:
+    """Extended tests for RadioAnalytics class to improve coverage."""
+
+    def test_group_by_channel_width(self):
+        """Test grouping radios by channel width."""
+        radios = [
+            Radio(id="r1", access_point_id="ap1", channel_width=20),
+            Radio(id="r2", access_point_id="ap2", channel_width=40),
+            Radio(id="r3", access_point_id="ap3", channel_width=80),
+            Radio(id="r4", access_point_id="ap4", channel_width=80),
+            Radio(id="r5", access_point_id="ap5", channel_width=None),
+        ]
+
+        result = RadioAnalytics.group_by_channel_width(radios)
+
+        assert result["20 MHz"] == 1
+        assert result["40 MHz"] == 1
+        assert result["80 MHz"] == 2
+        assert "None MHz" not in result  # None values are filtered out
+
+    def test_group_by_wifi_standard(self):
+        """Test grouping radios by Wi-Fi standard."""
+        radios = [
+            Radio(id="r1", access_point_id="ap1", standard="802.11ax"),
+            Radio(id="r2", access_point_id="ap2", standard="802.11ax"),
+            Radio(id="r3", access_point_id="ap3", standard="802.11ac"),
+            Radio(id="r4", access_point_id="ap4", standard="802.11n"),
+            Radio(id="r5", access_point_id="ap5", standard=None),
+        ]
+
+        result = RadioAnalytics.group_by_wifi_standard(radios)
+
+        assert result["802.11ax"] == 2
+        assert result["802.11ac"] == 1
+        assert result["802.11n"] == 1
+        assert None not in result  # None values are filtered out
+
+    def test_analyze_channel_usage_with_band_filter(self):
+        """Test analyze_channel_usage with band filter."""
+        radios = [
+            Radio(id="r1", access_point_id="ap1", frequency_band="2.4GHz", channel=1),
+            Radio(id="r2", access_point_id="ap2", frequency_band="2.4GHz", channel=6),
+            Radio(id="r3", access_point_id="ap3", frequency_band="5GHz", channel=36),
+            Radio(id="r4", access_point_id="ap4", frequency_band="5GHz", channel=36),
+            Radio(id="r5", access_point_id="ap5", frequency_band="5GHz", channel=40),
+        ]
+
+        # Test with 5GHz filter
+        result_5ghz = RadioAnalytics.analyze_channel_usage(radios, band="5GHz")
+
+        assert result_5ghz["total_radios"] == 3
+        assert result_5ghz["unique_channels"] == 2  # ch 36, 40
+        assert result_5ghz["channel_distribution"][36] == 2
+        assert result_5ghz["channel_distribution"][40] == 1
+
+        # Test with 2.4GHz filter
+        result_24ghz = RadioAnalytics.analyze_channel_usage(radios, band="2.4GHz")
+
+        assert result_24ghz["total_radios"] == 2
+        assert result_24ghz["unique_channels"] == 2  # ch 1, 6
+
+    def test_analyze_channel_usage_no_filter(self):
+        """Test analyze_channel_usage without band filter."""
+        radios = [
+            Radio(id="r1", access_point_id="ap1", frequency_band="2.4GHz", channel=1),
+            Radio(id="r2", access_point_id="ap2", frequency_band="5GHz", channel=36),
+            Radio(id="r3", access_point_id="ap3", frequency_band="5GHz", channel=36),
+        ]
+
+        result = RadioAnalytics.analyze_channel_usage(radios)
+
+        assert result["total_radios"] == 3
+        assert result["unique_channels"] == 2  # ch 1, 36
+        assert len(result["most_used_channels"]) > 0
+        assert result["avg_radios_per_channel"] == 1.5  # 3 radios / 2 channels
+
+    def test_get_tx_power_distribution_with_none(self):
+        """Test tx_power distribution with None values."""
+        radios = [
+            Radio(id="r1", access_point_id="ap1", tx_power=5.0),
+            Radio(id="r2", access_point_id="ap2", tx_power=12.0),
+            Radio(id="r3", access_point_id="ap3", tx_power=18.0),
+            Radio(id="r4", access_point_id="ap4", tx_power=22.0),
+            Radio(id="r5", access_point_id="ap5", tx_power=30.0),
+            Radio(id="r6", access_point_id="ap6", tx_power=None),
+        ]
+
+        result = RadioAnalytics.get_tx_power_distribution(radios)
+
+        assert result["< 10 dBm"] == 1  # 5.0
+        assert result["10-15 dBm"] == 1  # 12.0
+        assert result["15-20 dBm"] == 1  # 18.0
+        assert result["20-25 dBm"] == 1  # 22.0
+        assert result["> 25 dBm"] == 1  # 30.0
+        assert result["Unknown"] == 1  # None
+
+    def test_get_radio_summary(self):
+        """Test comprehensive radio summary."""
+        radios = [
+            Radio(
+                id="r1",
+                access_point_id="ap1",
+                frequency_band="5GHz",
+                channel=36,
+                channel_width=80,
+                tx_power=20.0,
+                standard="802.11ax"
+            ),
+            Radio(
+                id="r2",
+                access_point_id="ap2",
+                frequency_band="2.4GHz",
+                channel=6,
+                channel_width=40,
+                tx_power=15.0,
+                standard="802.11n"
+            ),
+        ]
+
+        summary = RadioAnalytics.get_radio_summary(radios)
+
+        assert summary["total_radios"] == 2
+        assert "5GHz" in summary["frequency_bands"]
+        assert "2.4GHz" in summary["frequency_bands"]
+        assert "80 MHz" in summary["channel_widths"]
+        assert "40 MHz" in summary["channel_widths"]
+        assert "802.11ax" in summary["wifi_standards"]
+        assert "802.11n" in summary["wifi_standards"]
+        assert summary["avg_tx_power"] == 17.5  # (20 + 15) / 2
+        assert summary["min_tx_power"] == 15.0
+        assert summary["max_tx_power"] == 20.0
