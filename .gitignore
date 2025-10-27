@@ -15,6 +15,10 @@ env/
 CLAUDE.md
 .claude/
 
+# Planning documents (local only)
+BUGFIX_PLAN.md
+plan_phases.txt
+
 # Python
 __pycache__/
 *.py[cod]
