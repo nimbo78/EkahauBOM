@@ -17,12 +17,12 @@ def _weasyprint_usable():
     """Check if WeasyPrint can actually be used (GTK libraries available)."""
     try:
         import weasyprint
-
-        # Try to actually use WeasyPrint to catch GTK loading errors
         from weasyprint import HTML
 
+        # Actually try to use WeasyPrint to catch compatibility issues
+        HTML(string="<html><body>test</body></html>").write_pdf()
         return True
-    except (ImportError, OSError):
+    except (ImportError, OSError, TypeError, AttributeError):
         return False
 
 
