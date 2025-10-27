@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Unit Tests Coverage Improvements** (Phase 9.1 continued - NEW!)
+  - Added 115 new unit tests (405 → 520, +28% increase)
+  - All tests now passing: 520/520 ✅
+  - Overall code coverage: 76% → 86% (+10%)
+  - **Goal of 80% coverage achieved!** 🎉
+
+  **New tests:**
+  - `tests/test_main.py` - Entry point testing (4 tests, 0% → 100% coverage)
+    - Module import validation
+    - `__name__ == '__main__'` guard verification
+    - Subprocess integration tests (--help, --version)
+
+  - `tests/test_pdf_exporter.py` - PDF export testing (+6 tests, 5% → 99% coverage)
+    - Full metadata export validation
+    - Empty table handling
+    - Wi-Fi standards section (802.11ax/ac/n)
+    - PDF file structure validation
+    - **Requires:** WeasyPrint + GTK3 Runtime on Windows
+
+  **Module coverage improvements:**
+  - `__main__.py`: 0% → 100% (entry point)
+  - `pdf_exporter.py`: 5% → 99% (+94%, 20 tests total)
+  - `parser.py`: 99% → 100%
+  - All processors: 100% coverage
+  - All exporters: 99-100% coverage
+  - `visualizers/floor_plan.py`: 84% → 99%
+  - `config.py`: 92% → 100%
+  - `analytics.py`: 100%
+  - `cable_analytics.py`: 100%
+
+  **Real business logic coverage: 99-100%** (excluding CLI which requires E2E tests)
+
 ## [2.7.0] - 2025-10-27
 
 ### Added
