@@ -241,3 +241,78 @@ class TestCostSummary:
         assert summary.subtotal == 0
         assert summary.grand_total == 0
         assert summary.coverage_percent == 0
+
+    def test_pricing_db_default_file_exists(self):
+        """Test PricingDatabase with None uses default file path."""
+        # Default pricing file exists in config directory
+        db = PricingDatabase(None)
+        # Should load successfully from default file
+        assert isinstance(db.prices, dict)
+        assert isinstance(db.antenna_prices, dict)
+        # Default file should have some vendors
+        assert len(db.prices) > 0
+
+    def test_pricing_db_default_file_not_found_warning(self, tmp_path, monkeypatch):
+        """Test PricingDatabase logs warning when default file doesn't exist."""
+        from pathlib import Path
+        from unittest.mock import Mock
+
+        # Mock Path(__file__).parent.parent to point to tmp directory without pricing.yaml
+        def mock_file_property():
+            return tmp_path / "fake_pricing.py"
+
+        # Patch __file__ for pricing module
+        monkeypatch.setattr("ekahau_bom.pricing.__file__", str(tmp_path / "pricing.py"))
+
+        db = PricingDatabase(None)
+
+        # Should handle missing default file gracefully
+        assert db.prices == {}
+        assert db.antenna_prices == {}
+
+    def test_pricing_db_file_not_exists(self, tmp_path):
+        """Test PricingDatabase when file doesn't exist."""
+        nonexistent_file = tmp_path / "nonexistent.yaml"
+        db = PricingDatabase(nonexistent_file)
+
+        # Should not raise error, just log warnings
+        assert db.prices == {}
+        assert db.antenna_prices == {}
+
+    def test_pricing_db_invalid_yaml(self, tmp_path):
+        """Test PricingDatabase with invalid YAML file."""
+        invalid_file = tmp_path / "invalid.yaml"
+        invalid_file.write_text("{ invalid yaml [[[", encoding='utf-8')
+
+        db = PricingDatabase(invalid_file)
+
+        # Should handle exception gracefully
+        assert db.prices == {}
+        assert db.antenna_prices == {}
+
+    def test_get_antenna_price_not_found(self, pricing_db):
+        """Test get_antenna_price for unknown antenna."""
+        price = pricing_db.get_antenna_price("Unknown-Antenna-XYZ")
+        assert price is None
+
+    def test_get_volume_discount_no_tier_match(self, pricing_db):
+        """Test get_volume_discount when quantity doesn't match any tier."""
+        # All tiers in test data: 1-9 (0%), 10-49 (10%), 50+ (20%)
+        # Quantity 0 doesn't match any tier
+        discount = pricing_db.get_volume_discount(0)
+        assert discount == 0.0
+
+    def test_calculate_antennas_cost_without_price(self, pricing_db):
+        """Test calculate_antennas_cost with antenna that has no price."""
+        antennas = [
+            Antenna("Unknown-Antenna-123", None),  # Unknown antenna without price
+            Antenna("ANT-20", None),  # Known antenna with price
+        ]
+
+        calculator = CostCalculator(pricing_db)
+        summary = calculator.calculate_antennas_cost(antennas)
+
+        # Should include both antennas, one with $0 price
+        assert len(summary.items) == 2
+        assert summary.items_without_prices == 1  # Unknown antenna
+        assert summary.items_with_prices == 1  # ANT-20
