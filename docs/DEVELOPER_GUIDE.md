@@ -12,6 +12,7 @@ Guide for contributors and developers working on EkahauBOM.
 - [Code Style](#code-style)
 - [Testing](#testing)
 - [Adding Features](#adding-features)
+- [Extending EkahauBOM](#extending-ekahaubom)
 - [Contributing](#contributing)
 
 ---
@@ -270,6 +271,26 @@ def test_channel_overlap(sample_radios):
 ```
 
 3. **Integrate into exporters** (optional)
+
+---
+
+## Extending EkahauBOM
+
+For detailed guides on extending EkahauBOM with new functionality, see:
+
+**[📚 EXTENDING.md](EXTENDING.md)** - Comprehensive extension guide
+
+This guide covers:
+- **Adding New Exporters**: Step-by-step guide with complete example (XML exporter)
+- **Adding New Processors**: Extract new data types from .esx files
+- **Adding New Analytics**: Statistical analysis and insights
+- **Adding CLI Options**: Extend command-line interface
+- **Best Practices**: Code quality, testing, and performance tips
+
+**Quick Links:**
+- [Adding a New Exporter](EXTENDING.md#adding-a-new-exporter)
+- [Adding a New Processor](EXTENDING.md#adding-a-new-processor)
+- [Adding New Analytics](EXTENDING.md#adding-new-analytics)
 
 ---
 

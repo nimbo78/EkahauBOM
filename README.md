@@ -880,9 +880,16 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📚 Documentation
 
+**For Users:**
 - **[User Guide](docs/USER_GUIDE.md)** - Detailed usage examples and scenarios ([Русский](docs/USER_GUIDE.ru.md))
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing and architecture ([Русский](docs/DEVELOPER_GUIDE.ru.md))
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
+- **[FAQ](#-faq)** - Frequently asked questions
+
+**For Developers:**
+- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing and architecture ([Русский](docs/DEVELOPER_GUIDE.ru.md))
+- **[Extending Guide](docs/EXTENDING.md)** - Adding exporters, processors, and features
+- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
 
 ---
 
