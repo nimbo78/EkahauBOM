@@ -114,9 +114,7 @@ class TestGroupingAnalytics:
                 tags=[Tag("Zone", "Office", "1")],
             ),
             AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", tags=[]),
-            AccessPoint(
-                "Aruba", "AP-635", "Red", "Floor 2", tags=[Tag("Zone", "Office", "1")]
-            ),
+            AccessPoint("Aruba", "AP-635", "Red", "Floor 2", tags=[Tag("Zone", "Office", "1")]),
         ]
         result = GroupingAnalytics.group_by_tag(aps, "Zone")
         assert result["Office"] == 2
@@ -200,9 +198,7 @@ class TestGroupingAnalytics:
 
     def test_group_by_dimension_tag(self, sample_aps):
         """Test group_by_dimension with tag."""
-        result = GroupingAnalytics.group_by_dimension(
-            sample_aps, "tag", tag_key="Location"
-        )
+        result = GroupingAnalytics.group_by_dimension(sample_aps, "tag", tag_key="Location")
         assert result["Building A"] == 3
         assert result["Building B"] == 1
 
@@ -221,9 +217,7 @@ class TestGroupingAnalytics:
 
     def test_multi_dimensional_grouping_floor_color(self, sample_aps):
         """Test multi-dimensional grouping with floor and color."""
-        result = GroupingAnalytics.multi_dimensional_grouping(
-            sample_aps, ["floor", "color"]
-        )
+        result = GroupingAnalytics.multi_dimensional_grouping(sample_aps, ["floor", "color"])
         assert result[("Floor 1", "Yellow")] == 3
         assert result[("Floor 2", "Red")] == 1
 
@@ -246,9 +240,7 @@ class TestGroupingAnalytics:
 
     def test_multi_dimensional_grouping_unknown_dimension(self, sample_aps):
         """Test multi-dimensional grouping with unknown dimension."""
-        result = GroupingAnalytics.multi_dimensional_grouping(
-            sample_aps, ["floor", "unknown"]
-        )
+        result = GroupingAnalytics.multi_dimensional_grouping(sample_aps, ["floor", "unknown"])
         # Should still work, with "Unknown" for the bad dimension
         assert len(result) > 0
 
@@ -312,24 +304,12 @@ class TestMountingAnalytics:
     def test_group_by_height_range(self):
         """Test grouping APs by height range."""
         aps = [
-            AccessPoint(
-                "Cisco", "AP-515", "Yellow", "Floor 1", mounting_height=2.0
-            ),  # < 2.5m
-            AccessPoint(
-                "Cisco", "AP-635", "Red", "Floor 2", mounting_height=3.0
-            ),  # 2.5-3.5m
-            AccessPoint(
-                "Aruba", "AP-515", "Blue", "Floor 1", mounting_height=4.0
-            ),  # 3.5-4.5m
-            AccessPoint(
-                "Cisco", "C9120", "Yellow", "Floor 3", mounting_height=5.0
-            ),  # 4.5-6.0m
-            AccessPoint(
-                "Aruba", "AP-635", "Red", "Floor 4", mounting_height=7.0
-            ),  # > 6.0m
-            AccessPoint(
-                "Cisco", "AP-515", "Blue", "Floor 5", mounting_height=None
-            ),  # Unknown
+            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", mounting_height=2.0),  # < 2.5m
+            AccessPoint("Cisco", "AP-635", "Red", "Floor 2", mounting_height=3.0),  # 2.5-3.5m
+            AccessPoint("Aruba", "AP-515", "Blue", "Floor 1", mounting_height=4.0),  # 3.5-4.5m
+            AccessPoint("Cisco", "C9120", "Yellow", "Floor 3", mounting_height=5.0),  # 4.5-6.0m
+            AccessPoint("Aruba", "AP-635", "Red", "Floor 4", mounting_height=7.0),  # > 6.0m
+            AccessPoint("Cisco", "AP-515", "Blue", "Floor 5", mounting_height=None),  # Unknown
         ]
 
         result = MountingAnalytics.group_by_height_range(aps)

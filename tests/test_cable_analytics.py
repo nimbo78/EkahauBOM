@@ -46,17 +46,13 @@ class TestCableAnalytics:
 
     def test_calculate_cable_length_horizontal_line(self):
         """Test cable length for horizontal line."""
-        cable = CableNote(
-            id="cable1", points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)]
-        )
+        cable = CableNote(id="cable1", points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)])
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 100.0
 
     def test_calculate_cable_length_vertical_line(self):
         """Test cable length for vertical line."""
-        cable = CableNote(
-            id="cable1", points=[Point(x=0.0, y=0.0), Point(x=0.0, y=100.0)]
-        )
+        cable = CableNote(id="cable1", points=[Point(x=0.0, y=0.0), Point(x=0.0, y=100.0)])
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 100.0
 
@@ -153,9 +149,7 @@ class TestCableAnalytics:
             )
         ]
         # Scale factor: 10 units = 1 meter
-        metrics = CableAnalytics.calculate_cable_metrics(
-            cables, sample_floors, scale_factor=10.0
-        )
+        metrics = CableAnalytics.calculate_cable_metrics(cables, sample_floors, scale_factor=10.0)
 
         assert metrics.total_length == 100.0
         assert metrics.total_length_m == 10.0  # 100 / 10
@@ -163,9 +157,7 @@ class TestCableAnalytics:
 
     def test_estimate_cable_cost_no_meters(self):
         """Test cable cost estimation without meters."""
-        metrics = CableMetrics(
-            total_cables=10, total_length=1000.0, total_length_m=None
-        )
+        metrics = CableMetrics(total_cables=10, total_length=1000.0, total_length_m=None)
         cost = CableAnalytics.estimate_cable_cost(metrics)
 
         assert cost["cable_material"] == 0.0
@@ -217,9 +209,7 @@ class TestCableAnalytics:
         assert any(item["description"] == "RJ45 Connectors" for item in bom)
         assert any(item["description"] == "Cable Routes/Runs" for item in bom)
 
-        connector_item = next(
-            item for item in bom if "Connectors" in item["description"]
-        )
+        connector_item = next(item for item in bom if "Connectors" in item["description"])
         assert connector_item["quantity"] == 10  # 5 cables * 2 connectors
         assert connector_item["unit"] == "pieces"
 
@@ -242,9 +232,7 @@ class TestCableAnalytics:
             metrics, connector_type="GG45", connectors_per_cable=4
         )
 
-        connector_item = next(
-            item for item in bom if "Connectors" in item["description"]
-        )
+        connector_item = next(item for item in bom if "Connectors" in item["description"])
         assert connector_item["quantity"] == 12  # 3 cables * 4 connectors
         assert "GG45" in connector_item["description"]
 

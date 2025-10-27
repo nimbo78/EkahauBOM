@@ -313,12 +313,8 @@ class TestConfigValidationExtended:
 
     def test_validate_discount_not_number(self):
         """Test validation error when discount is not a number."""
-        config_data = {
-            "pricing": {"default_discount": "ten percent"}
-        }  # Should be a number
-        with pytest.raises(
-            ConfigError, match="pricing.default_discount must be a number"
-        ):
+        config_data = {"pricing": {"default_discount": "ten percent"}}  # Should be a number
+        with pytest.raises(ConfigError, match="pricing.default_discount must be a number"):
             config = Config(config_data)
             config._validate()
 
@@ -343,9 +339,7 @@ class TestConfigValidationExtended:
         config._validate()  # Should not raise
 
         # Invalid orientation
-        config_data_invalid = {
-            "pdf": {"orientation": "vertical"}
-        }  # Not in valid orientations
+        config_data_invalid = {"pdf": {"orientation": "vertical"}}  # Not in valid orientations
         with pytest.raises(ConfigError, match="Invalid PDF orientation"):
             config_invalid = Config(config_data_invalid)
             config_invalid._validate()

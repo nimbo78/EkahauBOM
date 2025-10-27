@@ -268,9 +268,7 @@ class TestJSONExporter:
             data = json.load(f)
 
         vendor_analytics = data["analytics"]["by_vendor"]
-        total_percentage = sum(
-            group["percentage"] for group in vendor_analytics["groups"]
-        )
+        total_percentage = sum(group["percentage"] for group in vendor_analytics["groups"])
 
         # Should sum to approximately 100%
         assert 99.9 <= total_percentage <= 100.1
@@ -374,9 +372,7 @@ class TestJSONExporter:
         )
 
         exporter = JSONExporter(tmp_path)
-        files = exporter.export(
-            project_data
-        )  # Use project_data instead of sample_project_data
+        files = exporter.export(project_data)  # Use project_data instead of sample_project_data
 
         with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)

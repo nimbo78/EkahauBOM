@@ -155,9 +155,7 @@ class FloorPlanVisualizer:
         # First, try exact match with normalized name
         if hex_color_normalized in color_names:
             hex_color = color_names[hex_color_normalized]
-            logger.debug(
-                f"Converted color name '{original_color}' to hex: #{hex_color}"
-            )
+            logger.debug(f"Converted color name '{original_color}' to hex: #{hex_color}")
         # If not found, try fixing common typos (RReedd -> red, BBllue -> blue, etc.)
         else:
             import re
@@ -753,9 +751,7 @@ class FloorPlanVisualizer:
             logger.debug(
                 f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}"
             )
-            self._draw_azimuth_arrow(
-                draw, x, y, azimuth, arrow_color, arrow_length=arrow_length
-            )
+            self._draw_azimuth_arrow(draw, x, y, azimuth, arrow_color, arrow_length=arrow_length)
 
         # Draw AP names on top of the composited image
         for ap in floor_aps:
@@ -775,9 +771,7 @@ class FloorPlanVisualizer:
                 text_color = (0, 0, 0)  # Black text
 
                 # Shadow
-                draw.text(
-                    (text_x + 1, text_y + 1), ap.name, font=self.font, fill=shadow_color
-                )
+                draw.text((text_x + 1, text_y + 1), ap.name, font=self.font, fill=shadow_color)
 
                 # Main text
                 draw.text((text_x, text_y), ap.name, font=self.font, fill=text_color)

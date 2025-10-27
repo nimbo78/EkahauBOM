@@ -44,9 +44,7 @@ class NotesProcessor:
                 note = self._process_single_note(note_data)
                 processed_notes.append(note)
             except Exception as e:
-                logger.warning(
-                    f"Failed to process note {note_data.get('id', 'unknown')}: {e}"
-                )
+                logger.warning(f"Failed to process note {note_data.get('id', 'unknown')}: {e}")
                 continue
 
         logger.info(f"Processed {len(processed_notes)}/{len(notes_list)} text notes")
@@ -109,9 +107,7 @@ class NotesProcessor:
                 )
                 continue
 
-        logger.info(
-            f"Processed {len(processed_cable_notes)}/{len(cable_notes_list)} cable notes"
-        )
+        logger.info(f"Processed {len(processed_cable_notes)}/{len(cable_notes_list)} cable notes")
         return processed_cable_notes
 
     def _process_single_cable_note(
@@ -165,9 +161,7 @@ class NotesProcessor:
 
         for picture_note_data in picture_notes_list:
             try:
-                picture_note = self._process_single_picture_note(
-                    picture_note_data, floors
-                )
+                picture_note = self._process_single_picture_note(picture_note_data, floors)
                 processed_picture_notes.append(picture_note)
             except Exception as e:
                 logger.warning(

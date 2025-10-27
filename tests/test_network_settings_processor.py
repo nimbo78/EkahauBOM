@@ -49,9 +49,7 @@ class TestNetworkSettingsProcessor:
 
     def test_process_network_settings_success(self, sample_settings_data):
         """Test successful processing of network settings."""
-        settings = NetworkSettingsProcessor.process_network_settings(
-            sample_settings_data
-        )
+        settings = NetworkSettingsProcessor.process_network_settings(sample_settings_data)
 
         assert len(settings) == 2
         assert all(isinstance(s, NetworkCapacitySettings) for s in settings)
@@ -160,9 +158,7 @@ class TestNetworkSettingsProcessor:
 
     def test_get_ssid_summary(self, sample_settings_data):
         """Test SSID summary generation."""
-        settings = NetworkSettingsProcessor.process_network_settings(
-            sample_settings_data
-        )
+        settings = NetworkSettingsProcessor.process_network_settings(sample_settings_data)
         summary = NetworkSettingsProcessor.get_ssid_summary(settings)
 
         assert summary["ssids_2_4ghz"] == 3
@@ -196,9 +192,7 @@ class TestNetworkSettingsProcessor:
 
     def test_get_data_rate_summary(self, sample_settings_data):
         """Test data rate summary generation."""
-        settings = NetworkSettingsProcessor.process_network_settings(
-            sample_settings_data
-        )
+        settings = NetworkSettingsProcessor.process_network_settings(sample_settings_data)
         summary = NetworkSettingsProcessor.get_data_rate_summary(settings)
 
         assert "2.4GHz" in summary

@@ -20,9 +20,7 @@ class RadioProcessor:
     # Frequency band mapping based on channel numbers
     BAND_24GHZ_CHANNELS = range(1, 15)  # 2.4 GHz: channels 1-14
     BAND_5GHZ_CHANNELS = range(32, 177)  # 5 GHz: channels 32-177
-    BAND_6GHZ_CHANNELS = range(
-        1, 234
-    )  # 6 GHz: channels 1-233 (will need additional logic)
+    BAND_6GHZ_CHANNELS = range(1, 234)  # 6 GHz: channels 1-233 (will need additional logic)
 
     def process(self, simulated_radios_data: dict[str, Any]) -> list[Radio]:
         """Process raw simulated radios data into Radio objects.
@@ -43,9 +41,7 @@ class RadioProcessor:
                 radio = self._process_single_radio(radio_data)
                 radios.append(radio)
             except Exception as e:
-                logger.warning(
-                    f"Error processing radio {radio_data.get('id', 'Unknown')}: {e}"
-                )
+                logger.warning(f"Error processing radio {radio_data.get('id', 'Unknown')}: {e}")
                 continue
 
         logger.info(f"Successfully processed {len(radios)} radios")

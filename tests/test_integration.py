@@ -113,9 +113,7 @@ def parse_esx_to_project_data(esx_file):
         tag_processor = TagProcessor(tag_keys_data)
 
         ap_processor = AccessPointProcessor(color_db, tag_processor)
-        access_points = ap_processor.process(
-            access_points_data, floors, simulated_radios_data
-        )
+        access_points = ap_processor.process(access_points_data, floors, simulated_radios_data)
 
         antenna_processor = AntennaProcessor()
         antennas = antenna_processor.process(simulated_radios_data, antenna_types_data)
@@ -126,13 +124,9 @@ def parse_esx_to_project_data(esx_file):
         notes_processor = NotesProcessor()
         notes = notes_processor.process_notes(notes_data)
         cable_notes = notes_processor.process_cable_notes(cable_notes_data, floors)
-        picture_notes = notes_processor.process_picture_notes(
-            picture_notes_data, floors
-        )
+        picture_notes = notes_processor.process_picture_notes(picture_notes_data, floors)
 
-        network_settings = NetworkSettingsProcessor.process_network_settings(
-            network_settings_data
-        )
+        network_settings = NetworkSettingsProcessor.process_network_settings(network_settings_data)
 
         # Create project data container
         from ekahau_bom.models import ProjectData
@@ -392,9 +386,7 @@ class TestEndToEndScenarios:
         for file in all_files:
             assert file.exists(), f"File not created: {file}"
 
-    def test_parse_multiple_projects(
-        self, test_esx_file, test_esx_file_maga, temp_output_dir
-    ):
+    def test_parse_multiple_projects(self, test_esx_file, test_esx_file_maga, temp_output_dir):
         """Test parsing multiple different .esx files."""
         for esx_file in [test_esx_file, test_esx_file_maga]:
             project_data = parse_esx_to_project_data(esx_file)
@@ -552,10 +544,7 @@ class TestDataValidation:
         # Find aggregated AP file
         ap_file = None
         for file in files:
-            if (
-                "aggregated" in file.name.lower()
-                and "access_point" in file.name.lower()
-            ):
+            if "aggregated" in file.name.lower() and "access_point" in file.name.lower():
                 ap_file = file
                 break
 

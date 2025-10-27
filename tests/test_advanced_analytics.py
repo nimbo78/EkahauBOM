@@ -138,9 +138,7 @@ class TestCoverageAnalytics:
 
     def test_calculate_coverage_metrics_without_areas(self, sample_aps_with_mounting):
         """Test coverage metrics without measured areas."""
-        metrics = CoverageAnalytics.calculate_coverage_metrics(
-            sample_aps_with_mounting, None
-        )
+        metrics = CoverageAnalytics.calculate_coverage_metrics(sample_aps_with_mounting, None)
 
         assert isinstance(metrics, CoverageMetrics)
         assert metrics.total_area == 0.0
@@ -160,9 +158,7 @@ class TestCoverageAnalytics:
 
     def test_calculate_coverage_metrics_no_aps(self, sample_measured_areas):
         """Test coverage metrics with no APs."""
-        metrics = CoverageAnalytics.calculate_coverage_metrics(
-            [], sample_measured_areas
-        )
+        metrics = CoverageAnalytics.calculate_coverage_metrics([], sample_measured_areas)
 
         assert metrics.ap_count == 0
         assert metrics.ap_density == 0.0
@@ -193,9 +189,7 @@ class TestCoverageAnalytics:
 
     def test_group_by_floor_without_areas(self, sample_aps_with_mounting):
         """Test floor grouping without area data."""
-        result = CoverageAnalytics.group_by_floor_with_density(
-            sample_aps_with_mounting, None
-        )
+        result = CoverageAnalytics.group_by_floor_with_density(sample_aps_with_mounting, None)
 
         assert "Floor 1" in result
         assert "Floor 2" in result

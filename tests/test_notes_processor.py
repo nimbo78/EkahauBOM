@@ -222,9 +222,7 @@ class TestNotesProcessor:
 
     def test_process_picture_note_without_location(self, processor, sample_floors):
         """Test processing picture note without location."""
-        picture_notes_data = {
-            "pictureNotes": [{"id": "pic1", "noteIds": [], "status": "CREATED"}]
-        }
+        picture_notes_data = {"pictureNotes": [{"id": "pic1", "noteIds": [], "status": "CREATED"}]}
 
         result = processor.process_picture_notes(picture_notes_data, sample_floors)
 
@@ -400,9 +398,7 @@ class TestNotesProcessor:
                 raise ValueError("Simulated picture note processing error")
             return original_method(note_data, floors_dict)
 
-        with patch.object(
-            processor, "_process_single_picture_note", side_effect=mock_process
-        ):
+        with patch.object(processor, "_process_single_picture_note", side_effect=mock_process):
             result = processor.process_picture_notes(picture_notes_data, floors)
 
         # Should have 1 valid picture note (second one failed)

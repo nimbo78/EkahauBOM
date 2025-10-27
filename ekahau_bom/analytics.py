@@ -104,9 +104,7 @@ class GroupingAnalytics:
             Dictionary mapping floor name to count
         """
         counts = Counter(ap.floor_name for ap in access_points)
-        logger.info(
-            f"Grouped {len(access_points)} APs by floor: {len(counts)} unique floors"
-        )
+        logger.info(f"Grouped {len(access_points)} APs by floor: {len(counts)} unique floors")
         return dict(counts)
 
     @staticmethod
@@ -120,9 +118,7 @@ class GroupingAnalytics:
             Dictionary mapping color name to count
         """
         counts = Counter(ap.color or "No Color" for ap in access_points)
-        logger.info(
-            f"Grouped {len(access_points)} APs by color: {len(counts)} unique colors"
-        )
+        logger.info(f"Grouped {len(access_points)} APs by color: {len(counts)} unique colors")
         return dict(counts)
 
     @staticmethod
@@ -136,9 +132,7 @@ class GroupingAnalytics:
             Dictionary mapping vendor name to count
         """
         counts = Counter(ap.vendor for ap in access_points)
-        logger.info(
-            f"Grouped {len(access_points)} APs by vendor: {len(counts)} unique vendors"
-        )
+        logger.info(f"Grouped {len(access_points)} APs by vendor: {len(counts)} unique vendors")
         return dict(counts)
 
     @staticmethod
@@ -152,9 +146,7 @@ class GroupingAnalytics:
             Dictionary mapping model name to count
         """
         counts = Counter(ap.model for ap in access_points)
-        logger.info(
-            f"Grouped {len(access_points)} APs by model: {len(counts)} unique models"
-        )
+        logger.info(f"Grouped {len(access_points)} APs by model: {len(counts)} unique models")
         return dict(counts)
 
     @staticmethod
@@ -321,9 +313,7 @@ class GroupingAnalytics:
         if show_percentages:
             percentages = GroupingAnalytics.calculate_percentages(grouped_data)
             # Sort by count (descending)
-            sorted_data = sorted(
-                percentages.items(), key=lambda x: x[1][0], reverse=True
-            )
+            sorted_data = sorted(percentages.items(), key=lambda x: x[1][0], reverse=True)
 
             for key, (count, pct) in sorted_data:
                 logger.info(f"  {key}: {count} ({pct:.1f}%)")
@@ -417,11 +407,7 @@ class CoverageAnalytics:
                 "density": 0,
             }
 
-            if (
-                floor_areas
-                and floor_name in floor_areas
-                and floor_areas[floor_name] > 0
-            ):
+            if floor_areas and floor_name in floor_areas and floor_areas[floor_name] > 0:
                 metrics["density"] = count / floor_areas[floor_name] * 1000
 
             result[floor_name] = metrics
@@ -450,9 +436,7 @@ class MountingAnalytics:
             MountingMetrics object with calculated values
         """
         # Filter APs with height data
-        heights = [
-            ap.mounting_height for ap in access_points if ap.mounting_height is not None
-        ]
+        heights = [ap.mounting_height for ap in access_points if ap.mounting_height is not None]
         azimuths = [ap.azimuth for ap in access_points if ap.azimuth is not None]
         tilts = [ap.tilt for ap in access_points if ap.tilt is not None]
 
@@ -546,13 +530,10 @@ class MountingAnalytics:
             "aps_requiring_height_adjustment": sum(
                 1
                 for ap in access_points
-                if ap.mounting_height
-                and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
+                if ap.mounting_height and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
             ),
             "aps_with_tilt": sum(1 for ap in access_points if ap.tilt is not None),
-            "aps_with_azimuth": sum(
-                1 for ap in access_points if ap.azimuth is not None
-            ),
+            "aps_with_azimuth": sum(1 for ap in access_points if ap.azimuth is not None),
         }
 
 
@@ -682,9 +663,7 @@ class RadioAnalytics:
         return dict(standards)
 
     @staticmethod
-    def analyze_channel_usage(
-        radios: list[Radio], band: Optional[str] = None
-    ) -> dict[str, Any]:
+    def analyze_channel_usage(radios: list[Radio], band: Optional[str] = None) -> dict[str, Any]:
         """Analyze channel usage for specific band or all bands.
 
         Args:
@@ -703,15 +682,11 @@ class RadioAnalytics:
 
         # Find most used and least used channels
         most_common = channel_counts.most_common(3) if channel_counts else []
-        least_common = (
-            channel_counts.most_common()[:-4:-1] if len(channel_counts) > 3 else []
-        )
+        least_common = channel_counts.most_common()[:-4:-1] if len(channel_counts) > 3 else []
 
         # Calculate channel distribution statistics
         unique_channels = len(channel_counts)
-        avg_radios_per_channel = (
-            total_radios / unique_channels if unique_channels > 0 else 0
-        )
+        avg_radios_per_channel = total_radios / unique_channels if unique_channels > 0 else 0
 
         return {
             "total_radios": total_radios,

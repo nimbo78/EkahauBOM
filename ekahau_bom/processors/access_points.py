@@ -78,9 +78,7 @@ class AccessPointProcessor:
                 ap = self._process_single_ap(ap_data, floors, ap_radios)
                 access_points.append(ap)
             except Exception as e:
-                logger.warning(
-                    f"Error processing AP {ap_data.get('name', 'Unknown')}: {e}"
-                )
+                logger.warning(f"Error processing AP {ap_data.get('name', 'Unknown')}: {e}")
                 continue
 
         logger.info(f"Successfully processed {len(access_points)} access points")
@@ -126,9 +124,7 @@ class AccessPointProcessor:
             ap_tags = ap_data.get("tags", [])
             if ap_tags:
                 tags = self.tag_processor.process_ap_tags(ap_tags)
-                logger.debug(
-                    f"Processed {len(tags)} tags for AP {ap_data.get('name', 'Unknown')}"
-                )
+                logger.debug(f"Processed {len(tags)} tags for AP {ap_data.get('name', 'Unknown')}")
 
         # Extract mounting and location parameters
         location = ap_data.get("location", {})

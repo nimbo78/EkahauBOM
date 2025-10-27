@@ -148,9 +148,7 @@ class TestCostCalculator:
             ),
         ]
 
-        calculator = CostCalculator(
-            pricing_db, custom_discount=0, apply_volume_discounts=False
-        )
+        calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=False)
         summary = calculator.calculate_access_points_cost(aps)
 
         assert summary.items_with_prices == 2
@@ -172,9 +170,7 @@ class TestCostCalculator:
             for i in range(25)
         ]
 
-        calculator = CostCalculator(
-            pricing_db, custom_discount=0, apply_volume_discounts=True
-        )
+        calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=True)
         summary = calculator.calculate_access_points_cost(aps)
 
         assert summary.subtotal == 25000  # 25*1000
@@ -194,9 +190,7 @@ class TestCostCalculator:
             for i in range(5)
         ]
 
-        calculator = CostCalculator(
-            pricing_db, custom_discount=15, apply_volume_discounts=False
-        )
+        calculator = CostCalculator(pricing_db, custom_discount=15, apply_volume_discounts=False)
         summary = calculator.calculate_access_points_cost(aps)
 
         assert summary.subtotal == 5000
@@ -240,9 +234,7 @@ class TestCostCalculator:
             Antenna("ANT-20", "ant1"),
         ]
 
-        calculator = CostCalculator(
-            pricing_db, custom_discount=0, apply_volume_discounts=False
-        )
+        calculator = CostCalculator(pricing_db, custom_discount=0, apply_volume_discounts=False)
         ap_summary, antenna_summary, combined_summary = calculator.calculate_total_cost(
             aps, antennas
         )

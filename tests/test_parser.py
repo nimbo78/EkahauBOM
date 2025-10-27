@@ -50,15 +50,11 @@ def create_valid_esx_file(tmp_path):
             ]
         }
 
-        antenna_types_data = {
-            "antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]
-        }
+        antenna_types_data = {"antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]}
 
         tag_keys_data = {"tagKeys": [{"id": "tag-1", "key": "Zone"}]}
 
-        measured_areas_data = {
-            "measuredAreas": [{"id": "area-1", "name": "Coverage Area"}]
-        }
+        measured_areas_data = {"measuredAreas": [{"id": "area-1", "name": "Coverage Area"}]}
 
         notes_data = {"notes": [{"id": "note-1", "text": "Test note"}]}
 
@@ -448,9 +444,7 @@ class TestEkahauParserIntegration:
         }
 
         with ZipFile(esx_path, "w") as zf:
-            zf.writestr(
-                ESX_ACCESS_POINTS_FILE, json.dumps(unicode_data, ensure_ascii=False)
-            )
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps(unicode_data, ensure_ascii=False))
 
         with EkahauParser(esx_path) as parser:
             data = parser.get_access_points()

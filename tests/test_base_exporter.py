@@ -99,9 +99,7 @@ class TestBaseExporter:
     def test_concrete_export(self, tmp_path):
         """Test concrete export implementation."""
         exporter = self.ConcreteExporter(tmp_path)
-        project_data = ProjectData(
-            access_points=[], antennas=[], floors={}, project_name="Test"
-        )
+        project_data = ProjectData(access_points=[], antennas=[], floors={}, project_name="Test")
 
         result = exporter.export(project_data)
         assert len(result) == 1
@@ -135,9 +133,7 @@ class TestBaseExporter:
         """Test that abstract method pass statements are covered."""
         # Call the abstract methods directly through super() to cover the pass statements
         exporter = self.ConcreteExporter(tmp_path)
-        project_data = ProjectData(
-            access_points=[], antennas=[], floors={}, project_name="Test"
-        )
+        project_data = ProjectData(access_points=[], antennas=[], floors={}, project_name="Test")
 
         # Call parent's export method (which just has pass)
         result = BaseExporter.export(exporter, project_data)
