@@ -1148,6 +1148,15 @@ FLOOR = "FLOOR"      # Напольный монтаж (квадрат)
   - Быстрый старт
   - Примеры использования
   - FAQ
+- [ ] **Обновить бейджи на динамичные после merge в main**
+  - Заменить статичные shields.io бейджи на динамичные GitHub Actions badges
+  - После merge feature branch в main, workflows запустятся автоматически
+  - Обновить в README.md и README.ru.md:
+    ```markdown
+    [![Tests](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml)
+    [![Code Quality](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml)
+    ```
+  - Удалить TODO комментарий в README
 - [ ] Документация CLI команд
 - [ ] Примеры конфигурационных файлов
 - [ ] Скриншоты и примеры отчетов

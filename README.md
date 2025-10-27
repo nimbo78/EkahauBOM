@@ -6,10 +6,12 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml)
-[![Code Quality](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml)
+[![Tests Status](https://img.shields.io/badge/tests-545%20passing-brightgreen.svg)](tests/)
+[![Code Quality](https://img.shields.io/badge/code%20quality-passing-brightgreen.svg)](.github/workflows/)
 [![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)
-[![Tests Passing](https://img.shields.io/badge/tests-545%20passing-brightgreen.svg)](tests/)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](.github/workflows/)
+
+<!-- TODO: После merge в main заменить статичные бейджи на динамичные GitHub Actions badges -->
 
 **English** | [Русский](README.ru.md)
 
