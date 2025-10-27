@@ -3,6 +3,8 @@
 
 """Data models for Ekahau project entities."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Optional
 

@@ -22,7 +22,8 @@ from ekahau_bom.exporters.csv_exporter import CSVExporter
 from ekahau_bom.exporters.json_exporter import JSONExporter
 from ekahau_bom.exporters.html_exporter import HTMLExporter
 from ekahau_bom.exporters.excel_exporter import ExcelExporter
-from ekahau_bom.exporters.pdf_exporter import PDFExporter
+
+# PDFExporter imported conditionally in tests that need it (requires WeasyPrint)
 
 
 # Test fixtures
@@ -329,6 +330,7 @@ class TestPDFExportIntegration:
     def test_pdf_export_creates_file(self, parsed_project_data, temp_output_dir):
         """Test that PDF export creates a valid file (requires WeasyPrint)."""
         pytest.importorskip("weasyprint")
+        from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
         exporter = PDFExporter(temp_output_dir)
         files = exporter.export(parsed_project_data)
@@ -341,6 +343,7 @@ class TestPDFExportIntegration:
     def test_pdf_export_file_size(self, parsed_project_data, temp_output_dir):
         """Test that PDF file has reasonable size."""
         pytest.importorskip("weasyprint")
+        from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
         exporter = PDFExporter(temp_output_dir)
         files = exporter.export(parsed_project_data)
