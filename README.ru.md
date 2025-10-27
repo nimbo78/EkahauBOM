@@ -9,7 +9,7 @@ EkahauBOM извлекает данные об оборудовании из п�
 [![Tests](https://github.com/htechno/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/htechno/EkahauBOM/actions/workflows/tests.yml)
 [![Code Quality](https://github.com/htechno/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/htechno/EkahauBOM/actions/workflows/code-quality.yml)
 [![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)
-[![Tests Passing](https://img.shields.io/badge/tests-520%20passing-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/tests-545%20passing-brightgreen.svg)](tests/)
 
 [English](README.md) | **Русский**
 
@@ -622,7 +622,7 @@ EkahauBOM/
 ├── config/                  # Файлы конфигурации
 │   ├── colors.yaml          # База данных цветов
 │   └── pricing.yaml         # Ценообразование оборудования
-├── tests/                   # Набор тестов (520 тестов, 86% покрытие)
+├── tests/                   # Набор тестов (545 тестов, 86% покрытие)
 │   ├── test_analytics.py
 │   ├── test_csv_exporter.py
 │   ├── test_excel_exporter.py
@@ -695,8 +695,9 @@ pytest -v --tb=short
 Визуализаторы:                   99%
 Точка входа (__main__):          100%
 ----------------------------------------
-Всего: 520 тестов проходят
+Всего: 545 тестов проходят (включая 25 интеграционных)
 Реальное покрытие бизнес-логики: 99-100%
+Интеграционные тесты: E2E валидация всех форматов экспорта
 ```
 
 ---

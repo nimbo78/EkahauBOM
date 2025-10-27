@@ -9,7 +9,7 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 [![Tests](https://github.com/htechno/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/htechno/EkahauBOM/actions/workflows/tests.yml)
 [![Code Quality](https://github.com/htechno/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/htechno/EkahauBOM/actions/workflows/code-quality.yml)
 [![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)
-[![Tests Passing](https://img.shields.io/badge/tests-520%20passing-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/tests-545%20passing-brightgreen.svg)](tests/)
 
 **English** | [Русский](README.ru.md)
 
@@ -661,7 +661,7 @@ EkahauBOM/
 ├── config/                  # Configuration files
 │   ├── colors.yaml          # Color database
 │   └── pricing.yaml         # Equipment pricing
-├── tests/                   # Test suite (520 tests, 86% coverage)
+├── tests/                   # Test suite (545 tests, 86% coverage)
 │   ├── test_analytics.py
 │   ├── test_csv_exporter.py
 │   ├── test_excel_exporter.py
@@ -731,8 +731,9 @@ Utils:                           100%
 Visualizers:                     99%
 Entry Point (__main__):          100%
 ----------------------------------------
-Total: 520 tests passing
+Total: 545 tests passing (including 25 integration tests)
 Real business logic coverage: 99-100%
+Integration tests: E2E validation for all export formats
 ```
 
 ---

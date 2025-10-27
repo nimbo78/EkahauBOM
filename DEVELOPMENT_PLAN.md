@@ -1079,13 +1079,28 @@ FLOOR = "FLOOR"      # Напольный монтаж (квадрат)
 **Время фактическое:** 2 дня (Iteration 6, Phase 9.1)
 **Сложность:** Средняя
 
-### 9.2 Integration тесты
+### 9.2 Integration тесты ✅ (ЗАВЕРШЕНО)
 **Задачи:**
-- [ ] Тестовые .esx файлы
-- [ ] End-to-end тесты для каждого формата
-- [ ] Тесты различных сценариев использования
+- [x] Тестовые .esx файлы (используются существующие: wine office.esx, maga.esx)
+- [x] End-to-end тесты для каждого формата (CSV, JSON, HTML, Excel, PDF)
+- [x] Тесты различных сценариев использования
 
-**Время:** 2-3 дня
+**Реализовано:**
+- ✅ test_integration.py с 25 comprehensive тестами
+- ✅ E2E тесты для всех форматов экспорта (CSV, JSON, HTML, Excel, PDF)
+- ✅ Тесты сценариев: парсинг, экспорт, фильтрация, ошибки
+- ✅ Performance тесты: большие проекты, множественные экспорты
+- ✅ Configuration тесты: pricing, custom directories
+- ✅ Data validation: JSON completeness, CSV consistency
+- ✅ Error handling: invalid files, missing files
+- ✅ Helper function parse_esx_to_project_data() для E2E тестов
+
+**Тесты:**
+- Всего тестов: 520 → 545 (+25 integration tests)
+- Passing: 545/545 (100% ✅)
+- Coverage: 86% (stable)
+
+**Время фактическое:** 1 день (Iteration 6, Phase 9.2)
 **Сложность:** Средняя
 
 ### 9.2 CI/CD и автоматизация ✅ ЗАВЕРШЕНО
