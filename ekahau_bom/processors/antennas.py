@@ -15,9 +15,7 @@ class AntennaProcessor:
     """Process antennas data from Ekahau project."""
 
     def process(
-        self,
-        simulated_radios_data: dict[str, Any],
-        antenna_types_data: dict[str, Any]
+        self, simulated_radios_data: dict[str, Any], antenna_types_data: dict[str, Any]
     ) -> list[Antenna]:
         """Process raw antenna data into Antenna objects.
 
@@ -30,8 +28,7 @@ class AntennaProcessor:
         """
         # Create antenna type lookup dictionary for O(1) access
         antenna_types_map = {
-            ant["id"]: ant["name"]
-            for ant in antenna_types_data.get("antennaTypes", [])
+            ant["id"]: ant["name"] for ant in antenna_types_data.get("antennaTypes", [])
         }
 
         logger.info(f"Found {len(antenna_types_map)} antenna types")
@@ -54,10 +51,7 @@ class AntennaProcessor:
                 logger.warning(f"Antenna type ID {antenna_type_id} not found in antenna types")
                 continue
 
-            antenna = Antenna(
-                name=antenna_name,
-                antenna_type_id=antenna_type_id
-            )
+            antenna = Antenna(name=antenna_name, antenna_type_id=antenna_type_id)
             antennas.append(antenna)
 
         logger.info(f"Successfully processed {len(antennas)} antennas")

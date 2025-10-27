@@ -45,7 +45,7 @@ class TestRadioProcessor:
             "channel": [11],  # Channel as list
             "transmitPower": 8.0,
             "antennaTypeId": "antenna-1",
-            "technology": "N"
+            "technology": "N",
         }
 
         radio = processor._process_single_radio(radio_data)
@@ -63,7 +63,7 @@ class TestRadioProcessor:
             "channel": 36,  # Channel as int
             "transmitPower": 10.0,
             "antennaTypeId": "antenna-2",
-            "technology": "AC"
+            "technology": "AC",
         }
 
         radio = processor._process_single_radio(radio_data)
@@ -106,7 +106,7 @@ class TestRadioProcessor:
                     "channel": [11],
                     "transmitPower": 8.0,
                     "antennaTypeId": "antenna-1",
-                    "technology": "N"
+                    "technology": "N",
                 },
                 {
                     "id": "radio-2",
@@ -114,8 +114,8 @@ class TestRadioProcessor:
                     "channel": [36],
                     "transmitPower": 10.0,
                     "antennaTypeId": "antenna-2",
-                    "technology": "AC"
-                }
+                    "technology": "AC",
+                },
             ]
         }
 
@@ -129,10 +129,7 @@ class TestRadioProcessor:
 
     def test_process_radio_with_missing_fields(self, processor):
         """Test processing radio with minimal data."""
-        radio_data = {
-            "id": "minimal-radio",
-            "accessPointId": "minimal-ap"
-        }
+        radio_data = {"id": "minimal-radio", "accessPointId": "minimal-ap"}
 
         radio = processor._process_single_radio(radio_data)
 
@@ -146,12 +143,7 @@ class TestRadioProcessor:
         simulated_radios_data = {
             "simulatedRadios": [
                 {"id": "invalid-1"},  # Missing required fields
-                {
-                    "id": "valid-1",
-                    "accessPointId": "ap-1",
-                    "channel": [11],
-                    "technology": "N"
-                }
+                {"id": "valid-1", "accessPointId": "ap-1", "channel": [11], "technology": "N"},
             ]
         }
 
@@ -168,18 +160,8 @@ class TestRadioProcessor:
 
         simulated_radios_data = {
             "simulatedRadios": [
-                {
-                    "id": "radio-1",
-                    "accessPointId": "ap-1",
-                    "channel": [11],
-                    "technology": "N"
-                },
-                {
-                    "id": "radio-2",
-                    "accessPointId": "ap-2",
-                    "channel": [36],
-                    "technology": "AC"
-                }
+                {"id": "radio-1", "accessPointId": "ap-1", "channel": [11], "technology": "N"},
+                {"id": "radio-2", "accessPointId": "ap-2", "channel": [36], "technology": "AC"},
             ]
         }
 
@@ -193,7 +175,7 @@ class TestRadioProcessor:
                 raise ValueError("Simulated radio processing error")
             return original_method(radio_data)
 
-        with patch.object(processor, '_process_single_radio', side_effect=mock_process):
+        with patch.object(processor, "_process_single_radio", side_effect=mock_process):
             radios = processor.process(simulated_radios_data)
 
         # Should have 1 valid radio (second one failed)

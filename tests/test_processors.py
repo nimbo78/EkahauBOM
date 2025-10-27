@@ -69,11 +69,8 @@ class TestAccessPointProcessor:
                     "vendor": "Cisco",
                     "model": "C9120AXI",
                     "mine": True,
-                    "location": {
-                        "floorPlanId": "floor-1",
-                        "z": 3.0
-                    },
-                    "color": "#FF0000"
+                    "location": {"floorPlanId": "floor-1", "z": 3.0},
+                    "color": "#FF0000",
                 }
             ]
         }
@@ -99,7 +96,7 @@ class TestAccessPointProcessor:
                     "vendor": "Cisco",
                     "model": "C9120AXI",
                     "mine": False,  # Survey/neighbor AP
-                    "location": {"floorPlanId": "floor-1"}
+                    "location": {"floorPlanId": "floor-1"},
                 },
                 {
                     "id": "ap-2",
@@ -107,8 +104,8 @@ class TestAccessPointProcessor:
                     "vendor": "Aruba",
                     "model": "AP-515",
                     "mine": True,
-                    "location": {"floorPlanId": "floor-1"}
-                }
+                    "location": {"floorPlanId": "floor-1"},
+                },
             ]
         }
 
@@ -131,9 +128,7 @@ class TestAccessPointProcessor:
                     "model": "C9120AXI",
                     "mine": True,
                     "location": {"floorPlanId": "floor-1"},
-                    "tags": [
-                        {"tagKeyId": "zone-key", "value": "Office"}
-                    ]
+                    "tags": [{"tagKeyId": "zone-key", "value": "Office"}],
                 }
             ]
         }
@@ -156,7 +151,7 @@ class TestAccessPointProcessor:
                     "vendor": "Cisco",
                     "model": "C9120AXI",
                     "mine": True,
-                    "location": {"floorPlanId": "unknown-floor"}
+                    "location": {"floorPlanId": "unknown-floor"},
                 }
             ]
         }
@@ -177,7 +172,7 @@ class TestAccessPointProcessor:
                     "vendor": "Cisco",
                     "model": "C9120AXI",
                     "mine": True,
-                    "location": {}  # No floorPlanId
+                    "location": {},  # No floorPlanId
                 }
             ]
         }
@@ -199,13 +194,7 @@ class TestAccessPointProcessor:
                     "model": "C9120AXI",
                     "mine": True,
                     "location": {"floorPlanId": "floor-1", "z": 3.0},
-                    "antennas": [
-                        {
-                            "azimuth": 45.0,
-                            "tilt": 10.0,
-                            "antennaHeight": 3.5
-                        }
-                    ]
+                    "antennas": [{"azimuth": 45.0, "tilt": 10.0, "antennaHeight": 3.5}],
                 }
             ]
         }
@@ -229,7 +218,7 @@ class TestAccessPointProcessor:
                     "model": "C9120AXI",
                     "mine": True,
                     "location": {"floorPlanId": "floor-1"},
-                    "color": "#ABCDEF"  # Unknown color
+                    "color": "#ABCDEF",  # Unknown color
                 }
             ]
         }
@@ -261,7 +250,7 @@ class TestAccessPointProcessor:
                     "vendor": "Cisco",
                     "model": "C9120AXI",
                     "mine": True,
-                    "location": {"floorPlanId": "floor-1"}
+                    "location": {"floorPlanId": "floor-1"},
                 },
                 {
                     # Malformed data - missing required fields
@@ -273,8 +262,8 @@ class TestAccessPointProcessor:
                     "vendor": "Aruba",
                     "model": "AP-515",
                     "mine": True,
-                    "location": {"floorPlanId": "floor-2"}
-                }
+                    "location": {"floorPlanId": "floor-2"},
+                },
             ]
         }
 
@@ -286,6 +275,7 @@ class TestAccessPointProcessor:
     def test_process_with_exception_in_processing(self, color_database, sample_floors):
         """Test that exceptions during AP processing are handled."""
         from unittest.mock import patch
+
         processor = AccessPointProcessor(color_database)
 
         access_points_data = {
@@ -296,7 +286,7 @@ class TestAccessPointProcessor:
                     "vendor": "Cisco",
                     "model": "C9120AXI",
                     "mine": True,
-                    "location": {"floorPlanId": "floor-1"}
+                    "location": {"floorPlanId": "floor-1"},
                 },
                 {
                     "id": "ap-2",
@@ -304,8 +294,8 @@ class TestAccessPointProcessor:
                     "vendor": "Aruba",
                     "model": "AP-515",
                     "mine": True,
-                    "location": {"floorPlanId": "floor-1"}
-                }
+                    "location": {"floorPlanId": "floor-1"},
+                },
             ]
         }
 
@@ -319,7 +309,7 @@ class TestAccessPointProcessor:
                 raise ValueError("Simulated AP processing error")
             return original_method(ap_data, floors, radios)
 
-        with patch.object(processor, '_process_single_ap', side_effect=mock_process):
+        with patch.object(processor, "_process_single_ap", side_effect=mock_process):
             result = processor.process(access_points_data, sample_floors)
 
         # Should have 1 valid AP (second one failed)
@@ -336,7 +326,7 @@ class TestAccessPointProcessor:
             "vendor": "Cisco",
             "model": "C9120AXI",
             "mine": True,
-            "location": {"floorPlanId": "floor-1"}
+            "location": {"floorPlanId": "floor-1"},
         }
 
         # Call _process_single_ap directly with radios=None
@@ -356,21 +346,15 @@ class TestAntennaProcessor:
 
         simulated_radios_data = {
             "simulatedRadios": [
-                {
-                    "id": "radio-1",
-                    "antennaTypeId": "ant-1"
-                },
-                {
-                    "id": "radio-2",
-                    "antennaTypeId": "ant-2"
-                }
+                {"id": "radio-1", "antennaTypeId": "ant-1"},
+                {"id": "radio-2", "antennaTypeId": "ant-2"},
             ]
         }
 
         antenna_types_data = {
             "antennaTypes": [
                 {"id": "ant-1", "name": "ANT-2513P4M-N-R"},
-                {"id": "ant-2", "name": "ANT-20"}
+                {"id": "ant-2", "name": "ANT-20"},
             ]
         }
 
@@ -389,15 +373,11 @@ class TestAntennaProcessor:
         simulated_radios_data = {
             "simulatedRadios": [
                 {"id": "radio-1"},  # No antennaTypeId
-                {"id": "radio-2", "antennaTypeId": "ant-1"}
+                {"id": "radio-2", "antennaTypeId": "ant-1"},
             ]
         }
 
-        antenna_types_data = {
-            "antennaTypes": [
-                {"id": "ant-1", "name": "ANT-2513P4M-N-R"}
-            ]
-        }
+        antenna_types_data = {"antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]}
 
         result = processor.process(simulated_radios_data, antenna_types_data)
 
@@ -412,15 +392,11 @@ class TestAntennaProcessor:
         simulated_radios_data = {
             "simulatedRadios": [
                 {"id": "radio-1", "antennaTypeId": "unknown-ant"},
-                {"id": "radio-2", "antennaTypeId": "ant-1"}
+                {"id": "radio-2", "antennaTypeId": "ant-1"},
             ]
         }
 
-        antenna_types_data = {
-            "antennaTypes": [
-                {"id": "ant-1", "name": "ANT-2513P4M-N-R"}
-            ]
-        }
+        antenna_types_data = {"antennaTypes": [{"id": "ant-1", "name": "ANT-2513P4M-N-R"}]}
 
         result = processor.process(simulated_radios_data, antenna_types_data)
 
@@ -432,10 +408,7 @@ class TestAntennaProcessor:
         """Test processing with empty data."""
         processor = AntennaProcessor()
 
-        result = processor.process(
-            {"simulatedRadios": []},
-            {"antennaTypes": []}
-        )
+        result = processor.process({"simulatedRadios": []}, {"antennaTypes": []})
 
         assert result == []
 
@@ -443,11 +416,7 @@ class TestAntennaProcessor:
         """Test processing when no antenna types are defined."""
         processor = AntennaProcessor()
 
-        simulated_radios_data = {
-            "simulatedRadios": [
-                {"id": "radio-1", "antennaTypeId": "ant-1"}
-            ]
-        }
+        simulated_radios_data = {"simulatedRadios": [{"id": "radio-1", "antennaTypeId": "ant-1"}]}
 
         antenna_types_data = {"antennaTypes": []}
 
@@ -474,7 +443,7 @@ class TestRadioProcessor:
                     "channelWidth": 80,
                     "transmitPower": 20.0,
                     "antennaTypeId": "ant-1",
-                    "standard": "802.11ax"
+                    "standard": "802.11ax",
                 }
             ]
         }
@@ -579,7 +548,7 @@ class TestRadioProcessor:
                     "channel": 6,
                     "band": "TWO_DOT_FOUR_GHZ",
                     "channelWidth": 20,
-                    "transmitPower": 18.0
+                    "transmitPower": 18.0,
                 },
                 {
                     "id": "radio-2",
@@ -587,8 +556,8 @@ class TestRadioProcessor:
                     "channel": 36,
                     "band": "FIVE_GHZ",
                     "channelWidth": 80,
-                    "transmitPower": 20.0
-                }
+                    "transmitPower": 20.0,
+                },
             ]
         }
 
@@ -612,23 +581,18 @@ class TestRadioProcessor:
 
         simulated_radios_data = {
             "simulatedRadios": [
-                {
-                    "id": "radio-1",
-                    "accessPointId": "ap-1",
-                    "channel": 36,
-                    "band": "FIVE_GHZ"
-                },
+                {"id": "radio-1", "accessPointId": "ap-1", "channel": 36, "band": "FIVE_GHZ"},
                 {
                     # Malformed - could cause errors
                     "id": None,  # Invalid ID
-                    "accessPointId": None
+                    "accessPointId": None,
                 },
                 {
                     "id": "radio-3",
                     "accessPointId": "ap-2",
                     "channel": 6,
-                    "band": "TWO_DOT_FOUR_GHZ"
-                }
+                    "band": "TWO_DOT_FOUR_GHZ",
+                },
             ]
         }
 
@@ -645,7 +609,7 @@ class TestRadioProcessor:
             "simulatedRadios": [
                 {
                     "id": "radio-1",
-                    "accessPointId": "ap-1"
+                    "accessPointId": "ap-1",
                     # No other fields
                 }
             ]
@@ -664,40 +628,40 @@ class TestRadioProcessor:
 def test_access_point_processor_with_simulated_radios(color_database):
     """Test AP processing with simulated radios data."""
     aps_data = {
-        'accessPoints': [
+        "accessPoints": [
             {
-                'id': 'ap1',
-                'name': 'AP-01',
-                'vendor': 'Cisco',
-                'model': 'AP-515',
-                'mine': True,
-                'location': {'floorPlanId': 'floor1'}
+                "id": "ap1",
+                "name": "AP-01",
+                "vendor": "Cisco",
+                "model": "AP-515",
+                "mine": True,
+                "location": {"floorPlanId": "floor1"},
             }
         ]
     }
-    
+
     radios_data = {
-        'simulatedRadios': [
+        "simulatedRadios": [
             {
-                'accessPointId': 'ap1',
-                'antennaDirection': 45.0,
-                'antennaTilt': 15.0,
-                'antennaHeight': 3.5
+                "accessPointId": "ap1",
+                "antennaDirection": 45.0,
+                "antennaTilt": 15.0,
+                "antennaHeight": 3.5,
             },
             {
-                'accessPointId': 'ap1',
-                'antennaDirection': 180.0,
-                'antennaTilt': 10.0,
-                'antennaHeight': 3.5
-            }
+                "accessPointId": "ap1",
+                "antennaDirection": 180.0,
+                "antennaTilt": 10.0,
+                "antennaHeight": 3.5,
+            },
         ]
     }
-    
-    floors = {'floor1': Floor('floor1', 'Floor 1')}
-    
+
+    floors = {"floor1": Floor("floor1", "Floor 1")}
+
     processor = AccessPointProcessor(color_database)
     aps = processor.process(aps_data, floors, radios_data)
-    
+
     assert len(aps) == 1
     assert aps[0].azimuth == 45.0  # First radio's direction
     assert aps[0].tilt == 15.0  # First radio's tilt
@@ -707,22 +671,22 @@ def test_access_point_processor_with_simulated_radios(color_database):
 def test_access_point_processor_with_error(color_database):
     """Test AP processing continues when one AP has an error."""
     aps_data = {
-        'accessPoints': [
+        "accessPoints": [
             {
-                'id': 'ap1',
-                'name': 'Valid AP',
-                'vendor': 'Cisco',
-                'model': 'AP-515',
-                'mine': True,
-                'location': {'floorPlanId': 'floor1'}
+                "id": "ap1",
+                "name": "Valid AP",
+                "vendor": "Cisco",
+                "model": "AP-515",
+                "mine": True,
+                "location": {"floorPlanId": "floor1"},
             }
         ]
     }
-    
-    floors = {'floor1': Floor('floor1', 'Floor 1')}
-    
+
+    floors = {"floor1": Floor("floor1", "Floor 1")}
+
     processor = AccessPointProcessor(color_database)
-    
+
     # Manually trigger error handling by setting floors to non-dict
     # This will cause an exception in _process_single_ap
     try:
@@ -732,5 +696,3 @@ def test_access_point_processor_with_error(color_database):
     except Exception:
         # Should not raise - errors are caught
         assert False, "Processor should handle errors gracefully"
-
-

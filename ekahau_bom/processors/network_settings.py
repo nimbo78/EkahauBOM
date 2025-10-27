@@ -39,7 +39,9 @@ class NetworkSettingsProcessor:
                 logger.warning(f"Failed to process network setting: {e}")
                 continue
 
-        logger.info(f"Processed {len(processed_settings)}/{len(settings_list)} network capacity settings")
+        logger.info(
+            f"Processed {len(processed_settings)}/{len(settings_list)} network capacity settings"
+        )
         return processed_settings
 
     @staticmethod
@@ -53,31 +55,25 @@ class NetworkSettingsProcessor:
             NetworkCapacitySettings object
         """
         # Map Ekahau band names to readable format
-        band_map = {
-            "TWO": "2.4GHz",
-            "FIVE": "5GHz",
-            "SIX": "6GHz"
-        }
+        band_map = {"TWO": "2.4GHz", "FIVE": "5GHz", "SIX": "6GHz"}
 
         frequency_band = band_map.get(
-            setting_data.get("frequencyBand", ""),
-            setting_data.get("frequencyBand", "Unknown")
+            setting_data.get("frequencyBand", ""), setting_data.get("frequencyBand", "Unknown")
         )
 
         # Process data rates
         data_rates = []
         for rate_data in setting_data.get("abgRates", []):
-            data_rates.append(DataRate(
-                rate=rate_data.get("rate", ""),
-                state=rate_data.get("state", "")
-            ))
+            data_rates.append(
+                DataRate(rate=rate_data.get("rate", ""), state=rate_data.get("state", ""))
+            )
 
         return NetworkCapacitySettings(
             frequency_band=frequency_band,
             number_of_ssids=setting_data.get("numberOfSsids", 1),
             rts_cts_enabled=setting_data.get("rtsCtsEnabled", False),
             max_associated_clients=setting_data.get("maxAssociatedClientsAmount", 200),
-            data_rates=data_rates
+            data_rates=data_rates,
         )
 
     @staticmethod
@@ -110,7 +106,7 @@ class NetworkSettingsProcessor:
             "ssids_2_4ghz": total_ssids_24,
             "ssids_5ghz": total_ssids_5,
             "max_clients_2_4ghz": max_clients_24,
-            "max_clients_5ghz": max_clients_5
+            "max_clients_5ghz": max_clients_5,
         }
 
     @staticmethod
@@ -133,7 +129,7 @@ class NetworkSettingsProcessor:
             summary[band] = {
                 "mandatory_rates": mandatory_rates,
                 "disabled_rates": disabled_rates,
-                "total_rates": len(setting.data_rates)
+                "total_rates": len(setting.data_rates),
             }
 
         return summary

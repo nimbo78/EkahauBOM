@@ -34,10 +34,7 @@ class TagProcessor:
                 logger.warning(f"Skipping malformed tag key data: {tag_key_data}")
                 continue
 
-            tag_key = TagKey(
-                id=tag_key_data.get("id", ""),
-                key=tag_key_data.get("key", "Unknown")
-            )
+            tag_key = TagKey(id=tag_key_data.get("id", ""), key=tag_key_data.get("key", "Unknown"))
             self.tag_keys.append(tag_key)
             self.tag_keys_map[tag_key.id] = tag_key.key
 
@@ -64,11 +61,7 @@ class TagProcessor:
             if key == "Unknown":
                 logger.debug(f"Unknown tag key ID: {tag_key_id}")
 
-            tag = Tag(
-                key=key,
-                value=value,
-                tag_key_id=tag_key_id
-            )
+            tag = Tag(key=key, value=value, tag_key_id=tag_key_id)
             tags.append(tag)
 
         return tags

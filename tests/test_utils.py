@@ -8,23 +8,20 @@ import pytest
 from pathlib import Path
 import yaml
 
-from ekahau_bom.utils import (
-    load_color_database,
-    get_color_name,
-    ensure_output_dir,
-    setup_logging
-)
+from ekahau_bom.utils import load_color_database, get_color_name, ensure_output_dir, setup_logging
 from ekahau_bom.constants import DEFAULT_COLORS
 
 
 @pytest.fixture
 def temp_colors_file(tmp_path):
     """Create a temporary colors YAML file."""
+
     def _create_colors(colors_dict):
         colors_file = tmp_path / "colors.yaml"
-        with open(colors_file, 'w', encoding='utf-8') as f:
+        with open(colors_file, "w", encoding="utf-8") as f:
             yaml.dump(colors_dict, f)
         return colors_file
+
     return _create_colors
 
 
@@ -70,7 +67,7 @@ class TestLoadColorDatabase:
         """Test loading with invalid YAML format returns defaults."""
         invalid_file = tmp_path / "invalid.yaml"
         # Write list instead of dict
-        with open(invalid_file, 'w') as f:
+        with open(invalid_file, "w") as f:
             yaml.dump(["not", "a", "dict"], f)
 
         result = load_color_database(invalid_file)
@@ -80,7 +77,7 @@ class TestLoadColorDatabase:
     def test_load_with_malformed_yaml(self, tmp_path):
         """Test loading with malformed YAML returns defaults."""
         malformed_file = tmp_path / "malformed.yaml"
-        with open(malformed_file, 'w') as f:
+        with open(malformed_file, "w") as f:
             f.write("this is not: valid: yaml: content:")
 
         result = load_color_database(malformed_file)
@@ -91,8 +88,8 @@ class TestLoadColorDatabase:
         """Test loading colors with unicode names."""
         unicode_colors = {
             "#FF0000": "Красный",  # Russian
-            "#00FF00": "綠色",     # Chinese
-            "#0000FF": "Azul",     # Spanish
+            "#00FF00": "綠色",  # Chinese
+            "#0000FF": "Azul",  # Spanish
         }
         colors_file = temp_colors_file(unicode_colors)
         result = load_color_database(colors_file)
@@ -114,7 +111,7 @@ class TestLoadColorDatabase:
     def test_load_empty_yaml_file(self, tmp_path):
         """Test loading empty YAML file."""
         empty_file = tmp_path / "empty.yaml"
-        with open(empty_file, 'w') as f:
+        with open(empty_file, "w") as f:
             yaml.dump({}, f)
 
         result = load_color_database(empty_file)

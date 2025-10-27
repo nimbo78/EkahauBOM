@@ -1,8 +1,7 @@
 """Tests for models module."""
+
 import pytest
-from ekahau_bom.models import (
-    Tag, Radio, AccessPoint, Antenna
-)
+from ekahau_bom.models import Tag, Radio, AccessPoint, Antenna
 
 
 class TestTagModel:
@@ -57,25 +56,17 @@ class TestAccessPointModel:
     def test_access_point_hash(self):
         """Test that AccessPoint is hashable."""
         ap1 = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=[]
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
         )
         ap2 = AccessPoint(
             vendor="Cisco",
             model="AP-515",
             color="Yellow",
             floor_name="Floor 1",
-            tags=[]  # Same tags for identical object
+            tags=[],  # Same tags for identical object
         )
         ap3 = AccessPoint(
-            vendor="Aruba",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=[]
+            vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
         )
 
         # Same vendor/model/color/floor should have same hash
@@ -95,11 +86,7 @@ class TestAccessPointModel:
             Tag("Department", "IT", "dept1"),
         ]
         ap = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=tags
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=tags
         )
 
         assert ap.get_tag_value("Location") == "Office"
@@ -109,11 +96,7 @@ class TestAccessPointModel:
         """Test get_tag_value when tag doesn't exist."""
         tags = [Tag("Location", "Office", "loc1")]
         ap = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=tags
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=tags
         )
 
         assert ap.get_tag_value("NonExistent") is None
@@ -121,11 +104,7 @@ class TestAccessPointModel:
     def test_get_tag_value_empty_tags(self):
         """Test get_tag_value with no tags."""
         ap = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=[]
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
         )
 
         assert ap.get_tag_value("Location") is None
@@ -137,11 +116,7 @@ class TestAccessPointModel:
             Tag("Department", "IT", "dept1"),
         ]
         ap = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=tags
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=tags
         )
 
         # Check key existence
@@ -156,11 +131,7 @@ class TestAccessPointModel:
             Tag("Department", "IT", "dept1"),
         ]
         ap = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=tags
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=tags
         )
 
         # Check key and value match
@@ -172,11 +143,7 @@ class TestAccessPointModel:
     def test_has_tag_empty_tags(self):
         """Test has_tag with no tags."""
         ap = AccessPoint(
-            vendor="Cisco",
-            model="AP-515",
-            color="Yellow",
-            floor_name="Floor 1",
-            tags=[]
+            vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
         )
 
         assert ap.has_tag("Location") is False

@@ -63,10 +63,10 @@ class BaseExporter(ABC):
         """
         # Replace invalid characters with underscore
         # Windows reserved: < > : " / \ | ? *
-        sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
+        sanitized = re.sub(r'[<>:"/\\|?*]', "_", filename)
 
         # Remove leading/trailing dots and spaces
-        sanitized = sanitized.strip('. ')
+        sanitized = sanitized.strip(". ")
 
         # Ensure filename is not empty
         if not sanitized:

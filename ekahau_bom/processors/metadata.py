@@ -35,7 +35,7 @@ class ProjectMetadataProcessor:
             responsible_person=metadata_data.get("responsiblePerson", ""),
             schema_version=metadata_data.get("schemaVersion", ""),
             note_ids=metadata_data.get("noteIds", []),
-            project_ancestors=metadata_data.get("projectAncestors", [])
+            project_ancestors=metadata_data.get("projectAncestors", []),
         )
 
         logger.info(f"Processed project metadata: {metadata.name or 'Unnamed'}")

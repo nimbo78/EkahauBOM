@@ -24,6 +24,7 @@ class ProjectMetadata:
         note_ids: List of note IDs attached to the project
         project_ancestors: List of ancestor project IDs (for project history)
     """
+
     name: str = ""
     title: str = ""
     customer: str = ""
@@ -42,6 +43,7 @@ class NoteHistory:
         created_at: ISO 8601 timestamp when note was created
         created_by: Name of user who created the note
     """
+
     created_at: str = ""
     created_by: str = ""
 
@@ -60,6 +62,7 @@ class Note:
         image_ids: List of image IDs attached to this note
         status: Note status (typically "CREATED")
     """
+
     id: str
     text: str = ""
     history: Optional[NoteHistory] = None
@@ -75,6 +78,7 @@ class Point:
         x: X coordinate in project units
         y: Y coordinate in project units
     """
+
     x: float
     y: float
 
@@ -94,6 +98,7 @@ class CableNote:
         note_ids: List of Note IDs with additional information
         status: Cable note status (typically "CREATED")
     """
+
     id: str
     floor_plan_id: str = ""
     points: list[Point] = field(default_factory=list)
@@ -111,6 +116,7 @@ class Location:
         x: X coordinate in project units
         y: Y coordinate in project units
     """
+
     floor_plan_id: str = ""
     x: float = 0.0
     y: float = 0.0
@@ -129,6 +135,7 @@ class PictureNote:
         note_ids: List of Note IDs with text descriptions
         status: Picture note status (typically "CREATED")
     """
+
     id: str
     location: Optional[Location] = None
     note_ids: list[str] = field(default_factory=list)
@@ -147,6 +154,7 @@ class Tag:
         value: Tag value (e.g., "Building A", "Office", "Floor 1")
         tag_key_id: UUID reference to tagKeys.json
     """
+
     key: str
     value: str
     tag_key_id: str
@@ -168,6 +176,7 @@ class TagKey:
         id: UUID identifier for the tag key
         key: Human-readable tag name (e.g., "Location", "Zone")
     """
+
     id: str
     key: str
 
@@ -180,6 +189,7 @@ class Floor:
         id: Unique identifier for the floor
         name: Human-readable name of the floor
     """
+
     id: str
     name: str
 
@@ -202,6 +212,7 @@ class Radio:
         antenna_tilt: Antenna tilt in degrees
         antenna_height: Antenna height in meters
     """
+
     id: str
     access_point_id: str
     frequency_band: Optional[str] = None
@@ -242,6 +253,7 @@ class AccessPoint:
         antenna_height: Antenna height above ground in meters
         enabled: Whether the AP is enabled in the design
     """
+
     id: Optional[str] = None
     vendor: str = ""
     model: str = ""
@@ -307,6 +319,7 @@ class Antenna:
         name: Model name of the antenna
         antenna_type_id: Unique identifier for the antenna type
     """
+
     name: str
     antenna_type_id: str
 
@@ -323,6 +336,7 @@ class DataRate:
         rate: Rate identifier (e.g., "R1", "R2", "R6", "R54")
         state: Rate state ("MANDATORY", "DISABLED", "SUPPORTED")
     """
+
     rate: str
     state: str
 
@@ -341,6 +355,7 @@ class NetworkCapacitySettings:
         max_associated_clients: Maximum number of associated clients
         data_rates: List of data rate configurations
     """
+
     frequency_band: str
     number_of_ssids: int = 1
     rts_cts_enabled: bool = False
@@ -364,6 +379,7 @@ class ProjectData:
         picture_notes: List of picture notes on floor plans
         network_settings: List of network capacity settings (SSID, rates, etc.)
     """
+
     access_points: list[AccessPoint]
     antennas: list[Antenna]
     floors: dict[str, Floor]

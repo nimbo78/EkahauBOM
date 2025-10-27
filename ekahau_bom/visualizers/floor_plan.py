@@ -11,6 +11,7 @@ from io import BytesIO
 
 try:
     from PIL import Image, ImageDraw, ImageFont
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -36,7 +37,7 @@ class FloorPlanVisualizer:
         show_ap_names: bool = True,
         font_size: int = 12,
         show_azimuth_arrows: bool = False,
-        ap_opacity: float = 1.0
+        ap_opacity: float = 1.0,
     ):
         """Initialize floor plan visualizer.
 
@@ -69,7 +70,7 @@ class FloorPlanVisualizer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Open .esx archive
-        self.archive = zipfile.ZipFile(esx_path, 'r')
+        self.archive = zipfile.ZipFile(esx_path, "r")
 
         # Try to load a decent font, fall back to default if unavailable
         self.font = self._load_font()
@@ -82,12 +83,7 @@ class FloorPlanVisualizer:
         """
         try:
             # Try common system fonts
-            font_names = [
-                "arial.ttf",
-                "Arial.ttf",
-                "DejaVuSans.ttf",
-                "LiberationSans-Regular.ttf"
-            ]
+            font_names = ["arial.ttf", "Arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf"]
 
             for font_name in font_names:
                 try:
@@ -119,29 +115,29 @@ class FloorPlanVisualizer:
         # Standard color name mapping
         color_names = {
             # Basic colors
-            'red': 'FF0000',
-            'green': '00FF00',
-            'blue': '0000FF',
-            'yellow': 'FFFF00',
-            'orange': 'FFA500',
-            'purple': '800080',
-            'pink': 'FFC0CB',
-            'brown': 'A52A2A',
-            'gray': '808080',
-            'grey': '808080',
-            'black': '000000',
-            'white': 'FFFFFF',
-            'cyan': '00FFFF',
-            'magenta': 'FF00FF',
+            "red": "FF0000",
+            "green": "00FF00",
+            "blue": "0000FF",
+            "yellow": "FFFF00",
+            "orange": "FFA500",
+            "purple": "800080",
+            "pink": "FFC0CB",
+            "brown": "A52A2A",
+            "gray": "808080",
+            "grey": "808080",
+            "black": "000000",
+            "white": "FFFFFF",
+            "cyan": "00FFFF",
+            "magenta": "FF00FF",
             # Common Ekahau colors
-            'lightblue': '87CEEB',
-            'darkblue': '00008B',
-            'lightgreen': '90EE90',
-            'darkgreen': '006400',
-            'lightyellow': 'FFFFE0',
-            'mint': '98FF98',
-            'turquoise': '40E0D0',
-            'lavender': 'E6E6FA',
+            "lightblue": "87CEEB",
+            "darkblue": "00008B",
+            "lightgreen": "90EE90",
+            "darkgreen": "006400",
+            "lightyellow": "FFFFE0",
+            "mint": "98FF98",
+            "turquoise": "40E0D0",
+            "lavender": "E6E6FA",
         }
 
         # Normalize the color string
@@ -155,21 +151,24 @@ class FloorPlanVisualizer:
         # If not found, try fixing common typos (RReedd -> red, BBllue -> blue, etc.)
         else:
             import re
+
             # Pattern: remove duplicate characters (only if 3+ in a row to preserve "yellow", "green")
-            fixed_color = re.sub(r'(.)\1{2,}', r'\1', hex_color_normalized)
+            fixed_color = re.sub(r"(.)\1{2,}", r"\1", hex_color_normalized)
 
             # Check if fixed version is a known color name
             if fixed_color != hex_color_normalized and fixed_color in color_names:
                 hex_color = color_names[fixed_color]
-                logger.debug(f"Fixed typo: '{original_color}' -> '{fixed_color}' to hex: #{hex_color}")
+                logger.debug(
+                    f"Fixed typo: '{original_color}' -> '{fixed_color}' to hex: #{hex_color}"
+                )
             else:
                 # Not a color name, treat as hex code
                 # Remove '#' if present
-                hex_color = hex_color.lstrip('#')
+                hex_color = hex_color.lstrip("#")
 
                 # Handle short form (#FFF -> #FFFFFF)
                 if len(hex_color) == 3:
-                    hex_color = ''.join([c * 2 for c in hex_color])
+                    hex_color = "".join([c * 2 for c in hex_color])
 
         # Convert to RGB
         try:
@@ -188,7 +187,7 @@ class FloorPlanVisualizer:
         y: float,
         fill_color: tuple,
         mounting_type: str = "CEILING",
-        azimuth: float = 0.0
+        azimuth: float = 0.0,
     ) -> None:
         """Draw AP marker based on mounting type.
 
@@ -213,11 +212,7 @@ class FloorPlanVisualizer:
         # This method only draws the shapes (circles, rectangles, squares)
 
     def _draw_circle(
-        self,
-        draw: ImageDraw.ImageDraw,
-        x: float,
-        y: float,
-        fill_color: tuple
+        self, draw: ImageDraw.ImageDraw, x: float, y: float, fill_color: tuple
     ) -> None:
         """Draw circular AP marker (for ceiling-mounted APs).
 
@@ -233,32 +228,22 @@ class FloorPlanVisualizer:
                 x - self.ap_circle_radius,
                 y - self.ap_circle_radius,
                 x + self.ap_circle_radius,
-                y + self.ap_circle_radius
+                y + self.ap_circle_radius,
             ],
             fill=border_color,
-            outline=border_color
+            outline=border_color,
         )
 
         # Inner circle (AP color)
         inner_radius = self.ap_circle_radius - self.ap_border_width
         draw.ellipse(
-            [
-                x - inner_radius,
-                y - inner_radius,
-                x + inner_radius,
-                y + inner_radius
-            ],
+            [x - inner_radius, y - inner_radius, x + inner_radius, y + inner_radius],
             fill=fill_color,
-            outline=fill_color
+            outline=fill_color,
         )
 
     def _draw_oriented_rectangle(
-        self,
-        draw: ImageDraw.ImageDraw,
-        x: float,
-        y: float,
-        fill_color: tuple,
-        azimuth: float
+        self, draw: ImageDraw.ImageDraw, x: float, y: float, fill_color: tuple, azimuth: float
     ) -> None:
         """Draw rotated rectangle for wall-mounted AP.
 
@@ -286,9 +271,9 @@ class FloorPlanVisualizer:
         half_h = height / 2
         corners = [
             (-half_w, -half_h),  # Top-left
-            (half_w, -half_h),   # Top-right
-            (half_w, half_h),    # Bottom-right
-            (-half_w, half_h)    # Bottom-left
+            (half_w, -half_h),  # Top-right
+            (half_w, half_h),  # Bottom-right
+            (-half_w, half_h),  # Bottom-left
         ]
 
         # Rotate and translate corners
@@ -325,11 +310,7 @@ class FloorPlanVisualizer:
         draw.polygon(inner_corners, fill=fill_color, outline=fill_color)
 
     def _draw_square(
-        self,
-        draw: ImageDraw.ImageDraw,
-        x: float,
-        y: float,
-        fill_color: tuple
+        self, draw: ImageDraw.ImageDraw, x: float, y: float, fill_color: tuple
     ) -> None:
         """Draw square AP marker (for floor-mounted APs).
 
@@ -344,27 +325,17 @@ class FloorPlanVisualizer:
         # Draw border square
         border_color = (0, 0, 0, 255)
         draw.rectangle(
-            [
-                x - half_side,
-                y - half_side,
-                x + half_side,
-                y + half_side
-            ],
+            [x - half_side, y - half_side, x + half_side, y + half_side],
             fill=border_color,
-            outline=border_color
+            outline=border_color,
         )
 
         # Draw inner square
         inner_half = half_side - self.ap_border_width
         draw.rectangle(
-            [
-                x - inner_half,
-                y - inner_half,
-                x + inner_half,
-                y + inner_half
-            ],
+            [x - inner_half, y - inner_half, x + inner_half, y + inner_half],
             fill=fill_color,
-            outline=fill_color
+            outline=fill_color,
         )
 
     def _draw_azimuth_arrow(
@@ -375,7 +346,7 @@ class FloorPlanVisualizer:
         azimuth: float,
         color: tuple = (255, 0, 0, 255),
         arrow_length: float = None,
-        arrow_head_size: float = 6
+        arrow_head_size: float = 6,
     ) -> None:
         """Draw an arrow indicating azimuth direction.
 
@@ -401,7 +372,9 @@ class FloorPlanVisualizer:
         end_y = y + arrow_length * math.sin(angle_rad)
 
         # Draw arrow line
-        draw.line([(x, y), (end_x, end_y)], fill=color, width=3)  # Increased width for better visibility
+        draw.line(
+            [(x, y), (end_x, end_y)], fill=color, width=3
+        )  # Increased width for better visibility
 
         # Calculate arrow head points (triangle)
         # Create two points at 150 degrees from the main line
@@ -418,10 +391,7 @@ class FloorPlanVisualizer:
         draw.polygon(arrow_head, fill=color, outline=color)
 
     def _draw_legend(
-        self,
-        draw: ImageDraw.ImageDraw,
-        access_points: list,
-        image_size: tuple[int, int]
+        self, draw: ImageDraw.ImageDraw, access_points: list, image_size: tuple[int, int]
     ) -> None:
         """Draw color legend on the visualization.
 
@@ -435,6 +405,7 @@ class FloorPlanVisualizer:
 
         # Collect color statistics
         from collections import Counter
+
         color_counts = Counter()
         for ap in access_points:
             color_name = ap.color if ap.color else "Default"
@@ -460,7 +431,8 @@ class FloorPlanVisualizer:
         # Draw semi-transparent background
         # Create a new image for the legend with transparency
         from PIL import Image
-        legend_overlay = Image.new('RGBA', image_size, (255, 255, 255, 0))
+
+        legend_overlay = Image.new("RGBA", image_size, (255, 255, 255, 0))
         legend_draw = ImageDraw.Draw(legend_overlay)
 
         # Draw white background with transparency
@@ -468,7 +440,7 @@ class FloorPlanVisualizer:
             [legend_x, legend_y, legend_x + legend_width, legend_y + legend_height],
             fill=(255, 255, 255, 230),
             outline=(0, 0, 0, 255),
-            width=2
+            width=2,
         )
 
         # Draw title
@@ -478,7 +450,7 @@ class FloorPlanVisualizer:
                 (legend_x + legend_padding, title_y),
                 "Access Points",
                 font=self.font,
-                fill=(0, 0, 0, 255)
+                fill=(0, 0, 0, 255),
             )
 
         # Draw each color entry
@@ -501,23 +473,18 @@ class FloorPlanVisualizer:
                     circle_x - legend_circle_radius,
                     circle_y - legend_circle_radius,
                     circle_x + legend_circle_radius,
-                    circle_y + legend_circle_radius
+                    circle_y + legend_circle_radius,
                 ],
                 fill=(0, 0, 0, 255),
-                outline=(0, 0, 0, 255)
+                outline=(0, 0, 0, 255),
             )
 
             # Inner circle
             inner_r = legend_circle_radius - 2
             legend_draw.ellipse(
-                [
-                    circle_x - inner_r,
-                    circle_y - inner_r,
-                    circle_x + inner_r,
-                    circle_y + inner_r
-                ],
+                [circle_x - inner_r, circle_y - inner_r, circle_x + inner_r, circle_y + inner_r],
                 fill=fill_color,
-                outline=fill_color
+                outline=fill_color,
             )
 
             # Draw text
@@ -526,10 +493,7 @@ class FloorPlanVisualizer:
 
             if self.font:
                 legend_draw.text(
-                    (text_x, text_y),
-                    f"{color_name}: {count}",
-                    font=self.font,
-                    fill=(0, 0, 0, 255)
+                    (text_x, text_y), f"{color_name}: {count}", font=self.font, fill=(0, 0, 0, 255)
                 )
 
             entry_y += legend_line_height
@@ -537,8 +501,8 @@ class FloorPlanVisualizer:
         # Paste the legend overlay onto the original image
         # Convert original draw context image to RGBA
         base_image = draw._image
-        if base_image.mode != 'RGBA':
-            base_image_rgba = base_image.convert('RGBA')
+        if base_image.mode != "RGBA":
+            base_image_rgba = base_image.convert("RGBA")
         else:
             base_image_rgba = base_image
 
@@ -546,7 +510,7 @@ class FloorPlanVisualizer:
         base_image_rgba = Image.alpha_composite(base_image_rgba, legend_overlay)
 
         # Convert back to RGB
-        base_image_rgb = base_image_rgba.convert('RGB')
+        base_image_rgb = base_image_rgba.convert("RGB")
 
         # Update the original image
         draw._image.paste(base_image_rgb, (0, 0))
@@ -563,12 +527,13 @@ class FloorPlanVisualizer:
         try:
             # Floor plans metadata
             import json
-            floor_plans_data = json.loads(self.archive.read('floorPlans.json'))
+
+            floor_plans_data = json.loads(self.archive.read("floorPlans.json"))
 
             # Find floor plan by ID
             floor_plan = None
-            for fp in floor_plans_data.get('floorPlans', []):
-                if fp.get('id') == floor.id:
+            for fp in floor_plans_data.get("floorPlans", []):
+                if fp.get("id") == floor.id:
                     floor_plan = fp
                     break
 
@@ -577,7 +542,7 @@ class FloorPlanVisualizer:
                 return None
 
             # Get image ID
-            image_id = floor_plan.get('imageId')
+            image_id = floor_plan.get("imageId")
             if not image_id:
                 logger.warning(f"No image ID for floor: {floor.name}")
                 return None
@@ -600,10 +565,7 @@ class FloorPlanVisualizer:
             return None
 
     def visualize_floor(
-        self,
-        floor: Floor,
-        access_points: list[AccessPoint],
-        radios: list = None
+        self, floor: Floor, access_points: list[AccessPoint], radios: list = None
     ) -> Optional[Path]:
         """Create visualization for a single floor.
 
@@ -621,11 +583,11 @@ class FloorPlanVisualizer:
             return None
 
         # Convert to RGBA for transparency support
-        if image.mode != 'RGBA':
-            image = image.convert('RGBA')
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
 
         # Create a transparent overlay for AP markers (for proper alpha blending)
-        overlay = Image.new('RGBA', image.size, (255, 255, 255, 0))
+        overlay = Image.new("RGBA", image.size, (255, 255, 255, 0))
         overlay_draw = ImageDraw.Draw(overlay)
 
         # Filter APs for this floor
@@ -682,24 +644,26 @@ class FloorPlanVisualizer:
             )
 
             if show_arrow:
-                logger.debug(f"Will draw arrow for AP {ap.name}: azimuth={azimuth}°, mounting={mounting_type}")
+                logger.debug(
+                    f"Will draw arrow for AP {ap.name}: azimuth={azimuth}°, mounting={mounting_type}"
+                )
                 # Store arrow data for later drawing
-                arrows_to_draw.append({
-                    'x': x,
-                    'y': y,
-                    'azimuth': azimuth,
-                    'fill_color': fill_color,
-                    'ap_name': ap.name,
-                    'ap_model': ap.model,
-                    'ap_vendor': ap.vendor,
-                    'mounting_type': mounting_type
-                })
+                arrows_to_draw.append(
+                    {
+                        "x": x,
+                        "y": y,
+                        "azimuth": azimuth,
+                        "fill_color": fill_color,
+                        "ap_name": ap.name,
+                        "ap_model": ap.model,
+                        "ap_vendor": ap.vendor,
+                        "mounting_type": mounting_type,
+                    }
+                )
 
             # Draw AP marker on overlay for proper transparency (without arrows)
             self._draw_ap_marker(
-                overlay_draw, x, y, fill_color,
-                mounting_type=mounting_type,
-                azimuth=azimuth
+                overlay_draw, x, y, fill_color, mounting_type=mounting_type, azimuth=azimuth
             )
 
         # Composite the overlay onto the base image
@@ -711,26 +675,36 @@ class FloorPlanVisualizer:
         # Draw arrows on the final image (after compositing for better visibility)
         logger.info(f"Drawing {len(arrows_to_draw)} arrows on final image")
         for arrow_data in arrows_to_draw:
-            x = arrow_data['x']
-            y = arrow_data['y']
-            azimuth = arrow_data['azimuth']
-            fill_color = arrow_data['fill_color']
-            ap_model = arrow_data.get('ap_model', '')
-            mounting_type = arrow_data.get('mounting_type', 'CEILING')
+            x = arrow_data["x"]
+            y = arrow_data["y"]
+            azimuth = arrow_data["azimuth"]
+            fill_color = arrow_data["fill_color"]
+            ap_model = arrow_data.get("ap_model", "")
+            mounting_type = arrow_data.get("mounting_type", "CEILING")
 
             # Determine Wi-Fi standard from AP model
-            model_lower = ap_model.lower() if ap_model else ''
-            if 'wi-fi 6e' in model_lower or 'u6e' in model_lower or '6e' in model_lower:
-                wifi_standard = '802.11ax'  # Wi-Fi 6E
+            model_lower = ap_model.lower() if ap_model else ""
+            if "wi-fi 6e" in model_lower or "u6e" in model_lower or "6e" in model_lower:
+                wifi_standard = "802.11ax"  # Wi-Fi 6E
                 arrow_color = (0, 255, 255, 255)  # Cyan
-            elif 'wi-fi 6' in model_lower or 'u6' in model_lower or 'ax' in model_lower or '6 ' in model_lower:
-                wifi_standard = '802.11ax'  # Wi-Fi 6
+            elif (
+                "wi-fi 6" in model_lower
+                or "u6" in model_lower
+                or "ax" in model_lower
+                or "6 " in model_lower
+            ):
+                wifi_standard = "802.11ax"  # Wi-Fi 6
                 arrow_color = (0, 255, 255, 255)  # Cyan
-            elif 'ac' in model_lower or 'wave' in model_lower or 'u5' in model_lower or '5 ' in model_lower:
-                wifi_standard = '802.11ac'  # Wi-Fi 5
+            elif (
+                "ac" in model_lower
+                or "wave" in model_lower
+                or "u5" in model_lower
+                or "5 " in model_lower
+            ):
+                wifi_standard = "802.11ac"  # Wi-Fi 5
                 arrow_color = (255, 0, 255, 255)  # Magenta/Pink
             else:
-                wifi_standard = '802.11n'  # Wi-Fi 4 or older
+                wifi_standard = "802.11n"  # Wi-Fi 4 or older
                 arrow_color = (255, 0, 255, 255)  # Magenta/Pink
 
             # Adjust arrow length based on mounting type
@@ -740,7 +714,9 @@ class FloorPlanVisualizer:
             else:
                 arrow_length = self.ap_circle_radius * 2.5
 
-            logger.debug(f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}")
+            logger.debug(
+                f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}"
+            )
             self._draw_azimuth_arrow(draw, x, y, azimuth, arrow_color, arrow_length=arrow_length)
 
         # Draw AP names on top of the composited image
@@ -761,38 +737,26 @@ class FloorPlanVisualizer:
                 text_color = (0, 0, 0)  # Black text
 
                 # Shadow
-                draw.text(
-                    (text_x + 1, text_y + 1),
-                    ap.name,
-                    font=self.font,
-                    fill=shadow_color
-                )
+                draw.text((text_x + 1, text_y + 1), ap.name, font=self.font, fill=shadow_color)
 
                 # Main text
-                draw.text(
-                    (text_x, text_y),
-                    ap.name,
-                    font=self.font,
-                    fill=text_color
-                )
+                draw.text((text_x, text_y), ap.name, font=self.font, fill=text_color)
 
         # Draw legend
         self._draw_legend(draw, floor_aps, image.size)
 
         # Save image
-        output_filename = f"{floor.name.replace('/', '_').replace('\\', '_')}_visualization.png"
+        floor_name = floor.name.replace("/", "_").replace("\\", "_")
+        output_filename = f"{floor_name}_visualization.png"
         output_path = self.output_dir / output_filename
 
-        image.save(output_path, 'PNG')
+        image.save(output_path, "PNG")
         logger.info(f"Saved floor plan visualization: {output_path}")
 
         return output_path
 
     def visualize_all_floors(
-        self,
-        floors: dict[str, Floor],
-        access_points: list[AccessPoint],
-        radios: list = None
+        self, floors: dict[str, Floor], access_points: list[AccessPoint], radios: list = None
     ) -> list[Path]:
         """Create visualizations for all floors with APs.
 
@@ -831,7 +795,7 @@ class FloorPlanVisualizer:
 
     def close(self):
         """Close the .esx archive."""
-        if hasattr(self, 'archive'):
+        if hasattr(self, "archive"):
             self.archive.close()
 
     def __enter__(self):

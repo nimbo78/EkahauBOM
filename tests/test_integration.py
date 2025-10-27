@@ -126,6 +126,7 @@ def parse_esx_to_project_data(esx_file):
 
         # Create project data container
         from ekahau_bom.models import ProjectData
+
         return ProjectData(
             access_points=access_points,
             antennas=antennas,
@@ -136,7 +137,7 @@ def parse_esx_to_project_data(esx_file):
             notes=notes,
             cable_notes=cable_notes,
             picture_notes=picture_notes,
-            network_settings=network_settings
+            network_settings=network_settings,
         )
 
 
@@ -301,9 +302,7 @@ class TestExcelExportIntegration:
         assert excel_file.exists(), "Excel file not created"
         assert excel_file.suffix == ".xlsx", "Wrong file extension"
 
-    def test_excel_export_is_valid_workbook(
-        self, parsed_project_data, temp_output_dir
-    ):
+    def test_excel_export_is_valid_workbook(self, parsed_project_data, temp_output_dir):
         """Test that Excel file is a valid ZIP archive (xlsx format)."""
         exporter = ExcelExporter(temp_output_dir)
         files = exporter.export(parsed_project_data)
@@ -381,9 +380,7 @@ class TestEndToEndScenarios:
         for file in all_files:
             assert file.exists(), f"File not created: {file}"
 
-    def test_parse_multiple_projects(
-        self, test_esx_file, test_esx_file_maga, temp_output_dir
-    ):
+    def test_parse_multiple_projects(self, test_esx_file, test_esx_file_maga, temp_output_dir):
         """Test parsing multiple different .esx files."""
         for esx_file in [test_esx_file, test_esx_file_maga]:
             project_data = parse_esx_to_project_data(esx_file)

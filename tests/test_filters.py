@@ -19,17 +19,19 @@ def sample_aps():
             floor_name="Floor 1",
             tags=[Tag(key="Location", value="Building A", tag_key_id="1")],
             mine=True,
-            floor_id="f1"
+            floor_id="f1",
         ),
         AccessPoint(
             vendor="Cisco",
             model="AP-635",
             color="Red",
             floor_name="Floor 2",
-            tags=[Tag(key="Location", value="Building A", tag_key_id="1"),
-                  Tag(key="Zone", value="Office", tag_key_id="2")],
+            tags=[
+                Tag(key="Location", value="Building A", tag_key_id="1"),
+                Tag(key="Zone", value="Office", tag_key_id="2"),
+            ],
             mine=True,
-            floor_id="f2"
+            floor_id="f2",
         ),
         AccessPoint(
             vendor="Aruba",
@@ -38,7 +40,7 @@ def sample_aps():
             floor_name="Floor 1",
             tags=[Tag(key="Location", value="Building B", tag_key_id="1")],
             mine=True,
-            floor_id="f1"
+            floor_id="f1",
         ),
         AccessPoint(
             vendor="Aruba",
@@ -47,7 +49,7 @@ def sample_aps():
             floor_name="Floor 3",
             tags=[],
             mine=True,
-            floor_id="f3"
+            floor_id="f3",
         ),
     ]
 
@@ -113,10 +115,7 @@ class TestAPFilter:
 
     def test_by_tags_multiple(self, sample_aps):
         """Test filtering by multiple tag filters (AND logic)."""
-        tag_filters = {
-            "Location": ["Building A"],
-            "Zone": ["Office"]
-        }
+        tag_filters = {"Location": ["Building A"], "Zone": ["Office"]}
         result = APFilter.by_tags(sample_aps, tag_filters)
         assert len(result) == 1
         assert result[0].vendor == "Cisco"
@@ -146,7 +145,7 @@ class TestAPFilter:
             sample_aps,
             include_floors=["Floor 1", "Floor 2"],
             include_colors=["Yellow", "Red"],
-            exclude_vendors=["Aruba"]
+            exclude_vendors=["Aruba"],
         )
         assert len(result) == 2
         assert all(ap.vendor == "Cisco" for ap in result)
@@ -155,10 +154,7 @@ class TestAPFilter:
 
     def test_apply_filters_with_tags(self, sample_aps):
         """Test applying filters with tag filtering."""
-        result = APFilter.apply_filters(
-            sample_aps,
-            include_tags={"Location": ["Building A"]}
-        )
+        result = APFilter.apply_filters(sample_aps, include_tags={"Location": ["Building A"]})
         assert len(result) == 2
 
     def test_apply_filters_empty(self, sample_aps):
@@ -208,32 +204,20 @@ class TestAPFilter:
 
     def test_apply_filters_with_include_vendors(self, sample_aps):
         """Test apply_filters with include_vendors."""
-        result = APFilter.apply_filters(
-            sample_aps,
-            include_vendors=["Cisco"]
-        )
+        result = APFilter.apply_filters(sample_aps, include_vendors=["Cisco"])
         assert len(result) == 2
 
     def test_apply_filters_with_include_models(self, sample_aps):
         """Test apply_filters with include_models."""
-        result = APFilter.apply_filters(
-            sample_aps,
-            include_models=["AP-515"]
-        )
+        result = APFilter.apply_filters(sample_aps, include_models=["AP-515"])
         assert len(result) == 2
 
     def test_apply_filters_with_exclude_floors(self, sample_aps):
         """Test apply_filters with exclude_floors."""
-        result = APFilter.apply_filters(
-            sample_aps,
-            exclude_floors=["Floor 1"]
-        )
+        result = APFilter.apply_filters(sample_aps, exclude_floors=["Floor 1"])
         assert len(result) == 2
 
     def test_apply_filters_with_exclude_colors(self, sample_aps):
         """Test apply_filters with exclude_colors."""
-        result = APFilter.apply_filters(
-            sample_aps,
-            exclude_colors=["Yellow"]
-        )
+        result = APFilter.apply_filters(sample_aps, exclude_colors=["Yellow"])
         assert len(result) == 2

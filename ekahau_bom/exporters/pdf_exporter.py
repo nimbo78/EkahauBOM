@@ -11,6 +11,7 @@ from typing import Optional
 
 try:
     from weasyprint import HTML, CSS
+
     WEASYPRINT_AVAILABLE = True
 except ImportError:
     WEASYPRINT_AVAILABLE = False
@@ -58,10 +59,7 @@ class PDFExporter(BaseExporter):
                 "Install it with: pip install WeasyPrint>=60.0"
             )
 
-        output_file = self._get_output_filename(
-            project_data.project_name,
-            "report.pdf"
-        )
+        output_file = self._get_output_filename(project_data.project_name, "report.pdf")
 
         # Generate HTML content optimized for PDF
         html_content = self._generate_pdf_html(project_data)
@@ -100,11 +98,13 @@ class PDFExporter(BaseExporter):
             unique_vendors,
             unique_floors,
             unique_colors,
-            project_data.metadata
+            project_data.metadata,
         )
 
         grouping_html = self._generate_grouping_section(project_data.access_points)
-        analytics_html = self._generate_analytics_section(project_data.access_points, project_data.radios)
+        analytics_html = self._generate_analytics_section(
+            project_data.access_points, project_data.radios
+        )
         aps_table_html = self._generate_aps_table(project_data.access_points)
         detailed_aps_table_html = self._generate_detailed_aps_table(project_data.access_points)
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
@@ -371,7 +371,7 @@ class PDFExporter(BaseExporter):
         unique_vendors: int,
         unique_floors: int,
         unique_colors: int,
-        metadata = None
+        metadata=None,
     ) -> str:
         """Generate summary statistics section."""
         # Generate metadata section if available
@@ -379,15 +379,25 @@ class PDFExporter(BaseExporter):
         if metadata:
             metadata_items = []
             if metadata.name:
-                metadata_items.append(f"<p><strong>Project Name:</strong> {html_module.escape(metadata.name)}</p>")
+                metadata_items.append(
+                    f"<p><strong>Project Name:</strong> {html_module.escape(metadata.name)}</p>"
+                )
             if metadata.customer:
-                metadata_items.append(f"<p><strong>Customer:</strong> {html_module.escape(metadata.customer)}</p>")
+                metadata_items.append(
+                    f"<p><strong>Customer:</strong> {html_module.escape(metadata.customer)}</p>"
+                )
             if metadata.location:
-                metadata_items.append(f"<p><strong>Location:</strong> {html_module.escape(metadata.location)}</p>")
+                metadata_items.append(
+                    f"<p><strong>Location:</strong> {html_module.escape(metadata.location)}</p>"
+                )
             if metadata.responsible_person:
-                metadata_items.append(f"<p><strong>Responsible Person:</strong> {html_module.escape(metadata.responsible_person)}</p>")
+                metadata_items.append(
+                    f"<p><strong>Responsible Person:</strong> {html_module.escape(metadata.responsible_person)}</p>"
+                )
             if metadata.schema_version:
-                metadata_items.append(f"<p><strong>Schema Version:</strong> {html_module.escape(metadata.schema_version)}</p>")
+                metadata_items.append(
+                    f"<p><strong>Schema Version:</strong> {html_module.escape(metadata.schema_version)}</p>"
+                )
 
             if metadata_items:
                 metadata_html = f"""
@@ -434,7 +444,9 @@ class PDFExporter(BaseExporter):
         by_color = GroupingAnalytics.group_by_color(access_points)
         by_model = GroupingAnalytics.group_by_model(access_points)
 
-        html = '<section class="grouping"><h3>Distribution Statistics</h3><div class="grouping-stats">'
+        html = (
+            '<section class="grouping"><h3>Distribution Statistics</h3><div class="grouping-stats">'
+        )
 
         # Vendor grouping
         html += self._generate_grouping_table("By Vendor", by_vendor)
@@ -450,7 +462,7 @@ class PDFExporter(BaseExporter):
         # Model grouping
         html += self._generate_grouping_table("By Model", by_model)
 
-        html += '</div></section>'
+        html += "</div></section>"
 
         return html
 
@@ -466,9 +478,9 @@ class PDFExporter(BaseExporter):
 
         for name, count in sorted(data.items(), key=lambda x: x[1], reverse=True):
             percentage = (count / total * 100) if total > 0 else 0
-            html += f'<tr><td>{html_module.escape(str(name))}</td><td>{count}</td><td>{percentage:.1f}%</td></tr>'
+            html += f"<tr><td>{html_module.escape(str(name))}</td><td>{count}</td><td>{percentage:.1f}%</td></tr>"
 
-        html += '</tbody></table></div>'
+        html += "</tbody></table></div>"
         return html
 
     def _generate_analytics_section(self, access_points: list[AccessPoint], radios: list) -> str:
@@ -477,9 +489,13 @@ class PDFExporter(BaseExporter):
 
         # Mounting analytics
         mounting_analytics = MountingAnalytics.calculate_mounting_metrics(access_points)
-        if mounting_analytics and mounting_analytics.avg_height is not None and mounting_analytics.avg_height > 0:
+        if (
+            mounting_analytics
+            and mounting_analytics.avg_height is not None
+            and mounting_analytics.avg_height > 0
+        ):
             html += '<div class="analytics-grid"><div class="analytics-column">'
-            html += '<h4>Mounting Statistics</h4>'
+            html += "<h4>Mounting Statistics</h4>"
             html += f'<div class="metric-row"><span class="metric-label">Average Height:</span><span class="metric-value">{mounting_analytics.avg_height:.2f} m</span></div>'
             html += f'<div class="metric-row"><span class="metric-label">Min Height:</span><span class="metric-value">{mounting_analytics.min_height:.2f} m</span></div>'
             html += f'<div class="metric-row"><span class="metric-label">Max Height:</span><span class="metric-value">{mounting_analytics.max_height:.2f} m</span></div>'
@@ -487,7 +503,7 @@ class PDFExporter(BaseExporter):
                 html += f'<div class="metric-row"><span class="metric-label">Average Azimuth:</span><span class="metric-value">{mounting_analytics.avg_azimuth:.1f}°</span></div>'
             if mounting_analytics.avg_tilt:
                 html += f'<div class="metric-row"><span class="metric-label">Average Tilt:</span><span class="metric-value">{mounting_analytics.avg_tilt:.1f}°</span></div>'
-            html += '</div>'
+            html += "</div>"
 
         # Radio analytics
         if radios:
@@ -495,7 +511,7 @@ class PDFExporter(BaseExporter):
             by_standard = RadioAnalytics.group_by_wifi_standard(radios)
 
             html += '<div class="analytics-column">'
-            html += '<h4>Radio Configuration</h4>'
+            html += "<h4>Radio Configuration</h4>"
 
             if by_band:
                 total_radios = sum(by_band.values())
@@ -510,9 +526,9 @@ class PDFExporter(BaseExporter):
                     pct = (count / total_radios * 100) if total_radios > 0 else 0
                     html += f'<div class="metric-row"><span class="metric-label">{html_module.escape(std)}:</span><span class="metric-value">{count} ({pct:.1f}%)</span></div>'
 
-            html += '</div>'
+            html += "</div>"
 
-        html += '</div></section>'
+        html += "</div></section>"
         return html
 
     def _generate_aps_table(self, access_points: list[AccessPoint]) -> str:
@@ -524,12 +540,12 @@ class PDFExporter(BaseExporter):
             aggregated[key] = aggregated.get(key, 0) + 1
 
         html = '<section class="access-points"><h3>Access Points</h3>'
-        html += '<table><thead><tr><th>Vendor</th><th>Model</th><th>Floor</th><th>Color</th><th>Quantity</th></tr></thead><tbody>'
+        html += "<table><thead><tr><th>Vendor</th><th>Model</th><th>Floor</th><th>Color</th><th>Quantity</th></tr></thead><tbody>"
 
         for (vendor, model, floor, color), count in sorted(aggregated.items()):
-            html += f'<tr><td>{html_module.escape(vendor)}</td><td>{html_module.escape(model)}</td><td>{html_module.escape(floor)}</td><td>{html_module.escape(color)}</td><td>{count}</td></tr>'
+            html += f"<tr><td>{html_module.escape(vendor)}</td><td>{html_module.escape(model)}</td><td>{html_module.escape(floor)}</td><td>{html_module.escape(color)}</td><td>{count}</td></tr>"
 
-        html += '</tbody></table></section>'
+        html += "</tbody></table></section>"
         return html
 
     def _generate_detailed_aps_table(self, access_points: list[AccessPoint]) -> str:
@@ -538,19 +554,33 @@ class PDFExporter(BaseExporter):
             return ""
 
         html = '<section class="ap-details"><h3>Access Points Installation Details</h3>'
-        html += '<table><thead><tr><th>AP Name</th><th>Vendor</th><th>Model</th><th>Floor</th><th>X (m)</th><th>Y (m)</th><th>Height (m)</th><th>Azimuth (°)</th><th>Tilt (°)</th></tr></thead><tbody>'
+        html += "<table><thead><tr><th>AP Name</th><th>Vendor</th><th>Model</th><th>Floor</th><th>X (m)</th><th>Y (m)</th><th>Height (m)</th><th>Azimuth (°)</th><th>Tilt (°)</th></tr></thead><tbody>"
 
         for ap in access_points:
-            name = ap.name if hasattr(ap, 'name') and ap.name else "N/A"
-            loc_x = f"{ap.location_x:.2f}" if hasattr(ap, 'location_x') and ap.location_x is not None else "N/A"
-            loc_y = f"{ap.location_y:.2f}" if hasattr(ap, 'location_y') and ap.location_y is not None else "N/A"
-            height = f"{ap.mounting_height:.2f}" if hasattr(ap, 'mounting_height') and ap.mounting_height is not None else "N/A"
-            azimuth = f"{ap.azimuth:.1f}" if hasattr(ap, 'azimuth') and ap.azimuth is not None else "N/A"
-            tilt = f"{ap.tilt:.1f}" if hasattr(ap, 'tilt') and ap.tilt is not None else "N/A"
+            name = ap.name if hasattr(ap, "name") and ap.name else "N/A"
+            loc_x = (
+                f"{ap.location_x:.2f}"
+                if hasattr(ap, "location_x") and ap.location_x is not None
+                else "N/A"
+            )
+            loc_y = (
+                f"{ap.location_y:.2f}"
+                if hasattr(ap, "location_y") and ap.location_y is not None
+                else "N/A"
+            )
+            height = (
+                f"{ap.mounting_height:.2f}"
+                if hasattr(ap, "mounting_height") and ap.mounting_height is not None
+                else "N/A"
+            )
+            azimuth = (
+                f"{ap.azimuth:.1f}" if hasattr(ap, "azimuth") and ap.azimuth is not None else "N/A"
+            )
+            tilt = f"{ap.tilt:.1f}" if hasattr(ap, "tilt") and ap.tilt is not None else "N/A"
 
             html += f'<tr><td>{html_module.escape(name)}</td><td>{html_module.escape(ap.vendor)}</td><td>{html_module.escape(ap.model)}</td><td>{html_module.escape(ap.floor_name)}</td><td class="text-right">{loc_x}</td><td class="text-right">{loc_y}</td><td class="text-right">{height}</td><td class="text-right">{azimuth}</td><td class="text-right">{tilt}</td></tr>'
 
-        html += '</tbody></table></section>'
+        html += "</tbody></table></section>"
         return html
 
     def _generate_antennas_table(self, antennas: list[Antenna]) -> str:
@@ -562,10 +592,10 @@ class PDFExporter(BaseExporter):
         antenna_counts = Counter(antenna.name for antenna in antennas)
 
         html = '<section class="antennas"><h3>Antennas</h3>'
-        html += '<table><thead><tr><th>Model</th><th>Quantity</th></tr></thead><tbody>'
+        html += "<table><thead><tr><th>Model</th><th>Quantity</th></tr></thead><tbody>"
 
         for name, count in sorted(antenna_counts.items()):
-            html += f'<tr><td>{html_module.escape(name)}</td><td>{count}</td></tr>'
+            html += f"<tr><td>{html_module.escape(name)}</td><td>{count}</td></tr>"
 
-        html += '</tbody></table></section>'
+        html += "</tbody></table></section>"
         return html

@@ -35,7 +35,7 @@ def sample_access_points():
             tilt=10.0,
             antenna_height=3.5,
             enabled=True,
-            tags=[Tag("Zone", "Office", "zone-id"), Tag("Building", "HQ", "bldg-id")]
+            tags=[Tag("Zone", "Office", "zone-id"), Tag("Building", "HQ", "bldg-id")],
         ),
         AccessPoint(
             vendor="Cisco",
@@ -50,7 +50,7 @@ def sample_access_points():
             tilt=10.0,
             antenna_height=3.5,
             enabled=True,
-            tags=[Tag("Zone", "Office", "zone-id"), Tag("Building", "HQ", "bldg-id")]
+            tags=[Tag("Zone", "Office", "zone-id"), Tag("Building", "HQ", "bldg-id")],
         ),
         AccessPoint(
             vendor="Cisco",
@@ -65,7 +65,7 @@ def sample_access_points():
             tilt=15.0,
             antenna_height=4.8,
             enabled=False,
-            tags=[Tag("Zone", "Warehouse", "zone-id")]
+            tags=[Tag("Zone", "Warehouse", "zone-id")],
         ),
         AccessPoint(
             vendor="Aruba",
@@ -80,7 +80,7 @@ def sample_access_points():
             tilt=None,
             antenna_height=None,
             enabled=True,
-            tags=[]
+            tags=[],
         ),
     ]
 
@@ -106,7 +106,7 @@ def sample_radios():
             channel=36,
             channel_width=80,
             tx_power=20.0,
-            standard="802.11ax"
+            standard="802.11ax",
         ),
         Radio(
             id="radio-2",
@@ -115,7 +115,7 @@ def sample_radios():
             channel=6,
             channel_width=20,
             tx_power=18.0,
-            standard="802.11ax"
+            standard="802.11ax",
         ),
         Radio(
             id="radio-3",
@@ -124,7 +124,7 @@ def sample_radios():
             channel=37,
             channel_width=160,
             tx_power=15.0,
-            standard="802.11be"
+            standard="802.11be",
         ),
     ]
 
@@ -132,16 +132,13 @@ def sample_radios():
 @pytest.fixture
 def sample_project_data(sample_access_points, sample_antennas, sample_radios):
     """Create sample project data."""
-    floors = {
-        "f1": Floor("f1", "Floor 1"),
-        "f2": Floor("f2", "Floor 2")
-    }
+    floors = {"f1": Floor("f1", "Floor 1"), "f2": Floor("f2", "Floor 2")}
     return ProjectData(
         project_name="Test Project",
         access_points=sample_access_points,
         antennas=sample_antennas,
         radios=sample_radios,
-        floors=floors
+        floors=floors,
     )
 
 
@@ -172,7 +169,7 @@ class TestCSVExporter:
         output_file = exporter._export_access_points(sample_access_points, "Test")
 
         # Read the file
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -192,28 +189,24 @@ class TestCSVExporter:
                 model="C9120AXI",
                 color="Red",
                 floor_name="Floor 1",
-                tags=[Tag("Zone", "Office", "zone-id")]
+                tags=[Tag("Zone", "Office", "zone-id")],
             ),
             AccessPoint(
                 vendor="Cisco",
                 model="C9120AXI",
                 color="Red",
                 floor_name="Floor 1",
-                tags=[Tag("Zone", "Office", "zone-id")]
+                tags=[Tag("Zone", "Office", "zone-id")],
             ),
             AccessPoint(
-                vendor="Aruba",
-                model="AP-515",
-                color="Blue",
-                floor_name="Floor 2",
-                tags=[]
+                vendor="Aruba", model="AP-515", color="Blue", floor_name="Floor 2", tags=[]
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(aps, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -232,14 +225,18 @@ class TestCSVExporter:
                 model="C9120AXI",
                 color="Red",
                 floor_name="Floor 1",
-                tags=[Tag("Zone", "Office", "zone-id"), Tag("Building", "HQ", "bldg-id"), Tag("Area", "North", "area-id")]
+                tags=[
+                    Tag("Zone", "Office", "zone-id"),
+                    Tag("Building", "HQ", "bldg-id"),
+                    Tag("Area", "North", "area-id"),
+                ],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(aps, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -254,18 +251,14 @@ class TestCSVExporter:
         """Test handling of access points with no tags."""
         aps = [
             AccessPoint(
-                vendor="Cisco",
-                model="C9120AXI",
-                color="Red",
-                floor_name="Floor 1",
-                tags=[]
+                vendor="Cisco", model="C9120AXI", color="Red", floor_name="Floor 1", tags=[]
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(aps, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -276,18 +269,14 @@ class TestCSVExporter:
         """Test handling of None color values."""
         aps = [
             AccessPoint(
-                vendor="Cisco",
-                model="C9120AXI",
-                color=None,
-                floor_name="Floor 1",
-                tags=[]
+                vendor="Cisco", model="C9120AXI", color=None, floor_name="Floor 1", tags=[]
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(aps, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -299,15 +288,24 @@ class TestCSVExporter:
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_detailed_access_points(sample_access_points, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
         # Check header
         expected_headers = [
-            "AP Name", "Vendor", "Model", "Floor",
-            "Location X (m)", "Location Y (m)", "Mounting Height (m)",
-            "Azimuth (°)", "Tilt (°)", "Color", "Tags", "Enabled"
+            "AP Name",
+            "Vendor",
+            "Model",
+            "Floor",
+            "Location X (m)",
+            "Location Y (m)",
+            "Mounting Height (m)",
+            "Azimuth (°)",
+            "Tilt (°)",
+            "Color",
+            "Tags",
+            "Enabled",
         ]
         assert rows[0] == expected_headers
 
@@ -329,14 +327,14 @@ class TestCSVExporter:
                 azimuth=45.67,
                 tilt=10.89,
                 enabled=True,
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_detailed_access_points(aps, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -364,14 +362,14 @@ class TestCSVExporter:
                 azimuth=None,
                 tilt=None,
                 enabled=True,
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_detailed_access_points(aps, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -394,7 +392,7 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 enabled=True,
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Aruba",
@@ -402,14 +400,14 @@ class TestCSVExporter:
                 color="Blue",
                 floor_name="Floor 2",
                 enabled=False,
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_detailed_access_points(aps, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -421,7 +419,7 @@ class TestCSVExporter:
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_antennas(sample_antennas, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -443,7 +441,7 @@ class TestCSVExporter:
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_antennas(antennas, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -462,7 +460,7 @@ class TestCSVExporter:
         assert output_file is not None
         assert output_file.exists()
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for section headers
@@ -481,7 +479,7 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 mounting_height=None,
-                tags=[]
+                tags=[],
             ),
         ]
 
@@ -502,7 +500,7 @@ class TestCSVExporter:
                 mounting_height=3.0,
                 azimuth=45.0,
                 tilt=10.0,
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Cisco",
@@ -512,14 +510,14 @@ class TestCSVExporter:
                 mounting_height=4.0,
                 azimuth=90.0,
                 tilt=15.0,
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_analytics(aps, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -527,7 +525,9 @@ class TestCSVExporter:
         content = [row for row in rows if row]
 
         # Should have average height (3.5m)
-        height_rows = [row for row in content if len(row) > 0 and "Average Mounting Height" in row[0]]
+        height_rows = [
+            row for row in content if len(row) > 0 and "Average Mounting Height" in row[0]
+        ]
         assert len(height_rows) == 1
         assert "3.50" in height_rows[0][1]
 
@@ -540,7 +540,7 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 mounting_height=2.0,  # < 2.5m
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Cisco",
@@ -548,7 +548,7 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 mounting_height=3.0,  # 2.5-3.5m
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Cisco",
@@ -556,7 +556,7 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 mounting_height=4.0,  # 3.5-4.5m
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Cisco",
@@ -564,7 +564,7 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 mounting_height=5.0,  # 4.5-6.0m
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Cisco",
@@ -572,14 +572,14 @@ class TestCSVExporter:
                 color="Red",
                 floor_name="Floor 1",
                 mounting_height=7.0,  # > 6.0m
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_analytics(aps, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for all height ranges
@@ -594,7 +594,7 @@ class TestCSVExporter:
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_analytics(sample_access_points, sample_radios, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for radio sections
@@ -621,7 +621,7 @@ class TestCSVExporter:
                 mounting_height=2.0,  # Requires adjustment (< 2.5m)
                 azimuth=45.0,
                 tilt=10.0,
-                tags=[]
+                tags=[],
             ),
             AccessPoint(
                 vendor="Cisco",
@@ -631,14 +631,14 @@ class TestCSVExporter:
                 mounting_height=3.0,  # OK
                 azimuth=None,
                 tilt=15.0,
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_analytics(aps, [], "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
@@ -657,19 +657,29 @@ class TestCSVExporter:
         summary_section = content[summary_start:]
 
         # Total APs
-        total_aps_row = [row for row in summary_section if len(row) > 0 and "Total APs" in row[0]][0]
+        total_aps_row = [row for row in summary_section if len(row) > 0 and "Total APs" in row[0]][
+            0
+        ]
         assert total_aps_row[1] == "2"
 
         # APs with tilt
-        tilt_row = [row for row in summary_section if len(row) > 0 and "APs with Tilt Data" in row[0]][0]
+        tilt_row = [
+            row for row in summary_section if len(row) > 0 and "APs with Tilt Data" in row[0]
+        ][0]
         assert tilt_row[1] == "2"
 
         # APs with azimuth
-        azimuth_row = [row for row in summary_section if len(row) > 0 and "APs with Azimuth Data" in row[0]][0]
+        azimuth_row = [
+            row for row in summary_section if len(row) > 0 and "APs with Azimuth Data" in row[0]
+        ][0]
         assert azimuth_row[1] == "1"
 
         # APs requiring adjustment
-        adjust_row = [row for row in summary_section if len(row) > 0 and "APs Requiring Height Adjustment" in row[0]][0]
+        adjust_row = [
+            row
+            for row in summary_section
+            if len(row) > 0 and "APs Requiring Height Adjustment" in row[0]
+        ][0]
         assert adjust_row[1] == "1"
 
     def test_export_unicode_support(self, output_dir):
@@ -681,7 +691,7 @@ class TestCSVExporter:
                 color="Röt",  # German
                 floor_name="étage",  # French
                 name="点",  # Chinese
-                tags=[Tag("Ключ", "Значение", "key-id")]  # Russian
+                tags=[Tag("Ключ", "Значение", "key-id")],  # Russian
             ),
         ]
 
@@ -692,7 +702,7 @@ class TestCSVExporter:
         assert output_file.exists()
 
         # Read and verify unicode was preserved
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         assert "Производитель" in content
@@ -703,11 +713,7 @@ class TestCSVExporter:
     def test_export_with_empty_lists(self, output_dir):
         """Test export with empty lists doesn't crash."""
         project_data = ProjectData(
-            project_name="Empty Project",
-            access_points=[],
-            antennas=[],
-            radios=[],
-            floors={}
+            project_name="Empty Project", access_points=[], antennas=[], radios=[], floors={}
         )
 
         exporter = CSVExporter(output_dir)
@@ -725,14 +731,14 @@ class TestCSVExporter:
                 model='Model "X"',  # Quotes in name
                 color="Red",
                 floor_name="Floor 1",
-                tags=[]
+                tags=[],
             ),
         ]
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(aps, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Should have quotes around fields with special characters
@@ -743,22 +749,25 @@ class TestCSVExporter:
     def test_export_access_points_with_full_metadata(self, tmp_path):
         """Test CSV export with complete metadata."""
         from ekahau_bom.models import ProjectMetadata
+
         output_dir = tmp_path / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        aps = [AccessPoint(vendor="Cisco", model="AP-515", color="Red", floor_name="Floor 1", tags=[])]
+        aps = [
+            AccessPoint(vendor="Cisco", model="AP-515", color="Red", floor_name="Floor 1", tags=[])
+        ]
         metadata = ProjectMetadata(
             name="Enterprise WiFi Project",
             customer="Acme Corporation",
             location="Building A, Floor 3",
             responsible_person="John Doe",
-            schema_version="1.0"
+            schema_version="1.0",
         )
 
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(aps, "Test", metadata=metadata)
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Should have metadata as comments
@@ -770,6 +779,7 @@ class TestCSVExporter:
     def test_export_detailed_access_points_with_antenna_height_fallback(self, tmp_path):
         """Test detailed CSV export with mounting height from radio antenna_height."""
         from ekahau_bom.models import Radio
+
         output_dir = tmp_path / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -783,16 +793,14 @@ class TestCSVExporter:
                 floor_name="Floor 1",
                 name="AP-Office-01",
                 tags=[],
-                mounting_height=None  # No mounting height on AP
+                mounting_height=None,  # No mounting height on AP
             )
         ]
 
         # Radio with antenna_height
         radios = [
             Radio(
-                id="radio1",
-                access_point_id="ap1",
-                antenna_height=2.5  # Should be used as fallback
+                id="radio1", access_point_id="ap1", antenna_height=2.5  # Should be used as fallback
             )
         ]
 
@@ -800,7 +808,7 @@ class TestCSVExporter:
         # Correct signature: _export_detailed_access_points(access_points, radios, project_name)
         output_file = exporter._export_detailed_access_points(aps, radios, "Test")
 
-        with open(output_file, 'r', encoding='utf-8') as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Should have antenna_height as mounting height

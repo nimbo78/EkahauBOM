@@ -15,7 +15,7 @@ def sample_tag_keys_data():
         "tagKeys": [
             {"id": "tk1", "key": "Location"},
             {"id": "tk2", "key": "Zone"},
-            {"id": "tk3", "key": "Department"}
+            {"id": "tk3", "key": "Department"},
         ]
     }
 
@@ -103,7 +103,7 @@ class TestTagProcessor:
         ap_tags = [
             {"tagKeyId": "tk1"},  # Missing value
             {"value": "Some Value"},  # Missing tagKeyId
-            {}  # Missing both
+            {},  # Missing both
         ]
         tags = processor.process_ap_tags(ap_tags)
 

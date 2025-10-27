@@ -44,32 +44,23 @@ class CSVExporter(BaseExporter):
 
         # Export access points BOM (aggregated)
         ap_file = self._export_access_points(
-            project_data.access_points,
-            project_data.project_name,
-            project_data.metadata
+            project_data.access_points, project_data.project_name, project_data.metadata
         )
         files.append(ap_file)
 
         # Export detailed access points (individual with mounting data)
         detailed_ap_file = self._export_detailed_access_points(
-            project_data.access_points,
-            project_data.radios,
-            project_data.project_name
+            project_data.access_points, project_data.radios, project_data.project_name
         )
         files.append(detailed_ap_file)
 
         # Export antennas
-        antenna_file = self._export_antennas(
-            project_data.antennas,
-            project_data.project_name
-        )
+        antenna_file = self._export_antennas(project_data.antennas, project_data.project_name)
         files.append(antenna_file)
 
         # Export analytics if data available
         analytics_file = self._export_analytics(
-            project_data.access_points,
-            project_data.radios,
-            project_data.project_name
+            project_data.access_points, project_data.radios, project_data.project_name
         )
         if analytics_file:
             files.append(analytics_file)
@@ -78,10 +69,7 @@ class CSVExporter(BaseExporter):
         return files
 
     def _export_access_points(
-        self,
-        access_points: list[AccessPoint],
-        project_name: str,
-        metadata = None
+        self, access_points: list[AccessPoint], project_name: str, metadata=None
     ) -> Path:
         """Export access points to CSV file.
 
@@ -99,15 +87,14 @@ class CSVExporter(BaseExporter):
         # Create tuples for counting: (vendor, model, floor, color, tags)
         # Tags are converted to frozenset for hashability
         ap_tuples = [
-            (ap.vendor, ap.model, ap.floor_name, ap.color,
-             frozenset(str(tag) for tag in ap.tags))
+            (ap.vendor, ap.model, ap.floor_name, ap.color, frozenset(str(tag) for tag in ap.tags))
             for ap in access_points
         ]
         ap_counts = Counter(ap_tuples)
 
         logger.info(f"Exporting {len(access_points)} access points ({len(ap_counts)} unique)")
 
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+        with open(output_file, "w", newline="", encoding="utf-8") as f:
             # Write metadata as comments if available
             if metadata:
                 f.write("# Ekahau BOM - Access Points Bill of Materials\n")
@@ -121,7 +108,7 @@ class CSVExporter(BaseExporter):
                     f.write(f"# Responsible Person: {metadata.responsible_person}\n")
                 f.write("#\n")
 
-            writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
+            writer = csv.writer(f, dialect="excel", quoting=csv.QUOTE_ALL)
 
             # Write header
             writer.writerow(["Vendor", "Model", "Floor", "Color", "Tags", "Quantity"])
@@ -136,10 +123,7 @@ class CSVExporter(BaseExporter):
         return output_file
 
     def _export_detailed_access_points(
-        self,
-        access_points: list[AccessPoint],
-        radios: list,
-        project_name: str
+        self, access_points: list[AccessPoint], radios: list, project_name: str
     ) -> Path:
         """Export detailed access points with installation parameters.
 
@@ -165,29 +149,35 @@ class CSVExporter(BaseExporter):
                 ap_radio_map[radio.access_point_id] = []
             ap_radio_map[radio.access_point_id].append(radio)
 
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
+        with open(output_file, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, dialect="excel", quoting=csv.QUOTE_ALL)
 
             # Write header with all fields
-            writer.writerow([
-                "AP Name",
-                "Vendor",
-                "Model",
-                "Floor",
-                "Location X (m)",
-                "Location Y (m)",
-                "Mounting Height (m)",
-                "Azimuth (°)",
-                "Tilt (°)",
-                "Color",
-                "Tags",
-                "Enabled"
-            ])
+            writer.writerow(
+                [
+                    "AP Name",
+                    "Vendor",
+                    "Model",
+                    "Floor",
+                    "Location X (m)",
+                    "Location Y (m)",
+                    "Mounting Height (m)",
+                    "Azimuth (°)",
+                    "Tilt (°)",
+                    "Color",
+                    "Tags",
+                    "Enabled",
+                ]
+            )
 
             # Write data rows - one row per AP
             for ap in access_points:
                 # Format tags as "Key1:Value1; Key2:Value2"
-                tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)) if ap.tags else ""
+                tags_str = (
+                    "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key))
+                    if ap.tags
+                    else ""
+                )
 
                 # Format numeric values with appropriate precision
                 location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else ""
@@ -199,33 +189,33 @@ class CSVExporter(BaseExporter):
                     first_radio = ap_radio_map[ap.id][0]
                     mounting_height_value = first_radio.antenna_height
 
-                mounting_height = f"{mounting_height_value:.2f}" if mounting_height_value is not None else ""
+                mounting_height = (
+                    f"{mounting_height_value:.2f}" if mounting_height_value is not None else ""
+                )
                 azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else ""
                 tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else ""
 
-                writer.writerow([
-                    ap.name or "",
-                    ap.vendor,
-                    ap.model,
-                    ap.floor_name,
-                    location_x,
-                    location_y,
-                    mounting_height,
-                    azimuth,
-                    tilt,
-                    ap.color or "",
-                    tags_str,
-                    "Yes" if ap.enabled else "No"
-                ])
+                writer.writerow(
+                    [
+                        ap.name or "",
+                        ap.vendor,
+                        ap.model,
+                        ap.floor_name,
+                        location_x,
+                        location_y,
+                        mounting_height,
+                        azimuth,
+                        tilt,
+                        ap.color or "",
+                        tags_str,
+                        "Yes" if ap.enabled else "No",
+                    ]
+                )
 
         logger.debug(f"Detailed access points exported to {output_file}")
         return output_file
 
-    def _export_antennas(
-        self,
-        antennas: list[Antenna],
-        project_name: str
-    ) -> Path:
+    def _export_antennas(self, antennas: list[Antenna], project_name: str) -> Path:
         """Export antennas to CSV file.
 
         Args:
@@ -243,8 +233,8 @@ class CSVExporter(BaseExporter):
 
         logger.info(f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique)")
 
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
+        with open(output_file, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, dialect="excel", quoting=csv.QUOTE_ALL)
 
             # Write header
             writer.writerow(["Antenna Model", "Quantity"])
@@ -257,10 +247,7 @@ class CSVExporter(BaseExporter):
         return output_file
 
     def _export_analytics(
-        self,
-        access_points: list[AccessPoint],
-        radios: list,
-        project_name: str
+        self, access_points: list[AccessPoint], radios: list, project_name: str
     ) -> Path | None:
         """Export analytics metrics to CSV file.
 
@@ -288,8 +275,8 @@ class CSVExporter(BaseExporter):
 
         logger.info(f"Exporting analytics metrics")
 
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f, dialect='excel', quoting=csv.QUOTE_ALL)
+        with open(output_file, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f, dialect="excel", quoting=csv.QUOTE_ALL)
 
             # Mounting Metrics Section
             writer.writerow(["=== MOUNTING METRICS ==="])
@@ -298,15 +285,21 @@ class CSVExporter(BaseExporter):
             writer.writerow(["Metric", "Value", "Unit"])
 
             if mounting_metrics.avg_height is not None:
-                writer.writerow(["Average Mounting Height", f"{mounting_metrics.avg_height:.2f}", "meters"])
+                writer.writerow(
+                    ["Average Mounting Height", f"{mounting_metrics.avg_height:.2f}", "meters"]
+                )
                 writer.writerow(["Minimum Height", f"{mounting_metrics.min_height:.2f}", "meters"])
                 writer.writerow(["Maximum Height", f"{mounting_metrics.max_height:.2f}", "meters"])
-                writer.writerow(["Height Variance", f"{mounting_metrics.height_variance:.4f}", "m²"])
+                writer.writerow(
+                    ["Height Variance", f"{mounting_metrics.height_variance:.4f}", "m²"]
+                )
 
             writer.writerow(["APs with Height Data", mounting_metrics.aps_with_height, "count"])
 
             if mounting_metrics.avg_azimuth is not None:
-                writer.writerow(["Average Azimuth", f"{mounting_metrics.avg_azimuth:.1f}", "degrees"])
+                writer.writerow(
+                    ["Average Azimuth", f"{mounting_metrics.avg_azimuth:.1f}", "degrees"]
+                )
 
             if mounting_metrics.avg_tilt is not None:
                 writer.writerow(["Average Tilt", f"{mounting_metrics.avg_tilt:.1f}", "degrees"])
@@ -328,13 +321,18 @@ class CSVExporter(BaseExporter):
             writer.writerow([])
 
             aps_requiring_adjustment = sum(
-                1 for ap in access_points
+                1
+                for ap in access_points
                 if ap.mounting_height and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
             )
 
             writer.writerow(["Total APs", len(access_points)])
-            writer.writerow(["APs with Tilt Data", sum(1 for ap in access_points if ap.tilt is not None)])
-            writer.writerow(["APs with Azimuth Data", sum(1 for ap in access_points if ap.azimuth is not None)])
+            writer.writerow(
+                ["APs with Tilt Data", sum(1 for ap in access_points if ap.tilt is not None)]
+            )
+            writer.writerow(
+                ["APs with Azimuth Data", sum(1 for ap in access_points if ap.azimuth is not None)]
+            )
             writer.writerow(["APs Requiring Height Adjustment", aps_requiring_adjustment])
 
             # Radio Analytics Section
@@ -354,7 +352,11 @@ class CSVExporter(BaseExporter):
                 writer.writerow([])
                 writer.writerow(["Band", "Count", "Percentage"])
                 for band, count in sorted(radio_metrics.band_distribution.items()):
-                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    percentage = (
+                        (count / radio_metrics.total_radios * 100)
+                        if radio_metrics.total_radios > 0
+                        else 0
+                    )
                     writer.writerow([band, count, f"{percentage:.1f}%"])
 
                 # Wi-Fi Standards
@@ -364,7 +366,11 @@ class CSVExporter(BaseExporter):
                     writer.writerow([])
                     writer.writerow(["Standard", "Count", "Percentage"])
                     for standard, count in sorted(radio_metrics.standard_distribution.items()):
-                        percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                        percentage = (
+                            (count / radio_metrics.total_radios * 100)
+                            if radio_metrics.total_radios > 0
+                            else 0
+                        )
                         writer.writerow([standard, count, f"{percentage:.1f}%"])
 
                 # Channel Widths
@@ -382,9 +388,15 @@ class CSVExporter(BaseExporter):
                     writer.writerow(["=== TRANSMIT POWER ==="])
                     writer.writerow([])
                     writer.writerow(["Metric", "Value", "Unit"])
-                    writer.writerow(["Average TX Power", f"{radio_metrics.avg_tx_power:.1f}", "dBm"])
-                    writer.writerow(["Minimum TX Power", f"{radio_metrics.min_tx_power:.1f}", "dBm"])
-                    writer.writerow(["Maximum TX Power", f"{radio_metrics.max_tx_power:.1f}", "dBm"])
+                    writer.writerow(
+                        ["Average TX Power", f"{radio_metrics.avg_tx_power:.1f}", "dBm"]
+                    )
+                    writer.writerow(
+                        ["Minimum TX Power", f"{radio_metrics.min_tx_power:.1f}", "dBm"]
+                    )
+                    writer.writerow(
+                        ["Maximum TX Power", f"{radio_metrics.max_tx_power:.1f}", "dBm"]
+                    )
 
                 # TX Power Distribution
                 power_dist = RadioAnalytics.get_tx_power_distribution(radios)

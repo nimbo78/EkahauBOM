@@ -53,16 +53,13 @@ class JSONExporter(BaseExporter):
         Returns:
             List containing path to the created JSON file
         """
-        output_file = self._get_output_filename(
-            project_data.project_name,
-            "data.json"
-        )
+        output_file = self._get_output_filename(project_data.project_name, "data.json")
 
         # Generate JSON structure
         json_data = self._generate_json_structure(project_data)
 
         # Write to file
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=self.indent, ensure_ascii=False)
 
         files = [output_file]
@@ -109,8 +106,7 @@ class JSONExporter(BaseExporter):
         cable_bom = None
         if project_data.cable_notes:
             cable_metrics = CableAnalytics.calculate_cable_metrics(
-                project_data.cable_notes,
-                project_data.floors
+                project_data.cable_notes, project_data.floors
             )
             cable_bom = CableAnalytics.generate_cable_bom(cable_metrics)
 
@@ -118,7 +114,7 @@ class JSONExporter(BaseExporter):
         metadata_section = {
             "file_name": project_data.project_name,
             "export_format": "json",
-            "version": "2.3.0"
+            "version": "2.3.0",
         }
 
         # Add project metadata if available
@@ -150,15 +146,13 @@ class JSONExporter(BaseExporter):
                 "total_antennas": len(project_data.antennas),
                 "unique_vendors": len(set(ap.vendor for ap in project_data.access_points)),
                 "unique_floors": len(set(ap.floor_name for ap in project_data.access_points)),
-                "unique_colors": len(set(ap.color for ap in project_data.access_points if ap.color)),
-                "unique_models": len(set(ap.model for ap in project_data.access_points))
+                "unique_colors": len(
+                    set(ap.color for ap in project_data.access_points if ap.color)
+                ),
+                "unique_models": len(set(ap.model for ap in project_data.access_points)),
             },
             "floors": [
-                {
-                    "id": floor.id,
-                    "name": floor.name
-                }
-                for floor in project_data.floors.values()
+                {"id": floor.id, "name": floor.name} for floor in project_data.floors.values()
             ],
             "access_points": {
                 "bill_of_materials": [
@@ -167,15 +161,16 @@ class JSONExporter(BaseExporter):
                         "model": model,
                         "floor": floor,
                         "color": color if color else None,
-                        "tags": [
-                            {"key": key, "value": value}
-                            for key, value in sorted(tags_tuple)
-                        ] if tags_tuple else [],
-                        "quantity": count
+                        "tags": (
+                            [{"key": key, "value": value} for key, value in sorted(tags_tuple)]
+                            if tags_tuple
+                            else []
+                        ),
+                        "quantity": count,
                     }
                     for (vendor, model, floor, color, tags_tuple), count in sorted(
                         ap_counts.items(),
-                        key=lambda x: (x[0][0], x[0][1], x[0][2])  # Sort by vendor, model, floor
+                        key=lambda x: (x[0][0], x[0][1], x[0][2]),  # Sort by vendor, model, floor
                     )
                 ],
                 "details": [
@@ -185,46 +180,37 @@ class JSONExporter(BaseExporter):
                         "model": ap.model,
                         "floor": ap.floor_name,
                         "floor_id": ap.floor_id,
-                        "location": {
-                            "x": ap.location_x,
-                            "y": ap.location_y
-                        } if ap.location_x is not None and ap.location_y is not None else None,
+                        "location": (
+                            {"x": ap.location_x, "y": ap.location_y}
+                            if ap.location_x is not None and ap.location_y is not None
+                            else None
+                        ),
                         "installation": {
                             "mounting_height": ap.mounting_height,
                             "azimuth": ap.azimuth,
                             "tilt": ap.tilt,
-                            "antenna_height": ap.antenna_height
+                            "antenna_height": ap.antenna_height,
                         },
                         "color": ap.color,
                         "mine": ap.mine,
                         "enabled": ap.enabled,
                         "tags": [
-                            {
-                                "key": tag.key,
-                                "value": tag.value,
-                                "tag_key_id": tag.tag_key_id
-                            }
+                            {"key": tag.key, "value": tag.value, "tag_key_id": tag.tag_key_id}
                             for tag in ap.tags
-                        ]
+                        ],
                     }
                     for ap in project_data.access_points
-                ]
+                ],
             },
             "antennas": {
                 "bill_of_materials": [
-                    {
-                        "name": name,
-                        "quantity": count
-                    }
+                    {"name": name, "quantity": count}
                     for name, count in sorted(antenna_counts.items())
                 ],
                 "details": [
-                    {
-                        "name": antenna.name,
-                        "antenna_type_id": antenna.antenna_type_id
-                    }
+                    {"name": antenna.name, "antenna_type_id": antenna.antenna_type_id}
                     for antenna in project_data.antennas
-                ]
+                ],
             },
             "analytics": {
                 "by_vendor": self._format_grouping(by_vendor),
@@ -242,20 +228,32 @@ class JSONExporter(BaseExporter):
                     "height_distribution": [
                         {"range": range_name, "count": count}
                         for range_name, count in sorted(height_distribution.items())
-                    ]
+                    ],
                 },
                 "radio": {
                     "total_radios": radio_metrics.total_radios if radio_metrics else 0,
                     "frequency_bands": radio_metrics.band_distribution if radio_metrics else {},
-                    "channel_distribution": {str(k): v for k, v in radio_metrics.channel_distribution.items()} if radio_metrics else {},
-                    "channel_widths": {str(k): v for k, v in radio_metrics.channel_width_distribution.items()} if radio_metrics else {},
+                    "channel_distribution": (
+                        {str(k): v for k, v in radio_metrics.channel_distribution.items()}
+                        if radio_metrics
+                        else {}
+                    ),
+                    "channel_widths": (
+                        {str(k): v for k, v in radio_metrics.channel_width_distribution.items()}
+                        if radio_metrics
+                        else {}
+                    ),
                     "wifi_standards": radio_metrics.standard_distribution if radio_metrics else {},
-                    "tx_power": {
-                        "avg_dbm": radio_metrics.avg_tx_power,
-                        "min_dbm": radio_metrics.min_tx_power,
-                        "max_dbm": radio_metrics.max_tx_power
-                    } if radio_metrics and radio_metrics.avg_tx_power else None
-                }
+                    "tx_power": (
+                        {
+                            "avg_dbm": radio_metrics.avg_tx_power,
+                            "min_dbm": radio_metrics.min_tx_power,
+                            "max_dbm": radio_metrics.max_tx_power,
+                        }
+                        if radio_metrics and radio_metrics.avg_tx_power
+                        else None
+                    ),
+                },
             },
             "notes": {
                 "text_notes": [
@@ -265,7 +263,7 @@ class JSONExporter(BaseExporter):
                         "created_at": note.history.created_at if note.history else None,
                         "created_by": note.history.created_by if note.history else None,
                         "image_ids": note.image_ids,
-                        "status": note.status
+                        "status": note.status,
                     }
                     for note in project_data.notes
                 ],
@@ -273,70 +271,107 @@ class JSONExporter(BaseExporter):
                     {
                         "id": cable_note.id,
                         "floor_plan_id": cable_note.floor_plan_id,
-                        "floor_name": project_data.floors.get(cable_note.floor_plan_id).name if cable_note.floor_plan_id in project_data.floors else None,
-                        "points": [
-                            {"x": point.x, "y": point.y}
-                            for point in cable_note.points
-                        ],
+                        "floor_name": (
+                            project_data.floors.get(cable_note.floor_plan_id).name
+                            if cable_note.floor_plan_id in project_data.floors
+                            else None
+                        ),
+                        "points": [{"x": point.x, "y": point.y} for point in cable_note.points],
                         "color": cable_note.color,
                         "note_ids": cable_note.note_ids,
-                        "status": cable_note.status
+                        "status": cable_note.status,
                     }
                     for cable_note in project_data.cable_notes
                 ],
                 "picture_notes": [
                     {
                         "id": picture_note.id,
-                        "location": {
-                            "floor_plan_id": picture_note.location.floor_plan_id if picture_note.location else None,
-                            "floor_name": project_data.floors.get(picture_note.location.floor_plan_id).name if picture_note.location and picture_note.location.floor_plan_id in project_data.floors else None,
-                            "x": picture_note.location.x if picture_note.location else None,
-                            "y": picture_note.location.y if picture_note.location else None
-                        } if picture_note.location else None,
+                        "location": (
+                            {
+                                "floor_plan_id": (
+                                    picture_note.location.floor_plan_id
+                                    if picture_note.location
+                                    else None
+                                ),
+                                "floor_name": (
+                                    project_data.floors.get(
+                                        picture_note.location.floor_plan_id
+                                    ).name
+                                    if picture_note.location
+                                    and picture_note.location.floor_plan_id in project_data.floors
+                                    else None
+                                ),
+                                "x": picture_note.location.x if picture_note.location else None,
+                                "y": picture_note.location.y if picture_note.location else None,
+                            }
+                            if picture_note.location
+                            else None
+                        ),
                         "note_ids": picture_note.note_ids,
-                        "status": picture_note.status
+                        "status": picture_note.status,
                     }
                     for picture_note in project_data.picture_notes
                 ],
                 "summary": {
                     "total_text_notes": len(project_data.notes),
                     "total_cable_notes": len(project_data.cable_notes),
-                    "total_picture_notes": len(project_data.picture_notes)
+                    "total_picture_notes": len(project_data.picture_notes),
                 },
-                "cable_infrastructure": {
-                    "metrics": {
-                        "total_cables": cable_metrics.total_cables if cable_metrics else 0,
-                        "total_length_units": cable_metrics.total_length if cable_metrics else 0.0,
-                        "total_length_meters": cable_metrics.total_length_m if cable_metrics else None,
-                        "avg_length_units": cable_metrics.avg_length if cable_metrics else 0.0,
-                        "min_length_units": cable_metrics.min_length if cable_metrics else 0.0,
-                        "max_length_units": cable_metrics.max_length if cable_metrics else 0.0,
-                        "cables_by_floor": cable_metrics.cables_by_floor if cable_metrics else {},
-                        "length_by_floor_units": cable_metrics.length_by_floor if cable_metrics else {}
-                    },
-                    "bill_of_materials": cable_bom if cable_bom else []
-                } if cable_metrics else None
+                "cable_infrastructure": (
+                    {
+                        "metrics": {
+                            "total_cables": cable_metrics.total_cables if cable_metrics else 0,
+                            "total_length_units": (
+                                cable_metrics.total_length if cable_metrics else 0.0
+                            ),
+                            "total_length_meters": (
+                                cable_metrics.total_length_m if cable_metrics else None
+                            ),
+                            "avg_length_units": cable_metrics.avg_length if cable_metrics else 0.0,
+                            "min_length_units": cable_metrics.min_length if cable_metrics else 0.0,
+                            "max_length_units": cable_metrics.max_length if cable_metrics else 0.0,
+                            "cables_by_floor": (
+                                cable_metrics.cables_by_floor if cable_metrics else {}
+                            ),
+                            "length_by_floor_units": (
+                                cable_metrics.length_by_floor if cable_metrics else {}
+                            ),
+                        },
+                        "bill_of_materials": cable_bom if cable_bom else [],
+                    }
+                    if cable_metrics
+                    else None
+                ),
             },
             "network_settings": {
-                "ssid_configuration": NetworkSettingsProcessor.get_ssid_summary(project_data.network_settings) if project_data.network_settings else {},
-                "data_rates": NetworkSettingsProcessor.get_data_rate_summary(project_data.network_settings) if project_data.network_settings else {},
-                "bands": [
-                    {
-                        "frequency_band": setting.frequency_band,
-                        "number_of_ssids": setting.number_of_ssids,
-                        "rts_cts_enabled": setting.rts_cts_enabled,
-                        "max_associated_clients": setting.max_associated_clients,
-                        "data_rates": [
-                            {
-                                "rate": rate.rate,
-                                "state": rate.state
-                            }
-                            for rate in setting.data_rates
-                        ]
-                    }
-                    for setting in project_data.network_settings
-                ] if project_data.network_settings else []
-            }
+                "ssid_configuration": (
+                    NetworkSettingsProcessor.get_ssid_summary(project_data.network_settings)
+                    if project_data.network_settings
+                    else {}
+                ),
+                "data_rates": (
+                    NetworkSettingsProcessor.get_data_rate_summary(project_data.network_settings)
+                    if project_data.network_settings
+                    else {}
+                ),
+                "bands": (
+                    [
+                        {
+                            "frequency_band": setting.frequency_band,
+                            "number_of_ssids": setting.number_of_ssids,
+                            "rts_cts_enabled": setting.rts_cts_enabled,
+                            "max_associated_clients": setting.max_associated_clients,
+                            "data_rates": [
+                                {"rate": rate.rate, "state": rate.state}
+                                for rate in setting.data_rates
+                            ],
+                        }
+                        for setting in project_data.network_settings
+                    ]
+                    if project_data.network_settings
+                    else []
+                ),
+            },
         }
 
         return json_structure
@@ -358,14 +393,10 @@ class JSONExporter(BaseExporter):
                 {
                     "name": str(label),
                     "count": count,
-                    "percentage": round((count / total * 100) if total > 0 else 0, 2)
+                    "percentage": round((count / total * 100) if total > 0 else 0, 2),
                 }
-                for label, count in sorted(
-                    grouped_data.items(),
-                    key=lambda x: x[1],
-                    reverse=True
-                )
-            ]
+                for label, count in sorted(grouped_data.items(), key=lambda x: x[1], reverse=True)
+            ],
         }
 
 

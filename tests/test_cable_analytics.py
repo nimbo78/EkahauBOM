@@ -17,7 +17,7 @@ class TestCableAnalytics:
         """Create sample floors dictionary."""
         return {
             "floor1": Floor(id="floor1", name="Floor 1"),
-            "floor2": Floor(id="floor2", name="Floor 2")
+            "floor2": Floor(id="floor2", name="Floor 2"),
         }
 
     def test_calculate_cable_length_empty(self):
@@ -28,46 +28,27 @@ class TestCableAnalytics:
 
     def test_calculate_cable_length_single_point(self):
         """Test cable length calculation with single point."""
-        cable = CableNote(
-            id="cable1",
-            points=[Point(x=100.0, y=200.0)]
-        )
+        cable = CableNote(id="cable1", points=[Point(x=100.0, y=200.0)])
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 0.0
 
     def test_calculate_cable_length_two_points(self):
         """Test cable length calculation with two points."""
         cable = CableNote(
-            id="cable1",
-            points=[
-                Point(x=0.0, y=0.0),
-                Point(x=3.0, y=4.0)  # 3-4-5 right triangle
-            ]
+            id="cable1", points=[Point(x=0.0, y=0.0), Point(x=3.0, y=4.0)]  # 3-4-5 right triangle
         )
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 5.0
 
     def test_calculate_cable_length_horizontal_line(self):
         """Test cable length for horizontal line."""
-        cable = CableNote(
-            id="cable1",
-            points=[
-                Point(x=0.0, y=0.0),
-                Point(x=100.0, y=0.0)
-            ]
-        )
+        cable = CableNote(id="cable1", points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)])
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 100.0
 
     def test_calculate_cable_length_vertical_line(self):
         """Test cable length for vertical line."""
-        cable = CableNote(
-            id="cable1",
-            points=[
-                Point(x=0.0, y=0.0),
-                Point(x=0.0, y=100.0)
-            ]
-        )
+        cable = CableNote(id="cable1", points=[Point(x=0.0, y=0.0), Point(x=0.0, y=100.0)])
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 100.0
 
@@ -79,8 +60,8 @@ class TestCableAnalytics:
                 Point(x=0.0, y=0.0),
                 Point(x=10.0, y=0.0),  # 10 units
                 Point(x=10.0, y=10.0),  # 10 units
-                Point(x=0.0, y=10.0)  # 10 units
-            ]
+                Point(x=0.0, y=10.0),  # 10 units
+            ],
         )
         length = CableAnalytics.calculate_cable_length(cable)
         assert length == 30.0
@@ -89,10 +70,7 @@ class TestCableAnalytics:
         """Test cable length with diagonal segment."""
         cable = CableNote(
             id="cable1",
-            points=[
-                Point(x=0.0, y=0.0),
-                Point(x=10.0, y=10.0)  # sqrt(200) = 14.142...
-            ]
+            points=[Point(x=0.0, y=0.0), Point(x=10.0, y=10.0)],  # sqrt(200) = 14.142...
         )
         length = CableAnalytics.calculate_cable_length(cable)
         expected = math.sqrt(200)
@@ -111,10 +89,7 @@ class TestCableAnalytics:
             CableNote(
                 id="cable1",
                 floor_plan_id="floor1",
-                points=[
-                    Point(x=0.0, y=0.0),
-                    Point(x=100.0, y=0.0)
-                ]
+                points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)],
             )
         ]
         metrics = CableAnalytics.calculate_cable_metrics(cables, sample_floors)
@@ -133,18 +108,18 @@ class TestCableAnalytics:
             CableNote(
                 id="cable1",
                 floor_plan_id="floor1",
-                points=[Point(x=0.0, y=0.0), Point(x=50.0, y=0.0)]
+                points=[Point(x=0.0, y=0.0), Point(x=50.0, y=0.0)],
             ),
             CableNote(
                 id="cable2",
                 floor_plan_id="floor1",
-                points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)]
+                points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)],
             ),
             CableNote(
                 id="cable3",
                 floor_plan_id="floor2",
-                points=[Point(x=0.0, y=0.0), Point(x=75.0, y=0.0)]
-            )
+                points=[Point(x=0.0, y=0.0), Point(x=75.0, y=0.0)],
+            ),
         ]
         metrics = CableAnalytics.calculate_cable_metrics(cables, sample_floors)
 
@@ -163,15 +138,11 @@ class TestCableAnalytics:
             CableNote(
                 id="cable1",
                 floor_plan_id="floor1",
-                points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)]
+                points=[Point(x=0.0, y=0.0), Point(x=100.0, y=0.0)],
             )
         ]
         # Scale factor: 10 units = 1 meter
-        metrics = CableAnalytics.calculate_cable_metrics(
-            cables,
-            sample_floors,
-            scale_factor=10.0
-        )
+        metrics = CableAnalytics.calculate_cable_metrics(cables, sample_floors, scale_factor=10.0)
 
         assert metrics.total_length == 100.0
         assert metrics.total_length_m == 10.0  # 100 / 10
@@ -179,11 +150,7 @@ class TestCableAnalytics:
 
     def test_estimate_cable_cost_no_meters(self):
         """Test cable cost estimation without meters."""
-        metrics = CableMetrics(
-            total_cables=10,
-            total_length=1000.0,
-            total_length_m=None
-        )
+        metrics = CableMetrics(total_cables=10, total_length=1000.0, total_length_m=None)
         cost = CableAnalytics.estimate_cable_cost(metrics)
 
         assert cost["cable_material"] == 0.0
@@ -192,11 +159,7 @@ class TestCableAnalytics:
 
     def test_estimate_cable_cost_with_defaults(self):
         """Test cable cost estimation with default prices."""
-        metrics = CableMetrics(
-            total_cables=1,
-            total_length=100.0,
-            total_length_m=10.0
-        )
+        metrics = CableMetrics(total_cables=1, total_length=100.0, total_length_m=10.0)
         cost = CableAnalytics.estimate_cable_cost(metrics)
 
         # Default: $2/m cable, $5/m installation, 1.2x overage
@@ -213,16 +176,9 @@ class TestCableAnalytics:
 
     def test_estimate_cable_cost_custom_prices(self):
         """Test cable cost estimation with custom prices."""
-        metrics = CableMetrics(
-            total_cables=1,
-            total_length=100.0,
-            total_length_m=10.0
-        )
+        metrics = CableMetrics(total_cables=1, total_length=100.0, total_length_m=10.0)
         cost = CableAnalytics.estimate_cable_cost(
-            metrics,
-            cost_per_meter=3.0,
-            installation_cost_per_meter=10.0,
-            overage_factor=1.5
+            metrics, cost_per_meter=3.0, installation_cost_per_meter=10.0, overage_factor=1.5
         )
 
         expected_cable = 10.0 * 1.5 * 3.0  # 45.0
@@ -235,11 +191,7 @@ class TestCableAnalytics:
 
     def test_generate_cable_bom_no_meters(self):
         """Test BOM generation without length in meters."""
-        metrics = CableMetrics(
-            total_cables=5,
-            total_length=500.0,
-            total_length_m=None
-        )
+        metrics = CableMetrics(total_cables=5, total_length=500.0, total_length_m=None)
         bom = CableAnalytics.generate_cable_bom(metrics)
 
         # Should have connectors and routes, but no cable length
@@ -253,11 +205,7 @@ class TestCableAnalytics:
 
     def test_generate_cable_bom_with_meters(self):
         """Test BOM generation with length in meters."""
-        metrics = CableMetrics(
-            total_cables=5,
-            total_length=500.0,
-            total_length_m=50.5
-        )
+        metrics = CableMetrics(total_cables=5, total_length=500.0, total_length_m=50.5)
         bom = CableAnalytics.generate_cable_bom(metrics, cable_type="Cat6A UTP")
 
         assert len(bom) == 3  # Cable length + connectors + routes
@@ -269,15 +217,9 @@ class TestCableAnalytics:
 
     def test_generate_cable_bom_custom_connector_count(self):
         """Test BOM generation with custom connector count."""
-        metrics = CableMetrics(
-            total_cables=3,
-            total_length=300.0,
-            total_length_m=30.0
-        )
+        metrics = CableMetrics(total_cables=3, total_length=300.0, total_length_m=30.0)
         bom = CableAnalytics.generate_cable_bom(
-            metrics,
-            connector_type="GG45",
-            connectors_per_cable=4
+            metrics, connector_type="GG45", connectors_per_cable=4
         )
 
         connector_item = next(item for item in bom if "Connectors" in item["description"])
@@ -286,11 +228,7 @@ class TestCableAnalytics:
 
     def test_cable_metrics_dataclass(self):
         """Test CableMetrics dataclass initialization."""
-        metrics = CableMetrics(
-            total_cables=10,
-            total_length=1000.0,
-            avg_length=100.0
-        )
+        metrics = CableMetrics(total_cables=10, total_length=1000.0, avg_length=100.0)
 
         assert metrics.total_cables == 10
         assert metrics.total_length == 1000.0

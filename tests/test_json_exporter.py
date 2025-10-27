@@ -7,21 +7,52 @@ import json
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.json_exporter import JSONExporter, CompactJSONExporter
-from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, Radio, CableNote, ProjectMetadata
+from ekahau_bom.models import (
+    ProjectData,
+    AccessPoint,
+    Antenna,
+    Tag,
+    Floor,
+    Radio,
+    CableNote,
+    ProjectMetadata,
+)
 
 
 @pytest.fixture
 def sample_project_data():
     """Create sample project data for testing."""
     aps = [
-        AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
-                   tags=[Tag("Location", "Building A", "tag1")]),
-        AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1",
-                   tags=[Tag("Location", "Building A", "tag1")]),
-        AccessPoint(id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2", tags=[]),
-        AccessPoint(id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]),
-        AccessPoint(id="ap5", vendor="Aruba", model="AP-635", color="Blue", floor_name="Floor 2",
-                   tags=[Tag("Location", "Building B", "tag2")]),
+        AccessPoint(
+            id="ap1",
+            vendor="Cisco",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            tags=[Tag("Location", "Building A", "tag1")],
+        ),
+        AccessPoint(
+            id="ap2",
+            vendor="Cisco",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            tags=[Tag("Location", "Building A", "tag1")],
+        ),
+        AccessPoint(
+            id="ap3", vendor="Cisco", model="AP-635", color="Red", floor_name="Floor 2", tags=[]
+        ),
+        AccessPoint(
+            id="ap4", vendor="Aruba", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+        ),
+        AccessPoint(
+            id="ap5",
+            vendor="Aruba",
+            model="AP-635",
+            color="Blue",
+            floor_name="Floor 2",
+            tags=[Tag("Location", "Building B", "tag2")],
+        ),
     ]
     antennas = [
         Antenna("ANT-2513P4M-N-R", "ant1"),
@@ -33,10 +64,7 @@ def sample_project_data():
         "floor2": Floor("floor2", "Floor 2"),
     }
     return ProjectData(
-        access_points=aps,
-        antennas=antennas,
-        floors=floors,
-        project_name="Test Project"
+        access_points=aps, antennas=antennas, floors=floors, project_name="Test Project"
     )
 
 
@@ -50,7 +78,7 @@ class TestJSONExporter:
 
         assert len(files) == 1
         assert files[0].exists()
-        assert files[0].suffix == '.json'
+        assert files[0].suffix == ".json"
         assert "Test Project" in files[0].name
 
     def test_format_name(self, tmp_path):
@@ -63,7 +91,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert isinstance(data, dict)
@@ -73,7 +101,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "metadata" in data
@@ -86,7 +114,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "summary" in data
@@ -100,7 +128,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "floors" in data
@@ -116,7 +144,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "access_points" in data
@@ -138,7 +166,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "details" in data["access_points"]
@@ -150,7 +178,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Check that some APs have tags
@@ -170,7 +198,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "antennas" in data
@@ -189,7 +217,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert "analytics" in data
@@ -203,7 +231,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         vendor_analytics = data["analytics"]["by_vendor"]
@@ -223,7 +251,7 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         vendor_analytics = data["analytics"]["by_vendor"]
@@ -237,32 +265,32 @@ class TestJSONExporter:
         exporter = JSONExporter(tmp_path, indent=2)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for indentation (newlines and spaces)
-        assert '\n' in content
-        assert '  ' in content  # 2-space indentation
+        assert "\n" in content
+        assert "  " in content  # 2-space indentation
 
     def test_compact_json_exporter(self, sample_project_data, tmp_path):
         """Test compact JSON exporter."""
         exporter = CompactJSONExporter(tmp_path)
         files = exporter.export(sample_project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             content = f.read()
 
         # Compact JSON should have fewer newlines
-        compact_newlines = content.count('\n')
+        compact_newlines = content.count("\n")
 
         # Compare with pretty-printed
         pretty_exporter = JSONExporter(tmp_path, indent=2)
         pretty_files = pretty_exporter.export(sample_project_data)
 
-        with open(pretty_files[0], 'r', encoding='utf-8') as f:
+        with open(pretty_files[0], "r", encoding="utf-8") as f:
             pretty_content = f.read()
 
-        pretty_newlines = pretty_content.count('\n')
+        pretty_newlines = pretty_content.count("\n")
 
         assert compact_newlines < pretty_newlines
 
@@ -274,10 +302,7 @@ class TestJSONExporter:
     def test_empty_project(self, tmp_path):
         """Test export with empty project."""
         project_data = ProjectData(
-            access_points=[],
-            antennas=[],
-            floors={},
-            project_name="Empty Project"
+            access_points=[], antennas=[], floors={}, project_name="Empty Project"
         )
 
         exporter = JSONExporter(tmp_path)
@@ -286,7 +311,7 @@ class TestJSONExporter:
         assert len(files) == 1
         assert files[0].exists()
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         assert data["summary"]["total_access_points"] == 0
@@ -296,41 +321,47 @@ class TestJSONExporter:
     def test_json_special_characters(self, tmp_path):
         """Test that special characters are properly handled in JSON."""
         aps = [
-            AccessPoint("Test\"Vendor", "Model'123", None, "Floor\n1",
-                       tags=[Tag("Key&1", "Value<2>", "tag1")]),
+            AccessPoint(
+                'Test"Vendor',
+                "Model'123",
+                None,
+                "Floor\n1",
+                tags=[Tag("Key&1", "Value<2>", "tag1")],
+            ),
         ]
         project_data = ProjectData(
-            access_points=aps,
-            antennas=[],
-            floors={},
-            project_name="Test\"Project"
+            access_points=aps, antennas=[], floors={}, project_name='Test"Project'
         )
 
         exporter = JSONExporter(tmp_path)
         files = exporter.export(project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Should be able to parse without errors
-        assert data["metadata"]["file_name"] == "Test\"Project"
+        assert data["metadata"]["file_name"] == 'Test"Project'
 
     def test_json_unicode_support(self, tmp_path):
         """Test that JSON supports Unicode characters."""
         aps = [
-            AccessPoint(id="ap1", vendor="Тест", model="モデル-123", color="Yellow", floor_name="第1層", tags=[]),
+            AccessPoint(
+                id="ap1",
+                vendor="Тест",
+                model="モデル-123",
+                color="Yellow",
+                floor_name="第1層",
+                tags=[],
+            ),
         ]
         project_data = ProjectData(
-            access_points=aps,
-            antennas=[],
-            floors={},
-            project_name="テストプロジェクト"
+            access_points=aps, antennas=[], floors={}, project_name="テストプロジェクト"
         )
 
         exporter = JSONExporter(tmp_path)
         files = exporter.export(project_data)  # Use project_data instead of sample_project_data
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Should handle Unicode without errors
@@ -338,55 +369,55 @@ class TestJSONExporter:
 
     def test_json_with_metadata(self, tmp_path):
         """Test JSON export with project metadata."""
-        aps = [AccessPoint(id='ap1', vendor='Cisco', model='AP-515', color='Yellow', floor_name='Floor 1')]
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+            )
+        ]
         metadata = ProjectMetadata(
-            name='Test Project',
-            customer='Test Customer',
-            location='Test Location',
-            responsible_person='Test Person',
-            schema_version='1.0',
-            note_ids=['note1', 'note2'],
-            project_ancestors=['ancestor1']
+            name="Test Project",
+            customer="Test Customer",
+            location="Test Location",
+            responsible_person="Test Person",
+            schema_version="1.0",
+            note_ids=["note1", "note2"],
+            project_ancestors=["ancestor1"],
         )
         project_data = ProjectData(
-            access_points=aps,
-            antennas=[],
-            floors={},
-            project_name='Test',
-            metadata=metadata
+            access_points=aps, antennas=[], floors={}, project_name="Test", metadata=metadata
         )
 
         exporter = JSONExporter(tmp_path)
         files = exporter.export(project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Check metadata section
-        assert 'metadata' in data
-        assert 'project_info' in data['metadata']
-        project_info = data['metadata']['project_info']
-        assert project_info['project_name'] == 'Test Project'
-        assert project_info['customer'] == 'Test Customer'
-        assert project_info['location'] == 'Test Location'
-        assert project_info['responsible_person'] == 'Test Person'
-        assert project_info['schema_version'] == '1.0'
-        assert project_info['note_ids'] == ['note1', 'note2']
-        assert project_info['project_ancestors'] == ['ancestor1']
+        assert "metadata" in data
+        assert "project_info" in data["metadata"]
+        project_info = data["metadata"]["project_info"]
+        assert project_info["project_name"] == "Test Project"
+        assert project_info["customer"] == "Test Customer"
+        assert project_info["location"] == "Test Location"
+        assert project_info["responsible_person"] == "Test Person"
+        assert project_info["schema_version"] == "1.0"
+        assert project_info["note_ids"] == ["note1", "note2"]
+        assert project_info["project_ancestors"] == ["ancestor1"]
 
     def test_json_with_radios(self, tmp_path):
         """Test JSON export with radios data."""
-        aps = [AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1")]
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+            )
+        ]
         radios = [
             Radio(id="radio1", access_point_id="ap1", frequency_band="2.4GHz"),
-            Radio(id="radio2", access_point_id="ap1", frequency_band="5GHz")
+            Radio(id="radio2", access_point_id="ap1", frequency_band="5GHz"),
         ]
         project_data = ProjectData(
-            access_points=aps,
-            antennas=[],
-            floors={},
-            project_name="Test",
-            radios=radios
+            access_points=aps, antennas=[], floors={}, project_name="Test", radios=radios
         )
 
         exporter = JSONExporter(tmp_path)
@@ -398,23 +429,26 @@ class TestJSONExporter:
         # Check that radios data is processed (radio metrics should be calculated)
         assert "summary" in data
 
-
         exporter = JSONExporter(tmp_path)
         files = exporter.export(project_data)
 
-        with open(files[0], 'r', encoding='utf-8') as f:
+        with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Check that radios data is processed (radio metrics should be calculated)
-        assert 'summary' in data
+        assert "summary" in data
         # Radio metrics would be in analytics if present
 
     def test_json_with_cable_notes(self, tmp_path):
         """Test JSON export with cable notes."""
-        aps = [AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1")]
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+            )
+        ]
         cable_notes = [
             CableNote(id="cable1", floor_plan_id="floor1"),
-            CableNote(id="cable2", floor_plan_id="floor1")
+            CableNote(id="cable2", floor_plan_id="floor1"),
         ]
         floors = {"floor1": Floor("floor1", "Floor 1")}
         project_data = ProjectData(
@@ -422,7 +456,7 @@ class TestJSONExporter:
             antennas=[],
             floors=floors,
             project_name="Test",
-            cable_notes=cable_notes
+            cable_notes=cable_notes,
         )
 
         exporter = JSONExporter(tmp_path)

@@ -43,10 +43,10 @@ class ExcelExporter(BaseExporter):
 
     # Borders
     THIN_BORDER = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
     )
 
     @property
@@ -67,8 +67,7 @@ class ExcelExporter(BaseExporter):
             IOError: If file writing fails
         """
         output_file = self._get_output_filename(
-            project_data.project_name,
-            f"{project_data.project_name}.xlsx"
+            project_data.project_name, f"{project_data.project_name}.xlsx"
         )
 
         logger.info(f"Creating Excel file: {output_file}")
@@ -77,13 +76,15 @@ class ExcelExporter(BaseExporter):
         wb = Workbook()
 
         # Remove default sheet
-        if 'Sheet' in wb.sheetnames:
-            wb.remove(wb['Sheet'])
+        if "Sheet" in wb.sheetnames:
+            wb.remove(wb["Sheet"])
 
         # Create sheets in order
         self._create_summary_sheet(wb, project_data)
         self._create_access_points_sheet(wb, project_data.access_points, project_data.project_name)
-        self._create_detailed_access_points_sheet(wb, project_data.access_points, project_data.project_name)
+        self._create_detailed_access_points_sheet(
+            wb, project_data.access_points, project_data.project_name
+        )
         self._create_antennas_sheet(wb, project_data.antennas, project_data.project_name)
         self._create_grouped_sheets(wb, project_data.access_points)
 
@@ -155,9 +156,11 @@ class ExcelExporter(BaseExporter):
             ws: Worksheet
             row: Row number to freeze (all rows above will be frozen)
         """
-        ws.freeze_panes = ws[f'A{row}']
+        ws.freeze_panes = ws[f"A{row}"]
 
-    def _apply_borders(self, ws, min_row: int = 1, max_row: int = None, min_col: int = 1, max_col: int = None):
+    def _apply_borders(
+        self, ws, min_row: int = 1, max_row: int = None, min_col: int = 1, max_col: int = None
+    ):
         """Apply borders to range of cells.
 
         Args:
@@ -172,8 +175,7 @@ class ExcelExporter(BaseExporter):
         if max_col is None:
             max_col = ws.max_column
 
-        for row in ws.iter_rows(min_row=min_row, max_row=max_row,
-                                min_col=min_col, max_col=max_col):
+        for row in ws.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
             for cell in row:
                 cell.border = self.THIN_BORDER
 
@@ -187,118 +189,120 @@ class ExcelExporter(BaseExporter):
         ws = wb.create_sheet("Summary", 0)
 
         # Title
-        ws['A1'] = "Project Summary"
-        ws['A1'].font = Font(bold=True, size=14, color="366092")
-        ws.merge_cells('A1:B1')
+        ws["A1"] = "Project Summary"
+        ws["A1"].font = Font(bold=True, size=14, color="366092")
+        ws.merge_cells("A1:B1")
 
         row = 3
 
         # Project metadata section (if available)
         if project_data.metadata:
-            ws[f'A{row}'] = "Project Information"
-            ws[f'A{row}'].font = self.SECTION_FONT
+            ws[f"A{row}"] = "Project Information"
+            ws[f"A{row}"].font = self.SECTION_FONT
             row += 1
 
             if project_data.metadata.name:
-                ws[f'A{row}'] = "Project Name:"
-                ws[f'B{row}'] = project_data.metadata.name
-                ws[f'A{row}'].font = Font(bold=True)
+                ws[f"A{row}"] = "Project Name:"
+                ws[f"B{row}"] = project_data.metadata.name
+                ws[f"A{row}"].font = Font(bold=True)
                 row += 1
 
             if project_data.metadata.customer:
-                ws[f'A{row}'] = "Customer:"
-                ws[f'B{row}'] = project_data.metadata.customer
-                ws[f'A{row}'].font = Font(bold=True)
+                ws[f"A{row}"] = "Customer:"
+                ws[f"B{row}"] = project_data.metadata.customer
+                ws[f"A{row}"].font = Font(bold=True)
                 row += 1
 
             if project_data.metadata.location:
-                ws[f'A{row}'] = "Location:"
-                ws[f'B{row}'] = project_data.metadata.location
-                ws[f'A{row}'].font = Font(bold=True)
+                ws[f"A{row}"] = "Location:"
+                ws[f"B{row}"] = project_data.metadata.location
+                ws[f"A{row}"].font = Font(bold=True)
                 row += 1
 
             if project_data.metadata.responsible_person:
-                ws[f'A{row}'] = "Responsible Person:"
-                ws[f'B{row}'] = project_data.metadata.responsible_person
-                ws[f'A{row}'].font = Font(bold=True)
+                ws[f"A{row}"] = "Responsible Person:"
+                ws[f"B{row}"] = project_data.metadata.responsible_person
+                ws[f"A{row}"].font = Font(bold=True)
                 row += 1
 
             if project_data.metadata.schema_version:
-                ws[f'A{row}'] = "Schema Version:"
-                ws[f'B{row}'] = project_data.metadata.schema_version
-                ws[f'A{row}'].font = Font(bold=True)
+                ws[f"A{row}"] = "Schema Version:"
+                ws[f"B{row}"] = project_data.metadata.schema_version
+                ws[f"A{row}"].font = Font(bold=True)
                 row += 1
 
             row += 1  # Add spacing
 
         # Project statistics section
-        ws[f'A{row}'] = "Project Statistics"
-        ws[f'A{row}'].font = self.SECTION_FONT
+        ws[f"A{row}"] = "Project Statistics"
+        ws[f"A{row}"].font = self.SECTION_FONT
         row += 1
 
-        ws[f'A{row}'] = "File Name:"
-        ws[f'B{row}'] = project_data.project_name
-        ws[f'A{row}'].font = Font(bold=True)
+        ws[f"A{row}"] = "File Name:"
+        ws[f"B{row}"] = project_data.project_name
+        ws[f"A{row}"].font = Font(bold=True)
 
         row += 1
-        ws[f'A{row}'] = "Total Access Points:"
-        ws[f'B{row}'] = len(project_data.access_points)
-        ws[f'A{row}'].font = Font(bold=True)
+        ws[f"A{row}"] = "Total Access Points:"
+        ws[f"B{row}"] = len(project_data.access_points)
+        ws[f"A{row}"].font = Font(bold=True)
 
         row += 1
-        ws[f'A{row}'] = "Total Antennas:"
-        ws[f'B{row}'] = len(project_data.antennas)
-        ws[f'A{row}'].font = Font(bold=True)
+        ws[f"A{row}"] = "Total Antennas:"
+        ws[f"B{row}"] = len(project_data.antennas)
+        ws[f"A{row}"].font = Font(bold=True)
 
         row += 1
-        ws[f'A{row}'] = "Unique AP Models:"
+        ws[f"A{row}"] = "Unique AP Models:"
         unique_models = len(set(ap.model for ap in project_data.access_points))
-        ws[f'B{row}'] = unique_models
-        ws[f'A{row}'].font = Font(bold=True)
+        ws[f"B{row}"] = unique_models
+        ws[f"A{row}"].font = Font(bold=True)
 
         # Statistics by vendor
         row += 2
-        ws[f'A{row}'] = "Distribution by Vendor"
-        ws[f'A{row}'].font = self.SECTION_FONT
+        ws[f"A{row}"] = "Distribution by Vendor"
+        ws[f"A{row}"].font = self.SECTION_FONT
 
         row += 1
         vendor_counts = Counter(ap.vendor for ap in project_data.access_points)
-        ws[f'A{row}'] = "Vendor"
-        ws[f'B{row}'] = "Count"
-        ws[f'C{row}'] = "Percentage"
+        ws[f"A{row}"] = "Vendor"
+        ws[f"B{row}"] = "Count"
+        ws[f"C{row}"] = "Percentage"
         self._apply_header_style(ws, row)
 
         total_aps = len(project_data.access_points)
         for vendor, count in sorted(vendor_counts.items(), key=lambda x: x[1], reverse=True):
             row += 1
             percentage = (count / total_aps * 100) if total_aps > 0 else 0
-            ws[f'A{row}'] = vendor
-            ws[f'B{row}'] = count
-            ws[f'C{row}'] = f"{percentage:.1f}%"
+            ws[f"A{row}"] = vendor
+            ws[f"B{row}"] = count
+            ws[f"C{row}"] = f"{percentage:.1f}%"
 
         # Statistics by floor
         row += 2
-        ws[f'A{row}'] = "Distribution by Floor"
-        ws[f'A{row}'].font = self.SECTION_FONT
+        ws[f"A{row}"] = "Distribution by Floor"
+        ws[f"A{row}"].font = self.SECTION_FONT
 
         row += 1
         floor_counts = Counter(ap.floor_name for ap in project_data.access_points)
-        ws[f'A{row}'] = "Floor"
-        ws[f'B{row}'] = "Count"
-        ws[f'C{row}'] = "Percentage"
+        ws[f"A{row}"] = "Floor"
+        ws[f"B{row}"] = "Count"
+        ws[f"C{row}"] = "Percentage"
         self._apply_header_style(ws, row)
 
         for floor, count in sorted(floor_counts.items(), key=lambda x: x[1], reverse=True):
             row += 1
             percentage = (count / total_aps * 100) if total_aps > 0 else 0
-            ws[f'A{row}'] = floor
-            ws[f'B{row}'] = count
-            ws[f'C{row}'] = f"{percentage:.1f}%"
+            ws[f"A{row}"] = floor
+            ws[f"B{row}"] = count
+            ws[f"C{row}"] = f"{percentage:.1f}%"
 
         # Auto-size columns
         self._auto_size_columns(ws)
 
-    def _create_access_points_sheet(self, wb: Workbook, access_points: list[AccessPoint], project_name: str):
+    def _create_access_points_sheet(
+        self, wb: Workbook, access_points: list[AccessPoint], project_name: str
+    ):
         """Create detailed access points sheet.
 
         Args:
@@ -315,13 +319,14 @@ class ExcelExporter(BaseExporter):
 
         # Group and count APs
         ap_tuples = [
-            (ap.vendor, ap.model, ap.floor_name, ap.color,
-             frozenset(str(tag) for tag in ap.tags))
+            (ap.vendor, ap.model, ap.floor_name, ap.color, frozenset(str(tag) for tag in ap.tags))
             for ap in access_points
         ]
         ap_counts = Counter(ap_tuples)
 
-        logger.info(f"Exporting {len(access_points)} access points ({len(ap_counts)} unique) to Excel")
+        logger.info(
+            f"Exporting {len(access_points)} access points ({len(ap_counts)} unique) to Excel"
+        )
 
         # Write data
         for (vendor, model, floor, color, tags), count in sorted(ap_counts.items()):
@@ -334,7 +339,9 @@ class ExcelExporter(BaseExporter):
         self._freeze_header(ws)
         self._apply_borders(ws)
 
-    def _create_detailed_access_points_sheet(self, wb: Workbook, access_points: list[AccessPoint], project_name: str):
+    def _create_detailed_access_points_sheet(
+        self, wb: Workbook, access_points: list[AccessPoint], project_name: str
+    ):
         """Create detailed access points sheet with installation parameters.
 
         Each row represents a single access point with all its properties including
@@ -360,17 +367,23 @@ class ExcelExporter(BaseExporter):
             "Tilt (°)",
             "Color",
             "Tags",
-            "Enabled"
+            "Enabled",
         ]
         ws.append(headers)
         self._apply_header_style(ws)
 
-        logger.info(f"Exporting {len(access_points)} access points with detailed installation parameters")
+        logger.info(
+            f"Exporting {len(access_points)} access points with detailed installation parameters"
+        )
 
         # Write data - one row per AP
         for ap in access_points:
             # Format tags as "Key1:Value1; Key2:Value2"
-            tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)) if ap.tags else ""
+            tags_str = (
+                "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key))
+                if ap.tags
+                else ""
+            )
 
             # Prepare numeric values (will be None if not set)
             location_x = ap.location_x if ap.location_x is not None else None
@@ -379,20 +392,22 @@ class ExcelExporter(BaseExporter):
             azimuth = ap.azimuth if ap.azimuth is not None else None
             tilt = ap.tilt if ap.tilt is not None else None
 
-            ws.append([
-                ap.name or "",
-                ap.vendor,
-                ap.model,
-                ap.floor_name,
-                location_x,
-                location_y,
-                mounting_height,
-                azimuth,
-                tilt,
-                ap.color or "",
-                tags_str,
-                "Yes" if ap.enabled else "No"
-            ])
+            ws.append(
+                [
+                    ap.name or "",
+                    ap.vendor,
+                    ap.model,
+                    ap.floor_name,
+                    location_x,
+                    location_y,
+                    mounting_height,
+                    azimuth,
+                    tilt,
+                    ap.color or "",
+                    tags_str,
+                    "Yes" if ap.enabled else "No",
+                ]
+            )
 
         # Apply formatting
         self._auto_size_columns(ws)
@@ -404,17 +419,17 @@ class ExcelExporter(BaseExporter):
         for row in range(2, ws.max_row + 1):  # Skip header row
             # Location X, Y (columns 5, 6) - 2 decimal places
             if ws.cell(row, 5).value is not None:
-                ws.cell(row, 5).number_format = '0.00'
+                ws.cell(row, 5).number_format = "0.00"
             if ws.cell(row, 6).value is not None:
-                ws.cell(row, 6).number_format = '0.00'
+                ws.cell(row, 6).number_format = "0.00"
             # Mounting Height (column 7) - 2 decimal places
             if ws.cell(row, 7).value is not None:
-                ws.cell(row, 7).number_format = '0.00'
+                ws.cell(row, 7).number_format = "0.00"
             # Azimuth, Tilt (columns 8, 9) - 1 decimal place
             if ws.cell(row, 8).value is not None:
-                ws.cell(row, 8).number_format = '0.0'
+                ws.cell(row, 8).number_format = "0.0"
             if ws.cell(row, 9).value is not None:
-                ws.cell(row, 9).number_format = '0.0'
+                ws.cell(row, 9).number_format = "0.0"
 
         logger.info("Detailed AP installation sheet created")
 
@@ -455,7 +470,7 @@ class ExcelExporter(BaseExporter):
         sheet_name: str,
         grouped_data: dict[str, int],
         dimension_name: str,
-        add_chart: bool = True
+        add_chart: bool = True,
     ):
         """Create a grouped sheet with counts, percentages, and optional chart.
 
@@ -664,7 +679,7 @@ class ExcelExporter(BaseExporter):
             chart.x_axis.title = "Height Range"
 
             # Data references
-            data = Reference(ws, min_col=2, min_row=dist_start_row-1, max_row=dist_end_row)
+            data = Reference(ws, min_col=2, min_row=dist_start_row - 1, max_row=dist_end_row)
             categories = Reference(ws, min_col=1, min_row=dist_start_row, max_row=dist_end_row)
 
             chart.add_data(data, titles_from_data=True)
@@ -703,7 +718,9 @@ class ExcelExporter(BaseExporter):
         ws.cell(row, 2, installation_summary["aps_requiring_height_adjustment"])
         # Highlight if there are APs requiring adjustment
         if installation_summary["aps_requiring_height_adjustment"] > 0:
-            ws.cell(row, 2).fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+            ws.cell(row, 2).fill = PatternFill(
+                start_color="FFC7CE", end_color="FFC7CE", fill_type="solid"
+            )
         row += 1
 
         # Apply borders to summary table
@@ -768,7 +785,11 @@ class ExcelExporter(BaseExporter):
                 row += 1
 
                 for band, count in sorted(radio_metrics.band_distribution.items()):
-                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    percentage = (
+                        (count / radio_metrics.total_radios * 100)
+                        if radio_metrics.total_radios > 0
+                        else 0
+                    )
                     ws.cell(row, 1, band)
                     ws.cell(row, 2, count)
                     ws.cell(row, 3, f"{percentage:.1f}%")
@@ -781,7 +802,9 @@ class ExcelExporter(BaseExporter):
                 if band_end_row >= band_start_row:
                     chart = PieChart()
                     chart.title = "Frequency Band Distribution"
-                    data = Reference(ws, min_col=2, min_row=band_start_row-1, max_row=band_end_row)
+                    data = Reference(
+                        ws, min_col=2, min_row=band_start_row - 1, max_row=band_end_row
+                    )
                     labels = Reference(ws, min_col=1, min_row=band_start_row, max_row=band_end_row)
                     chart.add_data(data, titles_from_data=True)
                     chart.set_categories(labels)
@@ -805,7 +828,11 @@ class ExcelExporter(BaseExporter):
                 row += 1
 
                 for standard, count in sorted(radio_metrics.standard_distribution.items()):
-                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    percentage = (
+                        (count / radio_metrics.total_radios * 100)
+                        if radio_metrics.total_radios > 0
+                        else 0
+                    )
                     ws.cell(row, 1, standard)
                     ws.cell(row, 2, count)
                     ws.cell(row, 3, f"{percentage:.1f}%")
@@ -819,8 +846,12 @@ class ExcelExporter(BaseExporter):
                     chart = BarChart()
                     chart.title = "Wi-Fi Standards Distribution"
                     chart.y_axis.title = "Number of Radios"
-                    data = Reference(ws, min_col=2, min_row=standard_start_row-1, max_row=standard_end_row)
-                    categories = Reference(ws, min_col=1, min_row=standard_start_row, max_row=standard_end_row)
+                    data = Reference(
+                        ws, min_col=2, min_row=standard_start_row - 1, max_row=standard_end_row
+                    )
+                    categories = Reference(
+                        ws, min_col=1, min_row=standard_start_row, max_row=standard_end_row
+                    )
                     chart.add_data(data, titles_from_data=True)
                     chart.set_categories(categories)
                     chart.height = 10

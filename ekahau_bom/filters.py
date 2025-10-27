@@ -18,10 +18,7 @@ class APFilter:
     """
 
     @staticmethod
-    def by_floors(
-        access_points: list[AccessPoint],
-        floors: list[str]
-    ) -> list[AccessPoint]:
+    def by_floors(access_points: list[AccessPoint], floors: list[str]) -> list[AccessPoint]:
         """Filter access points by floor names.
 
         Args:
@@ -35,14 +32,13 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.floor_name in floors]
-        logger.info(f"Floor filter: {len(access_points)} → {len(filtered)} APs (floors: {', '.join(floors)})")
+        logger.info(
+            f"Floor filter: {len(access_points)} → {len(filtered)} APs (floors: {', '.join(floors)})"
+        )
         return filtered
 
     @staticmethod
-    def by_colors(
-        access_points: list[AccessPoint],
-        colors: list[str]
-    ) -> list[AccessPoint]:
+    def by_colors(access_points: list[AccessPoint], colors: list[str]) -> list[AccessPoint]:
         """Filter access points by colors.
 
         Args:
@@ -56,14 +52,13 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.color in colors]
-        logger.info(f"Color filter: {len(access_points)} → {len(filtered)} APs (colors: {', '.join(colors)})")
+        logger.info(
+            f"Color filter: {len(access_points)} → {len(filtered)} APs (colors: {', '.join(colors)})"
+        )
         return filtered
 
     @staticmethod
-    def by_vendors(
-        access_points: list[AccessPoint],
-        vendors: list[str]
-    ) -> list[AccessPoint]:
+    def by_vendors(access_points: list[AccessPoint], vendors: list[str]) -> list[AccessPoint]:
         """Filter access points by vendors.
 
         Args:
@@ -77,14 +72,13 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.vendor in vendors]
-        logger.info(f"Vendor filter: {len(access_points)} → {len(filtered)} APs (vendors: {', '.join(vendors)})")
+        logger.info(
+            f"Vendor filter: {len(access_points)} → {len(filtered)} APs (vendors: {', '.join(vendors)})"
+        )
         return filtered
 
     @staticmethod
-    def by_models(
-        access_points: list[AccessPoint],
-        models: list[str]
-    ) -> list[AccessPoint]:
+    def by_models(access_points: list[AccessPoint], models: list[str]) -> list[AccessPoint]:
         """Filter access points by model names.
 
         Args:
@@ -98,14 +92,14 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.model in models]
-        logger.info(f"Model filter: {len(access_points)} → {len(filtered)} APs (models: {', '.join(models)})")
+        logger.info(
+            f"Model filter: {len(access_points)} → {len(filtered)} APs (models: {', '.join(models)})"
+        )
         return filtered
 
     @staticmethod
     def by_tag(
-        access_points: list[AccessPoint],
-        tag_key: str,
-        tag_values: list[str]
+        access_points: list[AccessPoint], tag_key: str, tag_values: list[str]
     ) -> list[AccessPoint]:
         """Filter access points by specific tag key-value pairs.
 
@@ -127,13 +121,14 @@ class APFilter:
                     filtered.append(ap)
                     break
 
-        logger.info(f"Tag filter ({tag_key}): {len(access_points)} → {len(filtered)} APs (values: {', '.join(tag_values)})")
+        logger.info(
+            f"Tag filter ({tag_key}): {len(access_points)} → {len(filtered)} APs (values: {', '.join(tag_values)})"
+        )
         return filtered
 
     @staticmethod
     def by_tags(
-        access_points: list[AccessPoint],
-        tag_filters: dict[str, list[str]]
+        access_points: list[AccessPoint], tag_filters: dict[str, list[str]]
     ) -> list[AccessPoint]:
         """Filter access points by multiple tag key-value pairs.
 
@@ -155,10 +150,7 @@ class APFilter:
         return filtered
 
     @staticmethod
-    def exclude_floors(
-        access_points: list[AccessPoint],
-        floors: list[str]
-    ) -> list[AccessPoint]:
+    def exclude_floors(access_points: list[AccessPoint], floors: list[str]) -> list[AccessPoint]:
         """Exclude access points on specific floors.
 
         Args:
@@ -172,14 +164,13 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.floor_name not in floors]
-        logger.info(f"Exclude floors: {len(access_points)} → {len(filtered)} APs (excluded: {', '.join(floors)})")
+        logger.info(
+            f"Exclude floors: {len(access_points)} → {len(filtered)} APs (excluded: {', '.join(floors)})"
+        )
         return filtered
 
     @staticmethod
-    def exclude_colors(
-        access_points: list[AccessPoint],
-        colors: list[str]
-    ) -> list[AccessPoint]:
+    def exclude_colors(access_points: list[AccessPoint], colors: list[str]) -> list[AccessPoint]:
         """Exclude access points with specific colors.
 
         Args:
@@ -193,14 +184,13 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.color not in colors]
-        logger.info(f"Exclude colors: {len(access_points)} → {len(filtered)} APs (excluded: {', '.join(colors)})")
+        logger.info(
+            f"Exclude colors: {len(access_points)} → {len(filtered)} APs (excluded: {', '.join(colors)})"
+        )
         return filtered
 
     @staticmethod
-    def exclude_vendors(
-        access_points: list[AccessPoint],
-        vendors: list[str]
-    ) -> list[AccessPoint]:
+    def exclude_vendors(access_points: list[AccessPoint], vendors: list[str]) -> list[AccessPoint]:
         """Exclude access points from specific vendors.
 
         Args:
@@ -214,7 +204,9 @@ class APFilter:
             return access_points
 
         filtered = [ap for ap in access_points if ap.vendor not in vendors]
-        logger.info(f"Exclude vendors: {len(access_points)} → {len(filtered)} APs (excluded: {', '.join(vendors)})")
+        logger.info(
+            f"Exclude vendors: {len(access_points)} → {len(filtered)} APs (excluded: {', '.join(vendors)})"
+        )
         return filtered
 
     @staticmethod
@@ -227,7 +219,7 @@ class APFilter:
         include_tags: Optional[dict[str, list[str]]] = None,
         exclude_floors: Optional[list[str]] = None,
         exclude_colors: Optional[list[str]] = None,
-        exclude_vendors: Optional[list[str]] = None
+        exclude_vendors: Optional[list[str]] = None,
     ) -> list[AccessPoint]:
         """Apply multiple filters to access points with AND logic.
 
@@ -280,6 +272,8 @@ class APFilter:
 
         final_count = len(result)
         if original_count != final_count:
-            logger.info(f"Total filtering: {original_count} → {final_count} APs ({final_count/original_count*100:.1f}% remaining)")
+            logger.info(
+                f"Total filtering: {original_count} → {final_count} APs ({final_count/original_count*100:.1f}% remaining)"
+            )
 
         return result

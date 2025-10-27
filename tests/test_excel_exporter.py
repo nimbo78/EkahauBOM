@@ -6,10 +6,7 @@
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.excel_exporter import ExcelExporter
-from ekahau_bom.models import (
-    ProjectData, AccessPoint, Antenna, Tag, Floor,
-    ProjectMetadata, Radio
-)
+from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, ProjectMetadata, Radio
 
 
 @pytest.fixture
@@ -17,29 +14,54 @@ def sample_project_data():
     """Create sample project data."""
     aps = [
         AccessPoint(
-            id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
-            floor_name="Floor 1", floor_id="f1", mine=True,
-            tags=[Tag("Location", "Building A", "1")]
+            id="ap1",
+            vendor="Cisco",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            floor_id="f1",
+            mine=True,
+            tags=[Tag("Location", "Building A", "1")],
         ),
         AccessPoint(
-            id="ap2", vendor="Cisco", model="AP-515", color="Yellow",
-            floor_name="Floor 1", floor_id="f1", mine=True,
-            tags=[Tag("Location", "Building A", "1")]
+            id="ap2",
+            vendor="Cisco",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            floor_id="f1",
+            mine=True,
+            tags=[Tag("Location", "Building A", "1")],
         ),
         AccessPoint(
-            id="ap3", vendor="Cisco", model="AP-635", color="Red",
-            floor_name="Floor 2", floor_id="f2", mine=True,
-            tags=[]
+            id="ap3",
+            vendor="Cisco",
+            model="AP-635",
+            color="Red",
+            floor_name="Floor 2",
+            floor_id="f2",
+            mine=True,
+            tags=[],
         ),
         AccessPoint(
-            id="ap4", vendor="Aruba", model="AP-515", color="Yellow",
-            floor_name="Floor 1", floor_id="f1", mine=True,
-            tags=[]
+            id="ap4",
+            vendor="Aruba",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            floor_id="f1",
+            mine=True,
+            tags=[],
         ),
         AccessPoint(
-            id="ap5", vendor="Aruba", model="AP-635", color="Blue",
-            floor_name="Floor 2", floor_id="f2", mine=True,
-            tags=[Tag("Location", "Building B", "1")]
+            id="ap5",
+            vendor="Aruba",
+            model="AP-635",
+            color="Blue",
+            floor_name="Floor 2",
+            floor_id="f2",
+            mine=True,
+            tags=[Tag("Location", "Building B", "1")],
         ),
     ]
     antennas = [
@@ -47,15 +69,9 @@ def sample_project_data():
         Antenna("ANT-2513P4M-N-R", "ant1"),
         Antenna("ANT-20", "ant2"),
     ]
-    floors = {
-        "f1": Floor("f1", "Floor 1"),
-        "f2": Floor("f2", "Floor 2")
-    }
+    floors = {"f1": Floor("f1", "Floor 1"), "f2": Floor("f2", "Floor 2")}
     return ProjectData(
-        project_name="Test Project",
-        access_points=aps,
-        antennas=antennas,
-        floors=floors
+        project_name="Test Project", access_points=aps, antennas=antennas, floors=floors
     )
 
 
@@ -64,22 +80,38 @@ def detailed_project_data():
     """Create project data with detailed AP installation parameters."""
     aps = [
         AccessPoint(
-            id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
-            floor_name="Floor 1", floor_id="f1", mine=True,
+            id="ap1",
+            vendor="Cisco",
+            model="AP-515",
+            color="Yellow",
+            floor_name="Floor 1",
+            floor_id="f1",
+            mine=True,
             name="AP-Office-01",
-            location_x=10.5, location_y=20.3,
-            mounting_height=3.0, azimuth=45.0, tilt=10.0,
+            location_x=10.5,
+            location_y=20.3,
+            mounting_height=3.0,
+            azimuth=45.0,
+            tilt=10.0,
             enabled=True,
-            tags=[Tag("Location", "Office", "1")]
+            tags=[Tag("Location", "Office", "1")],
         ),
         AccessPoint(
-            id="ap2", vendor="Aruba", model="AP-635", color="Red",
-            floor_name="Floor 2", floor_id="f2", mine=True,
+            id="ap2",
+            vendor="Aruba",
+            model="AP-635",
+            color="Red",
+            floor_name="Floor 2",
+            floor_id="f2",
+            mine=True,
             name="AP-Lobby-01",
-            location_x=5.2, location_y=15.8,
-            mounting_height=2.5, azimuth=90.0, tilt=15.0,
+            location_x=5.2,
+            location_y=15.8,
+            mounting_height=2.5,
+            azimuth=90.0,
+            tilt=15.0,
             enabled=False,
-            tags=[]
+            tags=[],
         ),
     ]
     radios = [
@@ -92,7 +124,7 @@ def detailed_project_data():
             tx_power=20,
             antenna_direction=45.0,
             antenna_tilt=10.0,
-            antenna_height=3.0
+            antenna_height=3.0,
         ),
     ]
     floors = {"f1": Floor("f1", "Floor 1"), "f2": Floor("f2", "Floor 2")}
@@ -101,7 +133,7 @@ def detailed_project_data():
         customer="Acme Corporation",
         location="Building A, Floor 3",
         responsible_person="John Doe",
-        schema_version="1.0"
+        schema_version="1.0",
     )
     return ProjectData(
         project_name="Detailed Project",
@@ -109,7 +141,7 @@ def detailed_project_data():
         antennas=[],
         floors=floors,
         radios=radios,
-        metadata=metadata
+        metadata=metadata,
     )
 
 
@@ -123,7 +155,7 @@ class TestExcelExporter:
 
         assert len(files) == 1
         assert files[0].exists()
-        assert files[0].suffix == '.xlsx'
+        assert files[0].suffix == ".xlsx"
         assert "Test Project" in files[0].name
 
     def test_export_has_required_sheets(self, sample_project_data, tmp_path):
@@ -161,12 +193,12 @@ class TestExcelExporter:
         ws = wb["Summary"]
 
         # Check title
-        assert ws['A1'].value == "Project Summary"
+        assert ws["A1"].value == "Project Summary"
 
         # Find where "Project Statistics" section starts (after optional metadata)
         stats_row = None
         for row in range(1, 20):
-            if ws[f'A{row}'].value == "Project Statistics":
+            if ws[f"A{row}"].value == "Project Statistics":
                 stats_row = row
                 break
 
@@ -177,14 +209,14 @@ class TestExcelExporter:
         ap_row = stats_row + 2
         antenna_row = stats_row + 3
 
-        assert ws[f'A{file_name_row}'].value == "File Name:"
-        assert ws[f'B{file_name_row}'].value == "Test Project"
+        assert ws[f"A{file_name_row}"].value == "File Name:"
+        assert ws[f"B{file_name_row}"].value == "Test Project"
 
-        assert ws[f'A{ap_row}'].value == "Total Access Points:"
-        assert ws[f'B{ap_row}'].value == 5
+        assert ws[f"A{ap_row}"].value == "Total Access Points:"
+        assert ws[f"B{ap_row}"].value == 5
 
-        assert ws[f'A{antenna_row}'].value == "Total Antennas:"
-        assert ws[f'B{antenna_row}'].value == 3
+        assert ws[f"A{antenna_row}"].value == "Total Antennas:"
+        assert ws[f"B{antenna_row}"].value == 3
 
     def test_access_points_sheet_content(self, sample_project_data, tmp_path):
         """Test Access Points sheet has correct data."""
@@ -258,10 +290,7 @@ class TestExcelExporter:
     def test_empty_project_data(self, tmp_path):
         """Test export with empty project data."""
         empty_data = ProjectData(
-            project_name="Empty Project",
-            access_points=[],
-            antennas=[],
-            floors={}
+            project_name="Empty Project", access_points=[], antennas=[], floors={}
         )
         exporter = ExcelExporter(tmp_path)
         files = exporter.export(empty_data)
@@ -473,15 +502,15 @@ class TestExcelExporter:
 
         # Check number format for Location X (should be 0.00)
         loc_x_col = headers.index("Location X (m)") + 1
-        assert ws.cell(2, loc_x_col).number_format == '0.00'
+        assert ws.cell(2, loc_x_col).number_format == "0.00"
 
         # Check number format for Mounting Height (should be 0.00)
         height_col = headers.index("Mounting Height (m)") + 1
-        assert ws.cell(2, height_col).number_format == '0.00'
+        assert ws.cell(2, height_col).number_format == "0.00"
 
         # Check number format for Azimuth (should be 0.0)
         azimuth_col = headers.index("Azimuth (°)") + 1
-        assert ws.cell(2, azimuth_col).number_format == '0.0'
+        assert ws.cell(2, azimuth_col).number_format == "0.0"
 
     def test_export_with_aps_requiring_height_adjustment(self, tmp_path):
         """Test analytics sheet with APs requiring height adjustment."""
@@ -491,20 +520,32 @@ class TestExcelExporter:
         # Create APs with different mounting heights
         aps = [
             AccessPoint(
-                id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
-                floor_name="Floor 1", floor_id="f1", mine=True,
-                mounting_height=2.0, azimuth=0.0, tilt=0.0
+                id="ap1",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
+                floor_id="f1",
+                mine=True,
+                mounting_height=2.0,
+                azimuth=0.0,
+                tilt=0.0,
             ),
             AccessPoint(
-                id="ap2", vendor="Cisco", model="AP-515", color="Yellow",
-                floor_name="Floor 1", floor_id="f1", mine=True,
-                mounting_height=5.0, azimuth=0.0, tilt=0.0  # Different height
+                id="ap2",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
+                floor_id="f1",
+                mine=True,
+                mounting_height=5.0,
+                azimuth=0.0,
+                tilt=0.0,  # Different height
             ),
         ]
 
-        floors = {
-            "f1": Floor(id="f1", name="Floor 1")
-        }
+        floors = {"f1": Floor(id="f1", name="Floor 1")}
 
         radios = [
             Radio(id="r1", access_point_id="ap1", antenna_height=2.0),
@@ -516,7 +557,7 @@ class TestExcelExporter:
             access_points=aps,
             antennas=[],
             floors=floors,
-            radios=radios
+            radios=radios,
         )
 
         exporter = ExcelExporter(tmp_path)
@@ -545,18 +586,19 @@ class TestExcelExporter:
         """Test error handling when Excel file cannot be saved."""
         from unittest.mock import patch, MagicMock
 
-        aps = [AccessPoint(vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[])]
+        aps = [
+            AccessPoint(
+                vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+            )
+        ]
         project_data = ProjectData(
-            project_name="Error Test",
-            access_points=aps,
-            antennas=[],
-            floors={}
+            project_name="Error Test", access_points=aps, antennas=[], floors={}
         )
 
         exporter = ExcelExporter(tmp_path)
 
         # Mock workbook.save to raise an exception
-        with patch('openpyxl.Workbook.save', side_effect=PermissionError("File is locked")):
+        with patch("openpyxl.Workbook.save", side_effect=PermissionError("File is locked")):
             with pytest.raises(IOError, match="Failed to save Excel file"):
                 exporter.export(project_data)
 
@@ -564,12 +606,13 @@ class TestExcelExporter:
         """Test _auto_size_columns handles exceptions in cell values."""
         from openpyxl import Workbook
 
-        aps = [AccessPoint(vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[])]
+        aps = [
+            AccessPoint(
+                vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1", tags=[]
+            )
+        ]
         project_data = ProjectData(
-            project_name="AutoSize Test",
-            access_points=aps,
-            antennas=[],
-            floors={}
+            project_name="AutoSize Test", access_points=aps, antennas=[], floors={}
         )
 
         exporter = ExcelExporter(tmp_path)
@@ -579,18 +622,18 @@ class TestExcelExporter:
         ws = wb.active
 
         # Add normal cells
-        ws['A1'] = "Normal Text"
-        ws['B1'] = 12345
+        ws["A1"] = "Normal Text"
+        ws["B1"] = 12345
 
         # Create a cell with a value that might cause issues when converting to string
         # This should be handled by the except block
-        ws['C1'] = None
+        ws["C1"] = None
 
         # Call _auto_size_columns - should not raise exception
         exporter._auto_size_columns(ws)
 
         # Verify columns were sized (should complete without errors)
-        assert ws.column_dimensions['A'].width > 0
+        assert ws.column_dimensions["A"].width > 0
 
     def test_analytics_with_wifi_standards_section(self, tmp_path):
         """Test that Wi-Fi Standards section is generated in analytics."""
@@ -600,9 +643,16 @@ class TestExcelExporter:
         # Create APs with radios that have Wi-Fi standards
         aps = [
             AccessPoint(
-                id=f"ap{i}", vendor="Cisco", model="AP-515", color="Yellow",
-                floor_name="Floor 1", floor_id="f1", mine=True,
-                mounting_height=3.0, azimuth=0.0, tilt=0.0  # Add mounting info
+                id=f"ap{i}",
+                vendor="Cisco",
+                model="AP-515",
+                color="Yellow",
+                floor_name="Floor 1",
+                floor_id="f1",
+                mine=True,
+                mounting_height=3.0,
+                azimuth=0.0,
+                tilt=0.0,  # Add mounting info
             )
             for i in range(1, 6)
         ]
@@ -612,34 +662,54 @@ class TestExcelExporter:
         # Create radios with different Wi-Fi standards
         radios = [
             Radio(
-                id="r1", access_point_id="ap1",
-                frequency_band="5GHz", channel=36, channel_width=80,
-                tx_power=20.0, antenna_height=3.0,
-                standard="802.11ax"
+                id="r1",
+                access_point_id="ap1",
+                frequency_band="5GHz",
+                channel=36,
+                channel_width=80,
+                tx_power=20.0,
+                antenna_height=3.0,
+                standard="802.11ax",
             ),
             Radio(
-                id="r2", access_point_id="ap2",
-                frequency_band="5GHz", channel=40, channel_width=80,
-                tx_power=20.0, antenna_height=3.0,
-                standard="802.11ac"
+                id="r2",
+                access_point_id="ap2",
+                frequency_band="5GHz",
+                channel=40,
+                channel_width=80,
+                tx_power=20.0,
+                antenna_height=3.0,
+                standard="802.11ac",
             ),
             Radio(
-                id="r3", access_point_id="ap3",
-                frequency_band="5GHz", channel=44, channel_width=80,
-                tx_power=20.0, antenna_height=3.0,
-                standard="802.11ax"
+                id="r3",
+                access_point_id="ap3",
+                frequency_band="5GHz",
+                channel=44,
+                channel_width=80,
+                tx_power=20.0,
+                antenna_height=3.0,
+                standard="802.11ax",
             ),
             Radio(
-                id="r4", access_point_id="ap4",
-                frequency_band="2.4GHz", channel=6, channel_width=20,
-                tx_power=17.0, antenna_height=3.0,
-                standard="802.11n"
+                id="r4",
+                access_point_id="ap4",
+                frequency_band="2.4GHz",
+                channel=6,
+                channel_width=20,
+                tx_power=17.0,
+                antenna_height=3.0,
+                standard="802.11n",
             ),
             Radio(
-                id="r5", access_point_id="ap5",
-                frequency_band="5GHz", channel=48, channel_width=80,
-                tx_power=20.0, antenna_height=3.0,
-                standard="802.11ac"
+                id="r5",
+                access_point_id="ap5",
+                frequency_band="5GHz",
+                channel=48,
+                channel_width=80,
+                tx_power=20.0,
+                antenna_height=3.0,
+                standard="802.11ac",
             ),
         ]
 
@@ -648,7 +718,7 @@ class TestExcelExporter:
             access_points=aps,
             antennas=[],
             floors=floors,
-            radios=radios
+            radios=radios,
         )
 
         exporter = ExcelExporter(tmp_path)
@@ -679,15 +749,15 @@ class TestExcelExporter:
         ws = wb.active
 
         # Add normal cells
-        ws['A1'] = "Normal"
-        ws['B1'] = "Test"
-        ws['C1'] = "Data"
+        ws["A1"] = "Normal"
+        ws["B1"] = "Test"
+        ws["C1"] = "Data"
 
         # Get the actual cell object
-        problem_cell = ws['C1']
+        problem_cell = ws["C1"]
 
         # Create a mock that raises exception when value property is accessed
-        with patch.object(type(problem_cell), 'value', new_callable=PropertyMock) as mock_value:
+        with patch.object(type(problem_cell), "value", new_callable=PropertyMock) as mock_value:
             mock_value.side_effect = RuntimeError("Simulated cell value error")
 
             # This should not raise, exception should be caught by except block
@@ -698,4 +768,4 @@ class TestExcelExporter:
                 pytest.fail("Exception was not caught by except block")
 
         # Verify it completed successfully
-        assert ws.column_dimensions['A'].width > 0
+        assert ws.column_dimensions["A"].width > 0

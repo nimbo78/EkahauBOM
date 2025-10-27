@@ -5,4 +5,4 @@
 
 from .floor_plan import FloorPlanVisualizer
 
-__all__ = ['FloorPlanVisualizer']
+__all__ = ["FloorPlanVisualizer"]

@@ -46,7 +46,7 @@ class TestProjectMetadataProcessor:
             "responsiblePerson": "John Doe",
             "schemaVersion": "1.4.0",
             "noteIds": ["note1", "note2"],
-            "projectAncestors": ["ancestor1", "ancestor2"]
+            "projectAncestors": ["ancestor1", "ancestor2"],
         }
 
         result = processor.process(metadata_data)
@@ -63,10 +63,7 @@ class TestProjectMetadataProcessor:
 
     def test_process_partial_metadata(self, processor):
         """Test processing partial metadata."""
-        metadata_data = {
-            "name": "Partial Project",
-            "customer": "Partial Customer"
-        }
+        metadata_data = {"name": "Partial Project", "customer": "Partial Customer"}
 
         result = processor.process(metadata_data)
 
@@ -80,10 +77,7 @@ class TestProjectMetadataProcessor:
 
     def test_process_with_missing_fields(self, processor):
         """Test processing metadata with some missing fields."""
-        metadata_data = {
-            "name": "Project Name",
-            "schemaVersion": "1.2.0"
-        }
+        metadata_data = {"name": "Project Name", "schemaVersion": "1.2.0"}
 
         result = processor.process(metadata_data)
 
@@ -95,9 +89,7 @@ class TestProjectMetadataProcessor:
 
     def test_responsible_person_field_mapping(self, processor):
         """Test that responsiblePerson from JSON maps to responsible_person in model."""
-        metadata_data = {
-            "responsiblePerson": "Jane Smith"
-        }
+        metadata_data = {"responsiblePerson": "Jane Smith"}
 
         result = processor.process(metadata_data)
 
@@ -105,9 +97,7 @@ class TestProjectMetadataProcessor:
 
     def test_schema_version_field_mapping(self, processor):
         """Test that schemaVersion from JSON maps to schema_version in model."""
-        metadata_data = {
-            "schemaVersion": "2.0.0"
-        }
+        metadata_data = {"schemaVersion": "2.0.0"}
 
         result = processor.process(metadata_data)
 
@@ -115,9 +105,7 @@ class TestProjectMetadataProcessor:
 
     def test_note_ids_field_mapping(self, processor):
         """Test that noteIds from JSON maps to note_ids in model."""
-        metadata_data = {
-            "noteIds": ["id1", "id2", "id3"]
-        }
+        metadata_data = {"noteIds": ["id1", "id2", "id3"]}
 
         result = processor.process(metadata_data)
 
@@ -125,9 +113,7 @@ class TestProjectMetadataProcessor:
 
     def test_project_ancestors_field_mapping(self, processor):
         """Test that projectAncestors from JSON maps to project_ancestors in model."""
-        metadata_data = {
-            "projectAncestors": ["ancestor1"]
-        }
+        metadata_data = {"projectAncestors": ["ancestor1"]}
 
         result = processor.process(metadata_data)
 
@@ -135,10 +121,7 @@ class TestProjectMetadataProcessor:
 
     def test_real_world_example(self, processor):
         """Test with real-world example from wine office project."""
-        metadata_data = {
-            "name": "wine office",
-            "schemaVersion": "1.4.0"
-        }
+        metadata_data = {"name": "wine office", "schemaVersion": "1.4.0"}
 
         result = processor.process(metadata_data)
 

@@ -24,6 +24,7 @@ class CoverageMetrics:
         ap_density: Access points per 1000 square meters
         average_coverage_per_ap: Average coverage area per AP in square meters
     """
+
     total_area: float
     excluded_area: float
     ap_count: int
@@ -44,6 +45,7 @@ class MountingMetrics:
         avg_azimuth: Average azimuth angle
         avg_tilt: Average tilt angle
     """
+
     avg_height: Optional[float]
     min_height: Optional[float]
     max_height: Optional[float]
@@ -62,9 +64,7 @@ class GroupingAnalytics:
 
     @staticmethod
     def group_by_dimension(
-        access_points: list[AccessPoint],
-        dimension: str,
-        tag_key: str | None = None
+        access_points: list[AccessPoint], dimension: str, tag_key: str | None = None
     ) -> dict[str, int]:
         """Group access points by specified dimension.
 
@@ -147,10 +147,7 @@ class GroupingAnalytics:
         return dict(counts)
 
     @staticmethod
-    def group_by_tag(
-        access_points: list[AccessPoint],
-        tag_key: str
-    ) -> dict[str, int]:
+    def group_by_tag(access_points: list[AccessPoint], tag_key: str) -> dict[str, int]:
         """Group access points by specific tag key.
 
         Args:
@@ -172,7 +169,9 @@ class GroupingAnalytics:
                 tag_values.append(f"No {tag_key}")
 
         counts = Counter(tag_values)
-        logger.info(f"Grouped {len(access_points)} APs by tag '{tag_key}': {len(counts)} unique values")
+        logger.info(
+            f"Grouped {len(access_points)} APs by tag '{tag_key}': {len(counts)} unique values"
+        )
         return dict(counts)
 
     @staticmethod
@@ -186,14 +185,14 @@ class GroupingAnalytics:
             Dictionary mapping (vendor, model) tuple to count
         """
         counts = Counter((ap.vendor, ap.model) for ap in access_points)
-        logger.info(f"Grouped {len(access_points)} APs by vendor+model: {len(counts)} unique combinations")
+        logger.info(
+            f"Grouped {len(access_points)} APs by vendor+model: {len(counts)} unique combinations"
+        )
         return dict(counts)
 
     @staticmethod
     def multi_dimensional_grouping(
-        access_points: list[AccessPoint],
-        dimensions: list[str],
-        tag_key: str | None = None
+        access_points: list[AccessPoint], dimensions: list[str], tag_key: str | None = None
     ) -> dict[tuple, int]:
         """Multi-dimensional grouping of access points.
 
@@ -232,7 +231,9 @@ class GroupingAnalytics:
 
             groups[tuple(key)] += 1
 
-        logger.info(f"Multi-dimensional grouping ({'+'.join(dimensions)}): {len(groups)} unique combinations")
+        logger.info(
+            f"Multi-dimensional grouping ({'+'.join(dimensions)}): {len(groups)} unique combinations"
+        )
         return dict(groups)
 
     @staticmethod
@@ -249,10 +250,7 @@ class GroupingAnalytics:
         if total == 0:
             return {key: (0, 0.0) for key in counts.keys()}
 
-        return {
-            key: (count, (count / total * 100))
-            for key, count in counts.items()
-        }
+        return {key: (count, (count / total * 100)) for key, count in counts.items()}
 
     @staticmethod
     def get_summary_statistics(access_points: list[AccessPoint]) -> dict[str, Any]:
@@ -271,7 +269,7 @@ class GroupingAnalytics:
                 "unique_models": 0,
                 "unique_floors": 0,
                 "unique_colors": 0,
-                "with_tags": 0
+                "with_tags": 0,
             }
 
         return {
@@ -280,14 +278,12 @@ class GroupingAnalytics:
             "unique_models": len(set(ap.model for ap in access_points)),
             "unique_floors": len(set(ap.floor_name for ap in access_points)),
             "unique_colors": len(set(ap.color for ap in access_points if ap.color)),
-            "with_tags": sum(1 for ap in access_points if ap.tags)
+            "with_tags": sum(1 for ap in access_points if ap.tags),
         }
 
     @staticmethod
     def print_grouped_results(
-        grouped_data: dict[Any, int],
-        title: str = "Grouping Results",
-        show_percentages: bool = True
+        grouped_data: dict[Any, int], title: str = "Grouping Results", show_percentages: bool = True
     ) -> None:
         """Print grouped results to logger in a formatted way.
 
@@ -334,8 +330,7 @@ class CoverageAnalytics:
 
     @staticmethod
     def calculate_coverage_metrics(
-        access_points: list[AccessPoint],
-        measured_areas: Optional[dict[str, Any]] = None
+        access_points: list[AccessPoint], measured_areas: Optional[dict[str, Any]] = None
     ) -> CoverageMetrics:
         """Calculate coverage metrics from access points and measured areas.
 
@@ -364,21 +359,24 @@ class CoverageAnalytics:
         ap_density = (ap_count / effective_area * 1000) if effective_area > 0 else 0
         avg_coverage_per_ap = (effective_area / ap_count) if ap_count > 0 else 0
 
-        logger.info(f"Coverage metrics: {ap_count} APs, {total_area:.1f}m² total, {excluded_area:.1f}m² excluded")
-        logger.info(f"AP density: {ap_density:.2f} APs/1000m², avg coverage: {avg_coverage_per_ap:.1f}m²/AP")
+        logger.info(
+            f"Coverage metrics: {ap_count} APs, {total_area:.1f}m² total, {excluded_area:.1f}m² excluded"
+        )
+        logger.info(
+            f"AP density: {ap_density:.2f} APs/1000m², avg coverage: {avg_coverage_per_ap:.1f}m²/AP"
+        )
 
         return CoverageMetrics(
             total_area=total_area,
             excluded_area=excluded_area,
             ap_count=ap_count,
             ap_density=ap_density,
-            average_coverage_per_ap=avg_coverage_per_ap
+            average_coverage_per_ap=avg_coverage_per_ap,
         )
 
     @staticmethod
     def group_by_floor_with_density(
-        access_points: list[AccessPoint],
-        floor_areas: Optional[dict[str, float]] = None
+        access_points: list[AccessPoint], floor_areas: Optional[dict[str, float]] = None
     ) -> dict[str, dict[str, Any]]:
         """Group APs by floor and calculate density per floor.
 
@@ -396,7 +394,7 @@ class CoverageAnalytics:
             metrics = {
                 "ap_count": count,
                 "area": floor_areas.get(floor_name, 0) if floor_areas else 0,
-                "density": 0
+                "density": 0,
             }
 
             if floor_areas and floor_name in floor_areas and floor_areas[floor_name] > 0:
@@ -449,7 +447,9 @@ class MountingAnalytics:
 
         logger.info(f"Mounting metrics: {len(heights)} APs with height data")
         if avg_height:
-            logger.info(f"Height: avg={avg_height:.2f}m, min={min_height:.2f}m, max={max_height:.2f}m")
+            logger.info(
+                f"Height: avg={avg_height:.2f}m, min={min_height:.2f}m, max={max_height:.2f}m"
+            )
         if avg_azimuth:
             logger.info(f"Azimuth: avg={avg_azimuth:.1f}°")
         if avg_tilt:
@@ -462,7 +462,7 @@ class MountingAnalytics:
             height_variance=height_variance,
             aps_with_height=len(heights),
             avg_azimuth=avg_azimuth,
-            avg_tilt=avg_tilt
+            avg_tilt=avg_tilt,
         )
 
     @staticmethod
@@ -481,7 +481,7 @@ class MountingAnalytics:
             "3.5-4.5m": 0,
             "4.5-6.0m": 0,
             "> 6.0m": 0,
-            "Unknown": 0
+            "Unknown": 0,
         }
 
         for ap in access_points:
@@ -518,11 +518,12 @@ class MountingAnalytics:
             "mounting_metrics": metrics,
             "height_distribution": height_distribution,
             "aps_requiring_height_adjustment": sum(
-                1 for ap in access_points
+                1
+                for ap in access_points
                 if ap.mounting_height and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
             ),
             "aps_with_tilt": sum(1 for ap in access_points if ap.tilt is not None),
-            "aps_with_azimuth": sum(1 for ap in access_points if ap.azimuth is not None)
+            "aps_with_azimuth": sum(1 for ap in access_points if ap.azimuth is not None),
         }
 
 
@@ -540,6 +541,7 @@ class RadioMetrics:
         min_tx_power: Minimum transmit power
         max_tx_power: Maximum transmit power
     """
+
     total_radios: int
     band_distribution: dict[str, int]
     channel_distribution: dict[int, int]
@@ -603,7 +605,7 @@ class RadioAnalytics:
             standard_distribution=dict(standard_counts),
             avg_tx_power=avg_tx_power,
             min_tx_power=min_tx_power,
-            max_tx_power=max_tx_power
+            max_tx_power=max_tx_power,
         )
 
     @staticmethod
@@ -682,7 +684,7 @@ class RadioAnalytics:
             "avg_radios_per_channel": avg_radios_per_channel,
             "most_used_channels": most_common,
             "least_used_channels": least_common,
-            "channel_distribution": dict(channel_counts)
+            "channel_distribution": dict(channel_counts),
         }
 
     @staticmethod
@@ -701,7 +703,7 @@ class RadioAnalytics:
             "15-20 dBm": 0,
             "20-25 dBm": 0,
             "> 25 dBm": 0,
-            "Unknown": 0
+            "Unknown": 0,
         }
 
         for radio in radios:
@@ -744,5 +746,5 @@ class RadioAnalytics:
             "tx_power_ranges": power_dist,
             "avg_tx_power": metrics.avg_tx_power,
             "min_tx_power": metrics.min_tx_power,
-            "max_tx_power": metrics.max_tx_power
+            "max_tx_power": metrics.max_tx_power,
         }

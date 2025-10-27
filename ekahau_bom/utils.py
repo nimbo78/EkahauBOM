@@ -32,7 +32,7 @@ def load_color_database(config_file: Optional[Path] = None) -> dict[str, str]:
         return DEFAULT_COLORS.copy()
 
     try:
-        with open(config_file, 'r', encoding='utf-8') as f:
+        with open(config_file, "r", encoding="utf-8") as f:
             colors = yaml.safe_load(f)
             if not isinstance(colors, dict):
                 logger.warning(f"Invalid color config format in {config_file}, using defaults")
@@ -89,6 +89,6 @@ def setup_logging(verbose: bool = False, log_file: Optional[Path] = None) -> Non
 
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=handlers
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=handlers,
     )

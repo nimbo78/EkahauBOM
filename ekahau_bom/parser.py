@@ -48,7 +48,7 @@ class EkahauParser:
         if not self.esx_file.exists():
             raise FileNotFoundError(f"File not found: {self.esx_file}")
 
-        if self.esx_file.suffix.lower() != '.esx':
+        if self.esx_file.suffix.lower() != ".esx":
             raise ValueError(f"Invalid file extension. Expected .esx, got {self.esx_file.suffix}")
 
         self._zip_file: ZipFile | None = None
@@ -57,7 +57,7 @@ class EkahauParser:
     def __enter__(self):
         """Context manager entry."""
         try:
-            self._zip_file = ZipFile(self.esx_file, 'r')
+            self._zip_file = ZipFile(self.esx_file, "r")
             logger.info(f"Opened .esx file: {self.esx_file}")
             return self
         except BadZipFile as e:
@@ -97,11 +97,7 @@ class EkahauParser:
         except KeyError as e:
             raise KeyError(f"Required file '{filename}' not found in .esx archive") from e
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(
-                f"Invalid JSON in {filename}: {e.msg}",
-                e.doc,
-                e.pos
-            ) from e
+            raise json.JSONDecodeError(f"Invalid JSON in {filename}: {e.msg}", e.doc, e.pos) from e
 
     def get_access_points(self) -> dict[str, Any]:
         """Get access points data from the project.
@@ -149,7 +145,9 @@ class EkahauParser:
             return self._read_json(ESX_TAG_KEYS_FILE)
         except KeyError:
             # tagKeys.json may not exist in older Ekahau projects
-            logger.info(f"{ESX_TAG_KEYS_FILE} not found in project (older Ekahau version or no tags)")
+            logger.info(
+                f"{ESX_TAG_KEYS_FILE} not found in project (older Ekahau version or no tags)"
+            )
             return {"tagKeys": []}
 
     def get_measured_areas(self) -> dict[str, Any]:

@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 class AccessPointProcessor:
     """Process access points data from Ekahau project."""
 
-    def __init__(self, color_database: dict[str, str], tag_processor: Optional[TagProcessor] = None):
+    def __init__(
+        self, color_database: dict[str, str], tag_processor: Optional[TagProcessor] = None
+    ):
         """Initialize processor with color database and optional tag processor.
 
         Args:
@@ -30,7 +32,7 @@ class AccessPointProcessor:
         self,
         access_points_data: dict[str, Any],
         floors: dict[str, Floor],
-        simulated_radios_data: dict[str, Any] = None
+        simulated_radios_data: dict[str, Any] = None,
     ) -> list[AccessPoint]:
         """Process raw access points data into AccessPoint objects.
 
@@ -78,10 +80,7 @@ class AccessPointProcessor:
         return access_points
 
     def _process_single_ap(
-        self,
-        ap_data: dict[str, Any],
-        floors: dict[str, Floor],
-        radios: list[dict[str, Any]] = None
+        self, ap_data: dict[str, Any], floors: dict[str, Floor], radios: list[dict[str, Any]] = None
     ) -> AccessPoint:
         """Process a single access point.
 
@@ -141,7 +140,9 @@ class AccessPointProcessor:
             tilt = first_radio.get("antennaTilt")  # Tilt in degrees
             antenna_height = first_radio.get("antennaHeight")  # Height in meters
 
-            logger.debug(f"AP {ap_data.get('name', 'Unknown')}: tilt={tilt}°, azimuth={azimuth}°, antenna_height={antenna_height}m")
+            logger.debug(
+                f"AP {ap_data.get('name', 'Unknown')}: tilt={tilt}°, azimuth={azimuth}°, antenna_height={antenna_height}m"
+            )
 
         # Fallback: Check if antenna properties are in the AP data (old format)
         elif "antennas" in ap_data and ap_data["antennas"]:
@@ -165,5 +166,5 @@ class AccessPointProcessor:
             mounting_height=mounting_height,
             azimuth=azimuth,
             tilt=tilt,
-            antenna_height=antenna_height
+            antenna_height=antenna_height,
         )

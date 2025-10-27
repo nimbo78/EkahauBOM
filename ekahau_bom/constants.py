@@ -17,7 +17,7 @@ DEFAULT_COLORS = {
     "#6D6D6D": "Gray",
     "#00FF00": "Green",
     "#C97700": "Brown",
-    "#00FFCE": "Mint"
+    "#00FFCE": "Mint",
 }
 
 # Paths

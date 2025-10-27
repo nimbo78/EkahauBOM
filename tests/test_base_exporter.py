@@ -82,6 +82,7 @@ class TestBaseExporter:
     def test_log_export_success(self, tmp_path, caplog):
         """Test logging export success."""
         import logging
+
         caplog.set_level(logging.INFO)
 
         exporter = self.ConcreteExporter(tmp_path)
@@ -95,12 +96,7 @@ class TestBaseExporter:
     def test_concrete_export(self, tmp_path):
         """Test concrete export implementation."""
         exporter = self.ConcreteExporter(tmp_path)
-        project_data = ProjectData(
-            access_points=[],
-            antennas=[],
-            floors={},
-            project_name="Test"
-        )
+        project_data = ProjectData(access_points=[], antennas=[], floors={}, project_name="Test")
 
         result = exporter.export(project_data)
         assert len(result) == 1
@@ -119,10 +115,12 @@ class TestBaseExporter:
 
     def test_incomplete_implementation_fails(self, tmp_path):
         """Test that incomplete implementation cannot be instantiated."""
+
         # Class with only export implemented
         class IncompleteExporter(BaseExporter):
             def export(self, project_data: ProjectData) -> list[Path]:
                 return []
+
             # Missing format_name property
 
         with pytest.raises(TypeError):
@@ -132,12 +130,7 @@ class TestBaseExporter:
         """Test that abstract method pass statements are covered."""
         # Call the abstract methods directly through super() to cover the pass statements
         exporter = self.ConcreteExporter(tmp_path)
-        project_data = ProjectData(
-            access_points=[],
-            antennas=[],
-            floors={},
-            project_name="Test"
-        )
+        project_data = ProjectData(access_points=[], antennas=[], floors={}, project_name="Test")
 
         # Call parent's export method (which just has pass)
         result = BaseExporter.export(exporter, project_data)

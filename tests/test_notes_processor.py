@@ -5,15 +5,7 @@
 
 import pytest
 from ekahau_bom.processors.notes import NotesProcessor
-from ekahau_bom.models import (
-    Note,
-    NoteHistory,
-    CableNote,
-    PictureNote,
-    Point,
-    Location,
-    Floor
-)
+from ekahau_bom.models import Note, NoteHistory, CableNote, PictureNote, Point, Location, Floor
 
 
 class TestNotesProcessor:
@@ -29,7 +21,7 @@ class TestNotesProcessor:
         """Create sample floors dictionary."""
         return {
             "floor1": Floor(id="floor1", name="Floor 1"),
-            "floor2": Floor(id="floor2", name="Floor 2")
+            "floor2": Floor(id="floor2", name="Floor 2"),
         }
 
     def test_process_notes_empty(self, processor):
@@ -49,12 +41,9 @@ class TestNotesProcessor:
                 {
                     "id": "note1",
                     "text": "Test note",
-                    "history": {
-                        "createdAt": "2021-06-15T20:14:11.234Z",
-                        "createdBy": "Test User"
-                    },
+                    "history": {"createdAt": "2021-06-15T20:14:11.234Z", "createdBy": "Test User"},
                     "imageIds": [],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
             ]
         }
@@ -74,14 +63,7 @@ class TestNotesProcessor:
     def test_process_note_without_history(self, processor):
         """Test processing note without history."""
         notes_data = {
-            "notes": [
-                {
-                    "id": "note1",
-                    "text": "Test note",
-                    "imageIds": [],
-                    "status": "CREATED"
-                }
-            ]
+            "notes": [{"id": "note1", "text": "Test note", "imageIds": [], "status": "CREATED"}]
         }
 
         result = processor.process_notes(notes_data)
@@ -97,7 +79,7 @@ class TestNotesProcessor:
                     "id": "note1",
                     "text": "Test note",
                     "imageIds": ["img1", "img2"],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
             ]
         }
@@ -111,21 +93,9 @@ class TestNotesProcessor:
         """Test processing multiple notes."""
         notes_data = {
             "notes": [
-                {
-                    "id": "note1",
-                    "text": "Note 1",
-                    "status": "CREATED"
-                },
-                {
-                    "id": "note2",
-                    "text": "Note 2",
-                    "status": "CREATED"
-                },
-                {
-                    "id": "note3",
-                    "text": "Note 3",
-                    "status": "CREATED"
-                }
+                {"id": "note1", "text": "Note 1", "status": "CREATED"},
+                {"id": "note2", "text": "Note 2", "status": "CREATED"},
+                {"id": "note3", "text": "Note 3", "status": "CREATED"},
             ]
         }
 
@@ -148,13 +118,10 @@ class TestNotesProcessor:
                 {
                     "id": "cable1",
                     "floorPlanId": "floor1",
-                    "points": [
-                        {"x": 100.5, "y": 200.3},
-                        {"x": 150.7, "y": 250.9}
-                    ],
+                    "points": [{"x": 100.5, "y": 200.3}, {"x": 150.7, "y": 250.9}],
                     "color": "#FF0000",
                     "noteIds": ["note1"],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
             ]
         }
@@ -184,11 +151,11 @@ class TestNotesProcessor:
                         {"x": 100.0, "y": 100.0},
                         {"x": 200.0, "y": 100.0},
                         {"x": 200.0, "y": 200.0},
-                        {"x": 100.0, "y": 200.0}
+                        {"x": 100.0, "y": 200.0},
                     ],
                     "color": "#000000",
                     "noteIds": [],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
             ]
         }
@@ -209,15 +176,9 @@ class TestNotesProcessor:
             "pictureNotes": [
                 {
                     "id": "pic1",
-                    "location": {
-                        "floorPlanId": "floor1",
-                        "coord": {
-                            "x": 300.5,
-                            "y": 400.7
-                        }
-                    },
+                    "location": {"floorPlanId": "floor1", "coord": {"x": 300.5, "y": 400.7}},
                     "noteIds": ["note1", "note2"],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
             ]
         }
@@ -237,15 +198,7 @@ class TestNotesProcessor:
 
     def test_process_picture_note_without_location(self, processor, sample_floors):
         """Test processing picture note without location."""
-        picture_notes_data = {
-            "pictureNotes": [
-                {
-                    "id": "pic1",
-                    "noteIds": [],
-                    "status": "CREATED"
-                }
-            ]
-        }
+        picture_notes_data = {"pictureNotes": [{"id": "pic1", "noteIds": [], "status": "CREATED"}]}
 
         result = processor.process_picture_notes(picture_notes_data, sample_floors)
 
@@ -262,7 +215,7 @@ class TestNotesProcessor:
                     "points": [{"x": i * 10.0, "y": i * 20.0}],
                     "color": "#000000",
                     "noteIds": [],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
                 for i in range(5)
             ]
@@ -278,12 +231,9 @@ class TestNotesProcessor:
             "pictureNotes": [
                 {
                     "id": f"pic{i}",
-                    "location": {
-                        "floorPlanId": "floor1",
-                        "coord": {"x": i * 10.0, "y": i * 20.0}
-                    },
+                    "location": {"floorPlanId": "floor1", "coord": {"x": i * 10.0, "y": i * 20.0}},
                     "noteIds": [],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
                 for i in range(3)
             ]
@@ -301,11 +251,11 @@ class TestNotesProcessor:
                     "text": "Проход над подвесным потолком",
                     "history": {
                         "createdAt": "2021-06-15T20:14:11.234Z",
-                        "createdBy": "Network Team"
+                        "createdBy": "Network Team",
                     },
                     "imageIds": [],
                     "id": "5590b2bc-f8dc-4819-bdac-8d468878534a",
-                    "status": "CREATED"
+                    "status": "CREATED",
                 }
             ]
         }
@@ -319,20 +269,13 @@ class TestNotesProcessor:
     def test_process_notes_with_error_handling(self):
         """Test that notes processor handles errors gracefully."""
         from unittest.mock import patch
+
         processor = NotesProcessor()
 
         notes_data = {
             "notes": [
-                {
-                    "id": "valid-note",
-                    "text": "Valid note",
-                    "status": "CREATED"
-                },
-                {
-                    "id": "bad-note",
-                    "text": "This will fail",
-                    "status": "CREATED"
-                }
+                {"id": "valid-note", "text": "Valid note", "status": "CREATED"},
+                {"id": "bad-note", "text": "This will fail", "status": "CREATED"},
             ]
         }
 
@@ -346,7 +289,7 @@ class TestNotesProcessor:
                 raise ValueError("Simulated processing error")
             return original_method(note_data)
 
-        with patch.object(processor, '_process_single_note', side_effect=mock_process):
+        with patch.object(processor, "_process_single_note", side_effect=mock_process):
             result = processor.process_notes(notes_data)
 
         # Should have 1 valid note (second one failed)
@@ -365,21 +308,21 @@ class TestNotesProcessor:
                     "floorPlanId": "floor1",
                     "points": [{"x": 0, "y": 0}, {"x": 10, "y": 10}],
                     "color": "#FF0000",
-                    "status": "CREATED"
+                    "status": "CREATED",
                 },
                 {
                     "id": "invalid-cable",
                     # Missing floorPlanId which might cause issues
                     "points": None,  # Invalid points
-                    "status": "CREATED"
+                    "status": "CREATED",
                 },
                 {
                     "id": "another-valid-cable",
                     "floorPlanId": "floor1",
                     "points": [{"x": 5, "y": 5}],
                     "color": "#00FF00",
-                    "status": "CREATED"
-                }
+                    "status": "CREATED",
+                },
             ]
         }
 
@@ -392,6 +335,7 @@ class TestNotesProcessor:
     def test_process_picture_notes_with_error_handling(self):
         """Test that picture notes processor handles errors gracefully."""
         from unittest.mock import patch
+
         processor = NotesProcessor()
         floors = {"floor1": Floor(id="floor1", name="Floor 1")}
 
@@ -399,21 +343,15 @@ class TestNotesProcessor:
             "pictureNotes": [
                 {
                     "id": "valid-picture",
-                    "location": {
-                        "floorPlanId": "floor1",
-                        "coord": {"x": 100, "y": 200}
-                    },
+                    "location": {"floorPlanId": "floor1", "coord": {"x": 100, "y": 200}},
                     "noteIds": ["note1"],
-                    "status": "CREATED"
+                    "status": "CREATED",
                 },
                 {
                     "id": "bad-picture",
-                    "location": {
-                        "floorPlanId": "floor1",
-                        "coord": {"x": 150, "y": 250}
-                    },
-                    "status": "CREATED"
-                }
+                    "location": {"floorPlanId": "floor1", "coord": {"x": 150, "y": 250}},
+                    "status": "CREATED",
+                },
             ]
         }
 
@@ -427,7 +365,7 @@ class TestNotesProcessor:
                 raise ValueError("Simulated picture note processing error")
             return original_method(note_data, floors_dict)
 
-        with patch.object(processor, '_process_single_picture_note', side_effect=mock_process):
+        with patch.object(processor, "_process_single_picture_note", side_effect=mock_process):
             result = processor.process_picture_notes(picture_notes_data, floors)
 
         # Should have 1 valid picture note (second one failed)

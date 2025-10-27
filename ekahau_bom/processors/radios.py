@@ -93,7 +93,7 @@ class RadioProcessor:
             antenna_mounting=antenna_mounting,
             antenna_direction=antenna_direction,
             antenna_tilt=antenna_tilt,
-            antenna_height=antenna_height
+            antenna_height=antenna_height,
         )
 
     def _extract_value(self, value: Any) -> int | float | None:
@@ -113,7 +113,9 @@ class RadioProcessor:
             return value[0]
         return None
 
-    def _determine_frequency_band(self, radio_data: dict[str, Any], channel: int | None) -> str | None:
+    def _determine_frequency_band(
+        self, radio_data: dict[str, Any], channel: int | None
+    ) -> str | None:
         """Determine frequency band from radio data.
 
         Args:
@@ -144,7 +146,9 @@ class RadioProcessor:
 
         return None
 
-    def _determine_wifi_standard(self, radio_data: dict[str, Any], channel_width: int | float | None = None) -> str | None:
+    def _determine_wifi_standard(
+        self, radio_data: dict[str, Any], channel_width: int | float | None = None
+    ) -> str | None:
         """Determine Wi-Fi standard from radio data.
 
         Args:
@@ -168,7 +172,7 @@ class RadioProcessor:
                 "N": "802.11n",
                 "AC": "802.11ac",
                 "AX": "802.11ax",
-                "BE": "802.11be"
+                "BE": "802.11be",
             }
             if technology in tech_mapping:
                 return tech_mapping[technology]

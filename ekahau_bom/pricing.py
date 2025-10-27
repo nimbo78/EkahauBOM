@@ -29,6 +29,7 @@ class PriceInfo:
         discount_amount: Discount amount in USD
         total: Final total after discounts
     """
+
     vendor: str
     model: str
     unit_price: float
@@ -59,6 +60,7 @@ class CostSummary:
         items_without_prices: Number of items without prices
         coverage_percent: Percentage of items with prices
     """
+
     items: list[PriceInfo] = field(default_factory=list)
     subtotal: float = 0.0
     total_discount: float = 0.0
@@ -116,24 +118,24 @@ class PricingDatabase:
             return
 
         try:
-            with open(self.pricing_file, 'r', encoding='utf-8') as f:
+            with open(self.pricing_file, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             # Load vendor prices
-            for vendor in ['Cisco', 'Huawei', 'MikroTik', 'Ubiquiti', 'Ruckus']:
+            for vendor in ["Cisco", "Huawei", "MikroTik", "Ubiquiti", "Ruckus"]:
                 if vendor in data:
                     self.prices[vendor] = data[vendor]
 
             # Load antenna prices
-            if 'Antennas' in data:
-                self.antenna_prices = data['Antennas']
+            if "Antennas" in data:
+                self.antenna_prices = data["Antennas"]
 
             # Load volume discounts
-            if 'discounts' in data and 'volume' in data['discounts']:
-                self.volume_discounts = data['discounts']['volume']
+            if "discounts" in data and "volume" in data["discounts"]:
+                self.volume_discounts = data["discounts"]["volume"]
 
             # Load currency
-            self.currency = data.get('currency', 'USD')
+            self.currency = data.get("currency", "USD")
 
             logger.info(f"Loaded pricing for {len(self.prices)} vendors")
             logger.info(f"Loaded {len(self.antenna_prices)} antenna prices")
@@ -180,17 +182,17 @@ class PricingDatabase:
             Discount percentage (0-100)
         """
         for tier in self.volume_discounts:
-            min_qty = tier['min_quantity']
-            max_qty = tier.get('max_quantity')
+            min_qty = tier["min_quantity"]
+            max_qty = tier.get("max_quantity")
 
             if max_qty is None:
                 # Unlimited tier
                 if quantity >= min_qty:
-                    return float(tier['discount_percent'])
+                    return float(tier["discount_percent"])
             else:
                 # Range tier
                 if min_qty <= quantity <= max_qty:
-                    return float(tier['discount_percent'])
+                    return float(tier["discount_percent"])
 
         return 0.0
 
@@ -202,7 +204,7 @@ class CostCalculator:
         self,
         pricing_db: PricingDatabase,
         custom_discount: float = 0.0,
-        apply_volume_discounts: bool = True
+        apply_volume_discounts: bool = True,
     ):
         """Initialize cost calculator.
 
@@ -215,10 +217,7 @@ class CostCalculator:
         self.custom_discount = custom_discount
         self.apply_volume_discounts = apply_volume_discounts
 
-    def calculate_access_points_cost(
-        self,
-        access_points: list[AccessPoint]
-    ) -> CostSummary:
+    def calculate_access_points_cost(self, access_points: list[AccessPoint]) -> CostSummary:
         """Calculate cost for access points.
 
         Args:
@@ -256,7 +255,7 @@ class CostCalculator:
                     model=model,
                     unit_price=unit_price,
                     quantity=quantity,
-                    discount_percent=total_discount
+                    discount_percent=total_discount,
                 )
                 items.append(price_info)
                 items_with_prices += 1
@@ -267,7 +266,7 @@ class CostCalculator:
                     model=model,
                     unit_price=0.0,
                     quantity=quantity,
-                    discount_percent=0.0
+                    discount_percent=0.0,
                 )
                 items.append(price_info)
                 items_without_prices += 1
@@ -278,16 +277,13 @@ class CostCalculator:
             items=items,
             currency=self.pricing_db.currency,
             items_with_prices=items_with_prices,
-            items_without_prices=items_without_prices
+            items_without_prices=items_without_prices,
         )
         summary.calculate_totals()
 
         return summary
 
-    def calculate_antennas_cost(
-        self,
-        antennas: list[Antenna]
-    ) -> CostSummary:
+    def calculate_antennas_cost(self, antennas: list[Antenna]) -> CostSummary:
         """Calculate cost for antennas.
 
         Args:
@@ -316,7 +312,7 @@ class CostCalculator:
                     model=antenna_name,
                     unit_price=unit_price,
                     quantity=quantity,
-                    discount_percent=discount
+                    discount_percent=discount,
                 )
                 items.append(price_info)
                 items_with_prices += 1
@@ -327,7 +323,7 @@ class CostCalculator:
                     model=antenna_name,
                     unit_price=0.0,
                     quantity=quantity,
-                    discount_percent=0.0
+                    discount_percent=0.0,
                 )
                 items.append(price_info)
                 items_without_prices += 1
@@ -338,16 +334,14 @@ class CostCalculator:
             items=items,
             currency=self.pricing_db.currency,
             items_with_prices=items_with_prices,
-            items_without_prices=items_without_prices
+            items_without_prices=items_without_prices,
         )
         summary.calculate_totals()
 
         return summary
 
     def calculate_total_cost(
-        self,
-        access_points: list[AccessPoint],
-        antennas: list[Antenna]
+        self, access_points: list[AccessPoint], antennas: list[Antenna]
     ) -> tuple[CostSummary, CostSummary, CostSummary]:
         """Calculate total project cost.
 
@@ -366,7 +360,8 @@ class CostCalculator:
             items=ap_summary.items + antenna_summary.items,
             currency=self.pricing_db.currency,
             items_with_prices=ap_summary.items_with_prices + antenna_summary.items_with_prices,
-            items_without_prices=ap_summary.items_without_prices + antenna_summary.items_without_prices
+            items_without_prices=ap_summary.items_without_prices
+            + antenna_summary.items_without_prices,
         )
         combined.calculate_totals()
 

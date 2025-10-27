@@ -29,6 +29,7 @@ class CableMetrics:
         length_by_floor: Dictionary of total length per floor
         scale_factor: Scale factor from project units to meters
     """
+
     total_cables: int = 0
     total_length: float = 0.0
     total_length_m: Optional[float] = None
@@ -65,19 +66,14 @@ class CableAnalytics:
             p2 = cable_note.points[i + 1]
 
             # Euclidean distance: sqrt((x2-x1)^2 + (y2-y1)^2)
-            distance = math.sqrt(
-                (p2.x - p1.x) ** 2 +
-                (p2.y - p1.y) ** 2
-            )
+            distance = math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
             total_length += distance
 
         return total_length
 
     @staticmethod
     def calculate_cable_metrics(
-        cable_notes: list[CableNote],
-        floors: dict[str, Floor],
-        scale_factor: Optional[float] = None
+        cable_notes: list[CableNote], floors: dict[str, Floor], scale_factor: Optional[float] = None
     ) -> CableMetrics:
         """Calculate comprehensive cable infrastructure metrics.
 
@@ -130,7 +126,7 @@ class CableAnalytics:
             max_length=max_length,
             cables_by_floor=dict(cables_by_floor),
             length_by_floor=length_by_floor,
-            scale_factor=scale_factor
+            scale_factor=scale_factor,
         )
 
         logger.info(f"Cable metrics: {len(cable_notes)} cables analyzed")
@@ -146,7 +142,7 @@ class CableAnalytics:
         cable_metrics: CableMetrics,
         cost_per_meter: float = 2.0,
         installation_cost_per_meter: float = 5.0,
-        overage_factor: float = 1.2
+        overage_factor: float = 1.2,
     ) -> dict[str, float]:
         """Estimate total cable infrastructure cost.
 
@@ -164,11 +160,7 @@ class CableAnalytics:
         """
         if not cable_metrics.total_length_m:
             logger.warning("Cannot calculate cable cost: no length in meters available")
-            return {
-                "cable_material": 0.0,
-                "installation": 0.0,
-                "total": 0.0
-            }
+            return {"cable_material": 0.0, "installation": 0.0, "total": 0.0}
 
         # Apply overage factor for waste, slack, etc.
         effective_length = cable_metrics.total_length_m * overage_factor
@@ -177,7 +169,9 @@ class CableAnalytics:
         installation_cost = cable_metrics.total_length_m * installation_cost_per_meter
         total_cost = cable_material_cost + installation_cost
 
-        logger.info(f"Cable cost estimate: ${total_cost:.2f} ({effective_length:.1f}m @ ${cost_per_meter}/m + installation)")
+        logger.info(
+            f"Cable cost estimate: ${total_cost:.2f} ({effective_length:.1f}m @ ${cost_per_meter}/m + installation)"
+        )
 
         return {
             "cable_material": cable_material_cost,
@@ -185,7 +179,7 @@ class CableAnalytics:
             "total": total_cost,
             "length_meters": cable_metrics.total_length_m,
             "effective_length_meters": effective_length,
-            "overage_factor": overage_factor
+            "overage_factor": overage_factor,
         }
 
     @staticmethod
@@ -193,7 +187,7 @@ class CableAnalytics:
         cable_metrics: CableMetrics,
         cable_type: str = "Cat6A UTP",
         connector_type: str = "RJ45",
-        connectors_per_cable: int = 2
+        connectors_per_cable: int = 2,
     ) -> list[dict[str, any]]:
         """Generate Bill of Materials for cable infrastructure.
 
@@ -211,29 +205,35 @@ class CableAnalytics:
         if cable_metrics.total_length_m:
             # Cable in meters (rounded up to nearest meter)
             cable_length_rounded = math.ceil(cable_metrics.total_length_m)
-            bom.append({
-                "description": f"{cable_type} Network Cable",
-                "quantity": cable_length_rounded,
-                "unit": "meters",
-                "category": "Cable"
-            })
+            bom.append(
+                {
+                    "description": f"{cable_type} Network Cable",
+                    "quantity": cable_length_rounded,
+                    "unit": "meters",
+                    "category": "Cable",
+                }
+            )
 
         # Connectors
         total_connectors = cable_metrics.total_cables * connectors_per_cable
-        bom.append({
-            "description": f"{connector_type} Connectors",
-            "quantity": total_connectors,
-            "unit": "pieces",
-            "category": "Connectors"
-        })
+        bom.append(
+            {
+                "description": f"{connector_type} Connectors",
+                "quantity": total_connectors,
+                "unit": "pieces",
+                "category": "Connectors",
+            }
+        )
 
         # Cable routes (logical count)
-        bom.append({
-            "description": "Cable Routes/Runs",
-            "quantity": cable_metrics.total_cables,
-            "unit": "routes",
-            "category": "Infrastructure"
-        })
+        bom.append(
+            {
+                "description": "Cable Routes/Runs",
+                "quantity": cable_metrics.total_cables,
+                "unit": "routes",
+                "category": "Infrastructure",
+            }
+        )
 
         logger.info(f"Generated cable BOM: {len(bom)} items")
 

@@ -5,7 +5,12 @@
 
 import pytest
 from ekahau_bom.models import AccessPoint, Tag, Radio
-from ekahau_bom.analytics import GroupingAnalytics, CoverageAnalytics, MountingAnalytics, RadioAnalytics
+from ekahau_bom.analytics import (
+    GroupingAnalytics,
+    CoverageAnalytics,
+    MountingAnalytics,
+    RadioAnalytics,
+)
 
 
 @pytest.fixture
@@ -19,7 +24,7 @@ def sample_aps():
             floor_name="Floor 1",
             tags=[Tag(key="Location", value="Building A", tag_key_id="1")],
             mine=True,
-            floor_id="f1"
+            floor_id="f1",
         ),
         AccessPoint(
             vendor="Cisco",
@@ -28,7 +33,7 @@ def sample_aps():
             floor_name="Floor 1",
             tags=[Tag(key="Location", value="Building A", tag_key_id="1")],
             mine=True,
-            floor_id="f1"
+            floor_id="f1",
         ),
         AccessPoint(
             vendor="Cisco",
@@ -37,7 +42,7 @@ def sample_aps():
             floor_name="Floor 2",
             tags=[Tag(key="Location", value="Building B", tag_key_id="1")],
             mine=True,
-            floor_id="f2"
+            floor_id="f2",
         ),
         AccessPoint(
             vendor="Aruba",
@@ -46,7 +51,7 @@ def sample_aps():
             floor_name="Floor 1",
             tags=[Tag(key="Location", value="Building A", tag_key_id="1")],
             mine=True,
-            floor_id="f1"
+            floor_id="f1",
         ),
     ]
 
@@ -98,12 +103,9 @@ class TestGroupingAnalytics:
     def test_group_by_tag_with_untagged(self):
         """Test grouping by tag with some APs untagged."""
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
-                       tags=[Tag("Zone", "Office", "1")]),
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
-                       tags=[]),
-            AccessPoint("Aruba", "AP-635", "Red", "Floor 2",
-                       tags=[Tag("Zone", "Office", "1")]),
+            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", tags=[Tag("Zone", "Office", "1")]),
+            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", tags=[]),
+            AccessPoint("Aruba", "AP-635", "Red", "Floor 2", tags=[Tag("Zone", "Office", "1")]),
         ]
         result = GroupingAnalytics.group_by_tag(aps, "Zone")
         assert result["Office"] == 2
@@ -136,7 +138,9 @@ class TestGroupingAnalytics:
         """Test grouping by color when some APs have no color."""
         aps = [
             AccessPoint(id="ap1", vendor="Cisco", model="AP-515", color=None, floor_name="Floor 1"),
-            AccessPoint(id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"),
+            AccessPoint(
+                id="ap2", vendor="Cisco", model="AP-515", color="Yellow", floor_name="Floor 1"
+            ),
             AccessPoint(id="ap3", vendor="Aruba", model="AP-635", color=None, floor_name="Floor 2"),
         ]
         result = GroupingAnalytics.group_by_color(aps)
@@ -194,14 +198,18 @@ class TestGroupingAnalytics:
 
     def test_multi_dimensional_grouping_vendor_model_floor(self, sample_aps):
         """Test multi-dimensional grouping with vendor, model, and floor."""
-        result = GroupingAnalytics.multi_dimensional_grouping(sample_aps, ["vendor", "model", "floor"])
+        result = GroupingAnalytics.multi_dimensional_grouping(
+            sample_aps, ["vendor", "model", "floor"]
+        )
         assert result[("Cisco", "AP-515", "Floor 1")] == 2
         assert result[("Cisco", "AP-635", "Floor 2")] == 1
         assert result[("Aruba", "AP-515", "Floor 1")] == 1
 
     def test_multi_dimensional_grouping_with_tag(self, sample_aps):
         """Test multi-dimensional grouping with tag dimension."""
-        result = GroupingAnalytics.multi_dimensional_grouping(sample_aps, ["floor", "tag"], tag_key="Location")
+        result = GroupingAnalytics.multi_dimensional_grouping(
+            sample_aps, ["floor", "tag"], tag_key="Location"
+        )
         assert result[("Floor 1", "Building A")] == 3
         assert result[("Floor 2", "Building B")] == 1
 
@@ -218,9 +226,15 @@ class TestMountingAnalytics:
     def test_calculate_mounting_metrics_basic(self):
         """Test basic mounting metrics calculation."""
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", mounting_height=3.0, azimuth=45.0, tilt=10.0),
-            AccessPoint("Cisco", "AP-635", "Red", "Floor 2", mounting_height=4.0, azimuth=90.0, tilt=15.0),
-            AccessPoint("Aruba", "AP-515", "Blue", "Floor 1", mounting_height=3.5, azimuth=180.0, tilt=5.0),
+            AccessPoint(
+                "Cisco", "AP-515", "Yellow", "Floor 1", mounting_height=3.0, azimuth=45.0, tilt=10.0
+            ),
+            AccessPoint(
+                "Cisco", "AP-635", "Red", "Floor 2", mounting_height=4.0, azimuth=90.0, tilt=15.0
+            ),
+            AccessPoint(
+                "Aruba", "AP-515", "Blue", "Floor 1", mounting_height=3.5, azimuth=180.0, tilt=5.0
+            ),
         ]
 
         metrics = MountingAnalytics.calculate_mounting_metrics(aps)
@@ -349,13 +363,9 @@ class TestCoverageAnalytics:
                 {
                     "id": "area1",
                     "size": 500.0,  # Field is called 'size', not 'area'
-                    "excluded": False
+                    "excluded": False,
                 },
-                {
-                    "id": "area2",
-                    "size": 300.0,
-                    "excluded": False
-                }
+                {"id": "area2", "size": 300.0, "excluded": False},
             ]
         }
 
@@ -395,13 +405,12 @@ class TestCoverageAnalytics:
     def test_print_grouped_results_with_data(self, caplog):
         """Test print_grouped_results with data."""
         import logging
+
         caplog.set_level(logging.INFO)
 
         grouped_data = {"Cisco": 10, "Aruba": 5, "Ubiquiti": 3}
         GroupingAnalytics.print_grouped_results(
-            grouped_data,
-            title="Test Grouping",
-            show_percentages=True
+            grouped_data, title="Test Grouping", show_percentages=True
         )
 
         # Check that logger was called with correct messages
@@ -413,6 +422,7 @@ class TestCoverageAnalytics:
     def test_print_grouped_results_empty(self, caplog):
         """Test print_grouped_results with empty data."""
         import logging
+
         caplog.set_level(logging.INFO)
 
         GroupingAnalytics.print_grouped_results({}, title="Empty Test")
@@ -423,13 +433,12 @@ class TestCoverageAnalytics:
     def test_print_grouped_results_without_percentages(self, caplog):
         """Test print_grouped_results without percentages."""
         import logging
+
         caplog.set_level(logging.INFO)
 
         grouped_data = {"Cisco": 10, "Aruba": 5}
         GroupingAnalytics.print_grouped_results(
-            grouped_data,
-            title="No Percentages",
-            show_percentages=False
+            grouped_data, title="No Percentages", show_percentages=False
         )
 
         assert "No Percentages" in caplog.text
@@ -542,7 +551,7 @@ class TestRadioAnalyticsExtended:
                 channel=36,
                 channel_width=80,
                 tx_power=20.0,
-                standard="802.11ax"
+                standard="802.11ax",
             ),
             Radio(
                 id="r2",
@@ -551,7 +560,7 @@ class TestRadioAnalyticsExtended:
                 channel=6,
                 channel_width=40,
                 tx_power=15.0,
-                standard="802.11n"
+                standard="802.11n",
             ),
         ]
 

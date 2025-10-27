@@ -14,6 +14,7 @@ try:
     from rich.table import Table
     from rich.panel import Panel
     from rich import box
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -47,205 +48,169 @@ def create_argument_parser() -> argparse.ArgumentParser:
         Configured ArgumentParser instance
     """
     parser = argparse.ArgumentParser(
-        prog='EkahauBOM',
-        description='Generate Bill of Materials (BOM) from Ekahau AI project files',
-        epilog='Example: python EkahauBOM.py project.esx --output-dir reports/'
+        prog="EkahauBOM",
+        description="Generate Bill of Materials (BOM) from Ekahau AI project files",
+        epilog="Example: python EkahauBOM.py project.esx --output-dir reports/",
     )
 
     parser.add_argument(
-        'esx_file',
+        "esx_file",
         type=Path,
-        nargs='?',
-        help='Path to Ekahau .esx project file (optional if --batch is used)'
+        nargs="?",
+        help="Path to Ekahau .esx project file (optional if --batch is used)",
     )
 
     parser.add_argument(
-        '--output-dir',
+        "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help=f'Output directory for generated files (default: {DEFAULT_OUTPUT_DIR})'
+        help=f"Output directory for generated files (default: {DEFAULT_OUTPUT_DIR})",
     )
 
     parser.add_argument(
-        '--config',
-        type=Path,
-        help='Path to configuration file (default: config/config.yaml)'
+        "--config", type=Path, help="Path to configuration file (default: config/config.yaml)"
     )
 
     parser.add_argument(
-        '--colors-config',
-        type=Path,
-        help='Path to custom colors configuration file (YAML)'
+        "--colors-config", type=Path, help="Path to custom colors configuration file (YAML)"
     )
 
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Enable verbose logging (DEBUG level)'
+        "--verbose", "-v", action="store_true", help="Enable verbose logging (DEBUG level)"
     )
 
-    parser.add_argument(
-        '--log-file',
-        type=Path,
-        help='Path to log file (optional)'
-    )
+    parser.add_argument("--log-file", type=Path, help="Path to log file (optional)")
+
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     parser.add_argument(
-        '--version',
-        action='version',
-        version=f'%(prog)s {__version__}'
-    )
-
-    parser.add_argument(
-        '--format',
+        "--format",
         type=str,
-        default='csv',
-        help='Export format(s): csv, excel, html, json, pdf, or combinations like csv,excel,html,json,pdf (default: csv)'
+        default="csv",
+        help="Export format(s): csv, excel, html, json, pdf, or combinations like csv,excel,html,json,pdf (default: csv)",
     )
 
     # Filtering options
-    filter_group = parser.add_argument_group('filtering options')
+    filter_group = parser.add_argument_group("filtering options")
 
     filter_group.add_argument(
-        '--filter-floor',
+        "--filter-floor",
         type=str,
-        help='Filter by floor names (comma-separated): "Floor 1,Floor 2"'
+        help='Filter by floor names (comma-separated): "Floor 1,Floor 2"',
     )
 
     filter_group.add_argument(
-        '--filter-color',
-        type=str,
-        help='Filter by colors (comma-separated): "Yellow,Red,Blue"'
+        "--filter-color", type=str, help='Filter by colors (comma-separated): "Yellow,Red,Blue"'
     )
 
     filter_group.add_argument(
-        '--filter-vendor',
-        type=str,
-        help='Filter by vendors (comma-separated): "Cisco,Aruba"'
+        "--filter-vendor", type=str, help='Filter by vendors (comma-separated): "Cisco,Aruba"'
     )
 
     filter_group.add_argument(
-        '--filter-model',
-        type=str,
-        help='Filter by models (comma-separated): "AP-515,AP-635"'
+        "--filter-model", type=str, help='Filter by models (comma-separated): "AP-515,AP-635"'
     )
 
     filter_group.add_argument(
-        '--filter-tag',
-        action='append',
-        help='Filter by tag (format: "TagKey:TagValue"). Can be used multiple times. Example: --filter-tag "Location:Building A" --filter-tag "Zone:Office"'
+        "--filter-tag",
+        action="append",
+        help='Filter by tag (format: "TagKey:TagValue"). Can be used multiple times. Example: --filter-tag "Location:Building A" --filter-tag "Zone:Office"',
     )
 
     filter_group.add_argument(
-        '--exclude-floor',
-        type=str,
-        help='Exclude floor names (comma-separated)'
+        "--exclude-floor", type=str, help="Exclude floor names (comma-separated)"
     )
 
-    filter_group.add_argument(
-        '--exclude-color',
-        type=str,
-        help='Exclude colors (comma-separated)'
-    )
+    filter_group.add_argument("--exclude-color", type=str, help="Exclude colors (comma-separated)")
 
     filter_group.add_argument(
-        '--exclude-vendor',
-        type=str,
-        help='Exclude vendors (comma-separated)'
+        "--exclude-vendor", type=str, help="Exclude vendors (comma-separated)"
     )
 
     # Grouping options
-    group_group = parser.add_argument_group('grouping options')
+    group_group = parser.add_argument_group("grouping options")
 
     group_group.add_argument(
-        '--group-by',
+        "--group-by",
         type=str,
-        choices=['floor', 'color', 'vendor', 'model', 'tag'],
-        help='Group results by specified dimension and display statistics'
+        choices=["floor", "color", "vendor", "model", "tag"],
+        help="Group results by specified dimension and display statistics",
     )
 
     group_group.add_argument(
-        '--tag-key',
-        type=str,
-        help='Tag key name to use when --group-by tag is selected'
+        "--tag-key", type=str, help="Tag key name to use when --group-by tag is selected"
     )
 
     # Pricing options
-    pricing_group = parser.add_argument_group('pricing options')
+    pricing_group = parser.add_argument_group("pricing options")
 
     pricing_group.add_argument(
-        '--enable-pricing',
-        action='store_true',
-        help='Enable cost calculations and include pricing in reports'
+        "--enable-pricing",
+        action="store_true",
+        help="Enable cost calculations and include pricing in reports",
     )
 
     pricing_group.add_argument(
-        '--pricing-file',
-        type=Path,
-        help='Path to custom pricing database (YAML file)'
+        "--pricing-file", type=Path, help="Path to custom pricing database (YAML file)"
     )
 
     pricing_group.add_argument(
-        '--discount',
+        "--discount",
         type=float,
         default=0.0,
-        help='Additional discount percentage to apply (0-100, default: 0)'
+        help="Additional discount percentage to apply (0-100, default: 0)",
     )
 
     pricing_group.add_argument(
-        '--no-volume-discounts',
-        action='store_true',
-        help='Disable automatic volume-based discounts'
+        "--no-volume-discounts",
+        action="store_true",
+        help="Disable automatic volume-based discounts",
     )
 
     # Batch processing options
-    batch_group = parser.add_argument_group('batch processing options')
+    batch_group = parser.add_argument_group("batch processing options")
 
     batch_group.add_argument(
-        '--batch',
-        type=Path,
-        help='Process all .esx files in the specified directory'
+        "--batch", type=Path, help="Process all .esx files in the specified directory"
     )
 
     batch_group.add_argument(
-        '--recursive',
-        action='store_true',
-        help='Search for .esx files recursively in subdirectories (use with --batch)'
+        "--recursive",
+        action="store_true",
+        help="Search for .esx files recursively in subdirectories (use with --batch)",
     )
 
     # Visualization options
-    viz_group = parser.add_argument_group('visualization options')
+    viz_group = parser.add_argument_group("visualization options")
 
     viz_group.add_argument(
-        '--visualize-floor-plans',
-        action='store_true',
-        help='Generate floor plan images with AP placements overlaid (requires Pillow library)'
+        "--visualize-floor-plans",
+        action="store_true",
+        help="Generate floor plan images with AP placements overlaid (requires Pillow library)",
     )
 
     viz_group.add_argument(
-        '--ap-circle-radius',
+        "--ap-circle-radius",
         type=int,
         default=15,
-        help='Radius of AP marker circles in pixels (default: 15)'
+        help="Radius of AP marker circles in pixels (default: 15)",
     )
 
     viz_group.add_argument(
-        '--no-ap-names',
-        action='store_true',
-        help='Hide AP names on floor plan visualizations'
+        "--no-ap-names", action="store_true", help="Hide AP names on floor plan visualizations"
     )
 
     viz_group.add_argument(
-        '--show-azimuth-arrows',
-        action='store_true',
-        help='Show azimuth direction arrows on AP markers (useful for wall-mounted and directional APs)'
+        "--show-azimuth-arrows",
+        action="store_true",
+        help="Show azimuth direction arrows on AP markers (useful for wall-mounted and directional APs)",
     )
 
     viz_group.add_argument(
-        '--ap-opacity',
+        "--ap-opacity",
         type=float,
         default=1.0,
-        help='Opacity for AP markers (0.0-1.0, default: 1.0 = 100%%, 0.75 = 75%% for better floor plan visibility)'
+        help="Opacity for AP markers (0.0-1.0, default: 1.0 = 100%%, 0.75 = 75%% for better floor plan visibility)",
     )
 
     return parser
@@ -254,21 +219,27 @@ def create_argument_parser() -> argparse.ArgumentParser:
 def print_header():
     """Print application header with Rich."""
     if RICH_AVAILABLE and console:
-        console.print(Panel.fit(
-            "[bold blue]EkahauBOM[/bold blue] - Bill of Materials Generator\n"
-            f"[dim]Version {__version__}[/dim]",
-            border_style="blue"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold blue]EkahauBOM[/bold blue] - Bill of Materials Generator\n"
+                f"[dim]Version {__version__}[/dim]",
+                border_style="blue",
+            )
+        )
     else:
         logger.info(f"EkahauBOM - Version {__version__}")
 
 
-def print_summary_table(access_points, antennas, radios, floors, notes=None, cable_notes=None, picture_notes=None):
+def print_summary_table(
+    access_points, antennas, radios, floors, notes=None, cable_notes=None, picture_notes=None
+):
     """Print summary statistics table with Rich."""
     if not RICH_AVAILABLE or not console:
         return
 
-    table = Table(title="Project Summary", box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table = Table(
+        title="Project Summary", box=box.ROUNDED, show_header=True, header_style="bold cyan"
+    )
     table.add_column("Metric", style="cyan", no_wrap=True)
     table.add_column("Count", justify="right", style="green")
 
@@ -333,14 +304,18 @@ def print_cost_summary(cost_summary):
     if not RICH_AVAILABLE or not console or not cost_summary:
         return
 
-    table = Table(title="💰 Cost Summary", box=box.DOUBLE, show_header=True, header_style="bold green")
+    table = Table(
+        title="💰 Cost Summary", box=box.DOUBLE, show_header=True, header_style="bold green"
+    )
     table.add_column("Item", style="cyan")
     table.add_column("Amount", justify="right", style="green")
 
     table.add_row("Access Points", f"${cost_summary.grand_total:,.2f}")
-    if hasattr(cost_summary, 'total_discount') and cost_summary.total_discount > 0:
+    if hasattr(cost_summary, "total_discount") and cost_summary.total_discount > 0:
         table.add_row("Total Savings", f"[red]-${cost_summary.total_discount:,.2f}[/red]")
-    table.add_row("[bold]Total[/bold]", f"[bold green]${cost_summary.grand_total:,.2f}[/bold green]")
+    table.add_row(
+        "[bold]Total[/bold]", f"[bold green]${cost_summary.grand_total:,.2f}[/bold green]"
+    )
 
     console.print(table)
 
@@ -350,7 +325,9 @@ def print_export_summary(exported_files):
     if not RICH_AVAILABLE or not console:
         return
 
-    table = Table(title="📄 Generated Files", box=box.ROUNDED, show_header=True, header_style="bold blue")
+    table = Table(
+        title="📄 Generated Files", box=box.ROUNDED, show_header=True, header_style="bold blue"
+    )
     table.add_column("File", style="cyan")
     table.add_column("Size", justify="right", style="yellow")
 
@@ -360,7 +337,9 @@ def print_export_summary(exported_files):
             table.add_row(file_path.name, f"{size_kb:.1f} KB")
 
     console.print(table)
-    console.print(f"\n[bold green]✓[/bold green] Reports saved to: [cyan]{exported_files[0].parent if exported_files else 'output/'}[/cyan]")
+    console.print(
+        f"\n[bold green]✓[/bold green] Reports saved to: [cyan]{exported_files[0].parent if exported_files else 'output/'}[/cyan]"
+    )
 
 
 def find_esx_files(directory: Path, recursive: bool = False) -> list[Path]:
@@ -393,7 +372,10 @@ def find_esx_files(directory: Path, recursive: bool = False) -> list[Path]:
     # Sort files by name for consistent processing order
     esx_files.sort()
 
-    logger.info(f"Found {len(esx_files)} .esx file(s) in {directory}" + (" (recursive)" if recursive else ""))
+    logger.info(
+        f"Found {len(esx_files)} .esx file(s) in {directory}"
+        + (" (recursive)" if recursive else "")
+    )
 
     return esx_files
 
@@ -421,7 +403,7 @@ def process_project(
     ap_circle_radius: int = 15,
     show_ap_names: bool = True,
     show_azimuth_arrows: bool = False,
-    ap_opacity: float = 1.0
+    ap_opacity: float = 1.0,
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -468,7 +450,7 @@ def process_project(
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
-                console=console
+                console=console,
             ) as progress:
                 task = progress.add_task(f"[cyan]Processing project: {esx_file.name}", total=None)
                 parser_context = EkahauParser(esx_file)
@@ -503,15 +485,27 @@ def process_project(
             # Process tags
             tag_processor = TagProcessor(tag_keys_data)
             if tag_processor.tag_keys:
-                logger.info(f"Found {len(tag_processor.tag_keys)} tag types: {', '.join(tag_processor.get_tag_key_names())}")
+                logger.info(
+                    f"Found {len(tag_processor.tag_keys)} tag types: {', '.join(tag_processor.get_tag_key_names())}"
+                )
 
             # Process access points
             ap_processor = AccessPointProcessor(color_db, tag_processor)
             access_points = ap_processor.process(access_points_data, floors, simulated_radios_data)
 
             # Apply filters if specified
-            if any([filter_floors, filter_colors, filter_vendors, filter_models, filter_tags,
-                    exclude_floors, exclude_colors, exclude_vendors]):
+            if any(
+                [
+                    filter_floors,
+                    filter_colors,
+                    filter_vendors,
+                    filter_models,
+                    filter_tags,
+                    exclude_floors,
+                    exclude_colors,
+                    exclude_vendors,
+                ]
+            ):
                 logger.info(f"Applying filters to {len(access_points)} access points...")
                 access_points = APFilter.apply_filters(
                     access_points,
@@ -522,22 +516,22 @@ def process_project(
                     include_tags=filter_tags,
                     exclude_floors=exclude_floors,
                     exclude_colors=exclude_colors,
-                    exclude_vendors=exclude_vendors
+                    exclude_vendors=exclude_vendors,
                 )
 
             # Apply grouping if specified
             if group_by:
                 logger.info(f"Grouping {len(access_points)} access points by: {group_by}")
 
-                if group_by == 'floor':
+                if group_by == "floor":
                     grouped = GroupingAnalytics.group_by_floor(access_points)
-                elif group_by == 'color':
+                elif group_by == "color":
                     grouped = GroupingAnalytics.group_by_color(access_points)
-                elif group_by == 'vendor':
+                elif group_by == "vendor":
                     grouped = GroupingAnalytics.group_by_vendor(access_points)
-                elif group_by == 'model':
+                elif group_by == "model":
                     grouped = GroupingAnalytics.group_by_model(access_points)
-                elif group_by == 'tag':
+                elif group_by == "tag":
                     if not tag_key:
                         logger.error("--tag-key is required when using --group-by tag")
                         return 1
@@ -548,8 +542,7 @@ def process_project(
 
                 # Display grouped results
                 GroupingAnalytics.print_grouped_results(
-                    grouped,
-                    title=f"Access Points Grouped by {group_by.capitalize()}"
+                    grouped, title=f"Access Points Grouped by {group_by.capitalize()}"
                 )
 
             # Process antennas
@@ -565,12 +558,17 @@ def process_project(
             notes = notes_processor.process_notes(notes_data)
             cable_notes = notes_processor.process_cable_notes(cable_notes_data, floors)
             picture_notes = notes_processor.process_picture_notes(picture_notes_data, floors)
-            logger.info(f"Found {len(notes)} text notes, {len(cable_notes)} cable notes, {len(picture_notes)} picture notes")
+            logger.info(
+                f"Found {len(notes)} text notes, {len(cable_notes)} cable notes, {len(picture_notes)} picture notes"
+            )
 
             # Process network settings
             from .processors.network_settings import NetworkSettingsProcessor
+
             network_settings_data = parser.get_network_capacity_settings()
-            network_settings = NetworkSettingsProcessor.process_network_settings(network_settings_data)
+            network_settings = NetworkSettingsProcessor.process_network_settings(
+                network_settings_data
+            )
 
             # Create project data container
             project_data = ProjectData(
@@ -583,7 +581,7 @@ def process_project(
                 notes=notes,
                 cable_notes=cable_notes,
                 picture_notes=picture_notes,
-                network_settings=network_settings
+                network_settings=network_settings,
             )
 
             # Display advanced analytics
@@ -626,35 +624,50 @@ def process_project(
                 # Frequency bands
                 logger.info("Frequency Band Distribution:")
                 for band, count in sorted(radio_metrics.band_distribution.items()):
-                    percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                    percentage = (
+                        (count / radio_metrics.total_radios * 100)
+                        if radio_metrics.total_radios > 0
+                        else 0
+                    )
                     logger.info(f"  {band}: {count} radios ({percentage:.1f}%)")
 
                 # Wi-Fi standards
                 if radio_metrics.standard_distribution:
                     logger.info("Wi-Fi Standards:")
                     for standard, count in sorted(radio_metrics.standard_distribution.items()):
-                        percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                        percentage = (
+                            (count / radio_metrics.total_radios * 100)
+                            if radio_metrics.total_radios > 0
+                            else 0
+                        )
                         logger.info(f"  {standard}: {count} radios ({percentage:.1f}%)")
 
                 # Channel widths
                 if radio_metrics.channel_width_distribution:
                     logger.info("Channel Width Distribution:")
-                    for width, count in sorted(radio_metrics.channel_width_distribution.items(), key=lambda x: x[0] if x[0] else 0):
+                    for width, count in sorted(
+                        radio_metrics.channel_width_distribution.items(),
+                        key=lambda x: x[0] if x[0] else 0,
+                    ):
                         logger.info(f"  {width} MHz: {count} radios")
 
                 # Channel distribution
                 if radio_metrics.channel_distribution:
                     logger.info("Channel Distribution:")
                     # Show top 10 most used channels
-                    top_channels = sorted(radio_metrics.channel_distribution.items(), key=lambda x: x[1], reverse=True)[:10]
+                    top_channels = sorted(
+                        radio_metrics.channel_distribution.items(), key=lambda x: x[1], reverse=True
+                    )[:10]
                     for channel, count in top_channels:
                         logger.info(f"  Channel {channel}: {count} radios")
 
                 # TX Power
                 if radio_metrics.avg_tx_power:
-                    logger.info(f"TX Power: avg={radio_metrics.avg_tx_power:.1f} dBm, " +
-                               f"min={radio_metrics.min_tx_power:.1f} dBm, " +
-                               f"max={radio_metrics.max_tx_power:.1f} dBm")
+                    logger.info(
+                        f"TX Power: avg={radio_metrics.avg_tx_power:.1f} dBm, "
+                        + f"min={radio_metrics.min_tx_power:.1f} dBm, "
+                        + f"max={radio_metrics.max_tx_power:.1f} dBm"
+                    )
 
             # Network settings (SSID, rates, etc.)
             if network_settings:
@@ -666,9 +679,13 @@ def process_project(
                 if ssid_summary:
                     logger.info("  SSID Configuration:")
                     if ssid_summary.get("ssids_2_4ghz"):
-                        logger.info(f"    2.4 GHz: {ssid_summary['ssids_2_4ghz']} SSID(s), max {ssid_summary['max_clients_2_4ghz']} clients")
+                        logger.info(
+                            f"    2.4 GHz: {ssid_summary['ssids_2_4ghz']} SSID(s), max {ssid_summary['max_clients_2_4ghz']} clients"
+                        )
                     if ssid_summary.get("ssids_5ghz"):
-                        logger.info(f"    5 GHz: {ssid_summary['ssids_5ghz']} SSID(s), max {ssid_summary['max_clients_5ghz']} clients")
+                        logger.info(
+                            f"    5 GHz: {ssid_summary['ssids_5ghz']} SSID(s), max {ssid_summary['max_clients_5ghz']} clients"
+                        )
 
             # Cable infrastructure analytics
             if cable_notes:
@@ -702,7 +719,7 @@ def process_project(
                 calculator = CostCalculator(
                     pricing_db,
                     custom_discount=discount,
-                    apply_volume_discounts=not no_volume_discounts
+                    apply_volume_discounts=not no_volume_discounts,
                 )
 
                 ap_costs, antenna_costs, total_costs = calculator.calculate_total_cost(
@@ -720,7 +737,7 @@ def process_project(
 
             # Default to CSV if no format specified
             if not export_formats:
-                export_formats = ['csv']
+                export_formats = ["csv"]
 
             # Export to requested formats
             from .exporters.excel_exporter import ExcelExporter
@@ -728,20 +745,23 @@ def process_project(
             from .exporters.json_exporter import JSONExporter
 
             exporters = {
-                'csv': CSVExporter(output_dir),
-                'excel': ExcelExporter(output_dir),
-                'html': HTMLExporter(output_dir),
-                'json': JSONExporter(output_dir)
+                "csv": CSVExporter(output_dir),
+                "excel": ExcelExporter(output_dir),
+                "html": HTMLExporter(output_dir),
+                "json": JSONExporter(output_dir),
             }
 
             # Import PDF exporter only if needed (WeasyPrint may not be installed)
-            if 'pdf' in export_formats:
+            if "pdf" in export_formats:
                 try:
                     from .exporters.pdf_exporter import PDFExporter
-                    exporters['pdf'] = PDFExporter(output_dir)
+
+                    exporters["pdf"] = PDFExporter(output_dir)
                 except ImportError as e:
                     logger.warning(f"PDF export not available: {e}")
-                    logger.warning("Install WeasyPrint to enable PDF export: pip install weasyprint")
+                    logger.warning(
+                        "Install WeasyPrint to enable PDF export: pip install weasyprint"
+                    )
 
             # Export with progress
             exported_files = []
@@ -751,18 +771,25 @@ def process_project(
                     TextColumn("[progress.description]{task.description}"),
                     BarColumn(),
                     TaskProgressColumn(),
-                    console=console
+                    console=console,
                 ) as progress:
-                    export_task = progress.add_task("[cyan]Exporting reports...", total=len(export_formats))
+                    export_task = progress.add_task(
+                        "[cyan]Exporting reports...", total=len(export_formats)
+                    )
                     for format_name in export_formats:
                         if format_name in exporters:
-                            progress.update(export_task, description=f"[cyan]Exporting to {format_name.upper()}...")
+                            progress.update(
+                                export_task,
+                                description=f"[cyan]Exporting to {format_name.upper()}...",
+                            )
                             exporter = exporters[format_name]
                             files = exporter.export(project_data)
                             exported_files.extend(files)
                             progress.advance(export_task)
                         else:
-                            console.print(f"[yellow]⚠[/yellow] Unknown export format: {format_name}")
+                            console.print(
+                                f"[yellow]⚠[/yellow] Unknown export format: {format_name}"
+                            )
                             progress.advance(export_task)
             else:
                 for format_name in export_formats:
@@ -795,16 +822,16 @@ def process_project(
                         ap_circle_radius=ap_circle_radius,
                         show_ap_names=show_ap_names,
                         show_azimuth_arrows=show_azimuth_arrows,
-                        ap_opacity=ap_opacity
+                        ap_opacity=ap_opacity,
                     ) as visualizer:
                         visualization_files = visualizer.visualize_all_floors(
-                            floors=floors,
-                            access_points=access_points,
-                            radios=radios
+                            floors=floors, access_points=access_points, radios=radios
                         )
 
                     if visualization_files:
-                        logger.info(f"Generated {len(visualization_files)} floor plan visualizations:")
+                        logger.info(
+                            f"Generated {len(visualization_files)} floor plan visualizations:"
+                        )
                         for viz_file in visualization_files:
                             logger.info(f"  - {viz_file.name}")
                     else:
@@ -816,12 +843,15 @@ def process_project(
                 except Exception as e:
                     logger.error(f"Error generating floor plan visualizations: {e}")
                     import traceback
+
                     logger.debug(traceback.format_exc())
 
             # Print summary with Rich
             if RICH_AVAILABLE and console:
                 console.print("\n[bold green]✓ Processing completed successfully![/bold green]\n")
-                print_summary_table(access_points, antennas, radios, floors, notes, cable_notes, picture_notes)
+                print_summary_table(
+                    access_points, antennas, radios, floors, notes, cable_notes, picture_notes
+                )
                 # Combine exported files and visualization files for summary
                 all_files = exported_files + visualization_files
                 print_export_summary(all_files)
@@ -859,7 +889,9 @@ def process_project(
     except ImportError as e:
         if RICH_AVAILABLE and console:
             console.print(f"[bold red]✗ Error:[/bold red] Missing dependency: {e}")
-            console.print("[yellow]Hint:[/yellow] Install missing dependencies with: pip install -r requirements.txt")
+            console.print(
+                "[yellow]Hint:[/yellow] Install missing dependencies with: pip install -r requirements.txt"
+            )
         else:
             logger.error(f"Missing dependency: {e}")
         return 1
@@ -886,10 +918,7 @@ def main(args: list[str] | None = None) -> int:
     parsed_args = parser.parse_args(args)
 
     # Setup logging (using CLI args for now, will be updated after config merge)
-    setup_logging(
-        verbose=parsed_args.verbose,
-        log_file=parsed_args.log_file
-    )
+    setup_logging(verbose=parsed_args.verbose, log_file=parsed_args.log_file)
 
     # Load configuration file
     try:
@@ -904,61 +933,65 @@ def main(args: list[str] | None = None) -> int:
     merged_config = config.merge_with_args(parsed_args)
 
     # Update logging if config changed it
-    if merged_config.get('log_level') or merged_config.get('log_file'):
+    if merged_config.get("log_level") or merged_config.get("log_file"):
         setup_logging(
-            verbose=(merged_config.get('log_level') == 'DEBUG'),
-            log_file=merged_config.get('log_file')
+            verbose=(merged_config.get("log_level") == "DEBUG"),
+            log_file=merged_config.get("log_file"),
         )
 
     # Extract merged configuration values
-    filter_floors = merged_config.get('filter_floors')
-    filter_colors = merged_config.get('filter_colors')
-    filter_vendors = merged_config.get('filter_vendors')
-    filter_models = merged_config.get('filter_models')
-    exclude_floors = merged_config.get('exclude_floors')
-    exclude_colors = merged_config.get('exclude_colors')
-    exclude_vendors = merged_config.get('exclude_vendors')
+    filter_floors = merged_config.get("filter_floors")
+    filter_colors = merged_config.get("filter_colors")
+    filter_vendors = merged_config.get("filter_vendors")
+    filter_models = merged_config.get("filter_models")
+    exclude_floors = merged_config.get("exclude_floors")
+    exclude_colors = merged_config.get("exclude_colors")
+    exclude_vendors = merged_config.get("exclude_vendors")
 
     # Parse tag filters (format: "TagKey:TagValue")
     filter_tags = None
-    raw_filter_tags = merged_config.get('filter_tags')
+    raw_filter_tags = merged_config.get("filter_tags")
     if raw_filter_tags:
         filter_tags = {}
         # Handle both list and dict formats
         if isinstance(raw_filter_tags, list):
             for tag_filter in raw_filter_tags:
-                if ':' in tag_filter:
-                    key, value = tag_filter.split(':', 1)
+                if ":" in tag_filter:
+                    key, value = tag_filter.split(":", 1)
                     key = key.strip()
                     value = value.strip()
                     if key not in filter_tags:
                         filter_tags[key] = []
                     filter_tags[key].append(value)
                 else:
-                    logger.warning(f"Invalid tag filter format (expected 'Key:Value'): {tag_filter}")
+                    logger.warning(
+                        f"Invalid tag filter format (expected 'Key:Value'): {tag_filter}"
+                    )
         elif isinstance(raw_filter_tags, dict):
             filter_tags = raw_filter_tags
 
     # Export formats from merged config
-    export_formats = merged_config.get('export_formats', ['csv'])
+    export_formats = merged_config.get("export_formats", ["csv"])
 
     # Determine files to process
     files_to_process = []
 
-    batch_dir = merged_config.get('batch')
+    batch_dir = merged_config.get("batch")
     if batch_dir:
         # Batch mode: find all .esx files in directory
         try:
-            files_to_process = find_esx_files(batch_dir, merged_config.get('recursive', False))
+            files_to_process = find_esx_files(batch_dir, merged_config.get("recursive", False))
             if not files_to_process:
                 logger.error(f"No .esx files found in {batch_dir}")
                 return 1
 
             if RICH_AVAILABLE and console:
                 console.print(f"\n[bold cyan]Batch Processing Mode[/bold cyan]")
-                console.print(f"Found [bold green]{len(files_to_process)}[/bold green] project file(s)")
+                console.print(
+                    f"Found [bold green]{len(files_to_process)}[/bold green] project file(s)"
+                )
                 console.print(f"Directory: [cyan]{batch_dir}[/cyan]")
-                if merged_config.get('recursive'):
+                if merged_config.get("recursive"):
                     console.print("[yellow]Recursive search enabled[/yellow]")
                 console.print()
             else:
@@ -974,7 +1007,9 @@ def main(args: list[str] | None = None) -> int:
         if not parsed_args.esx_file:
             logger.error("Either provide an .esx file or use --batch option")
             if RICH_AVAILABLE and console:
-                console.print("[bold red]✗ Error:[/bold red] Either provide an .esx file or use --batch option")
+                console.print(
+                    "[bold red]✗ Error:[/bold red] Either provide an .esx file or use --batch option"
+                )
             return 1
         files_to_process = [parsed_args.esx_file]
 
@@ -986,7 +1021,9 @@ def main(args: list[str] | None = None) -> int:
         if total_files > 1:
             if RICH_AVAILABLE and console:
                 console.print(f"\n[bold blue]{'='*60}[/bold blue]")
-                console.print(f"[bold cyan]Processing file {idx}/{total_files}:[/bold cyan] [yellow]{esx_file.name}[/yellow]")
+                console.print(
+                    f"[bold cyan]Processing file {idx}/{total_files}:[/bold cyan] [yellow]{esx_file.name}[/yellow]"
+                )
                 console.print(f"[bold blue]{'='*60}[/bold blue]\n")
             else:
                 logger.info(f"Processing file {idx}/{total_files}: {esx_file.name}")
@@ -994,8 +1031,8 @@ def main(args: list[str] | None = None) -> int:
         try:
             exit_code = process_project(
                 esx_file=esx_file,
-                output_dir=merged_config.get('output_dir'),
-                colors_config=merged_config.get('colors_config'),
+                output_dir=merged_config.get("output_dir"),
+                colors_config=merged_config.get("colors_config"),
                 export_formats=export_formats,
                 filter_floors=filter_floors,
                 filter_colors=filter_colors,
@@ -1005,17 +1042,17 @@ def main(args: list[str] | None = None) -> int:
                 exclude_floors=exclude_floors,
                 exclude_colors=exclude_colors,
                 exclude_vendors=exclude_vendors,
-                group_by=merged_config.get('group_by'),
-                tag_key=merged_config.get('tag_key'),
-                enable_pricing=merged_config.get('enable_pricing'),
-                pricing_file=merged_config.get('pricing_file'),
-                discount=merged_config.get('discount', 0.0),
-                no_volume_discounts=merged_config.get('no_volume_discounts', False),
-                visualize_floor_plans=merged_config.get('visualize_floor_plans', False),
-                ap_circle_radius=merged_config.get('ap_circle_radius', 15),
-                show_ap_names=not merged_config.get('no_ap_names', False),
-                show_azimuth_arrows=merged_config.get('show_azimuth_arrows', False),
-                ap_opacity=merged_config.get('ap_opacity', 1.0)
+                group_by=merged_config.get("group_by"),
+                tag_key=merged_config.get("tag_key"),
+                enable_pricing=merged_config.get("enable_pricing"),
+                pricing_file=merged_config.get("pricing_file"),
+                discount=merged_config.get("discount", 0.0),
+                no_volume_discounts=merged_config.get("no_volume_discounts", False),
+                visualize_floor_plans=merged_config.get("visualize_floor_plans", False),
+                ap_circle_radius=merged_config.get("ap_circle_radius", 15),
+                show_ap_names=not merged_config.get("no_ap_names", False),
+                show_azimuth_arrows=merged_config.get("show_azimuth_arrows", False),
+                ap_opacity=merged_config.get("ap_opacity", 1.0),
             )
 
             if exit_code != 0:
@@ -1033,7 +1070,9 @@ def main(args: list[str] | None = None) -> int:
             console.print(f"[bold cyan]Batch Processing Summary[/bold cyan]")
             console.print(f"[bold blue]{'='*60}[/bold blue]\n")
 
-            table = Table(title="Results", box=box.ROUNDED, show_header=True, header_style="bold cyan")
+            table = Table(
+                title="Results", box=box.ROUNDED, show_header=True, header_style="bold cyan"
+            )
             table.add_column("Metric", style="cyan")
             table.add_column("Count", justify="right", style="green")
 
@@ -1049,12 +1088,14 @@ def main(args: list[str] | None = None) -> int:
                 for filename in failed_files:
                     console.print(f"  [red]✗[/red] {filename}")
         else:
-            logger.info(f"Batch processing complete: {total_files - len(failed_files)}/{total_files} successful")
+            logger.info(
+                f"Batch processing complete: {total_files - len(failed_files)}/{total_files} successful"
+            )
             if failed_files:
                 logger.error(f"Failed files: {', '.join(failed_files)}")
 
     return 1 if failed_files else 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

@@ -6,6 +6,7 @@ EkahauBOM извлекает данные об оборудовании из п�
 
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Tests Status](https://img.shields.io/badge/tests-545%20passing-brightgreen.svg)](tests/)
 [![Code Quality](https://img.shields.io/badge/code%20quality-passing-brightgreen.svg)](.github/workflows/)
 [![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)

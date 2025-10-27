@@ -13,19 +13,66 @@ from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, Rad
 def sample_project_data():
     """Create sample project data for testing."""
     aps = [
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
-                   tags=[Tag("Location", "Building A", "tag1")],
-                   location_x=10.5, location_y=20.3, mounting_height=3.2, azimuth=45.0, tilt=10.0),
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
-                   tags=[Tag("Location", "Building A", "tag1")],
-                   location_x=15.7, location_y=25.8, mounting_height=3.0, azimuth=90.0, tilt=5.0),
-        AccessPoint("Cisco", "AP-635", "Red", "Floor 2", tags=[],
-                   location_x=12.0, location_y=18.5, mounting_height=3.5, azimuth=180.0, tilt=15.0),
-        AccessPoint("Aruba", "AP-515", "Yellow", "Floor 1", tags=[],
-                   location_x=8.3, location_y=22.1, mounting_height=2.8, azimuth=270.0, tilt=8.0),
-        AccessPoint("Aruba", "AP-635", "Blue", "Floor 2",
-                   tags=[Tag("Location", "Building B", "tag2")],
-                   location_x=20.0, location_y=30.0, mounting_height=3.3, azimuth=0.0, tilt=12.0),
+        AccessPoint(
+            "Cisco",
+            "AP-515",
+            "Yellow",
+            "Floor 1",
+            tags=[Tag("Location", "Building A", "tag1")],
+            location_x=10.5,
+            location_y=20.3,
+            mounting_height=3.2,
+            azimuth=45.0,
+            tilt=10.0,
+        ),
+        AccessPoint(
+            "Cisco",
+            "AP-515",
+            "Yellow",
+            "Floor 1",
+            tags=[Tag("Location", "Building A", "tag1")],
+            location_x=15.7,
+            location_y=25.8,
+            mounting_height=3.0,
+            azimuth=90.0,
+            tilt=5.0,
+        ),
+        AccessPoint(
+            "Cisco",
+            "AP-635",
+            "Red",
+            "Floor 2",
+            tags=[],
+            location_x=12.0,
+            location_y=18.5,
+            mounting_height=3.5,
+            azimuth=180.0,
+            tilt=15.0,
+        ),
+        AccessPoint(
+            "Aruba",
+            "AP-515",
+            "Yellow",
+            "Floor 1",
+            tags=[],
+            location_x=8.3,
+            location_y=22.1,
+            mounting_height=2.8,
+            azimuth=270.0,
+            tilt=8.0,
+        ),
+        AccessPoint(
+            "Aruba",
+            "AP-635",
+            "Blue",
+            "Floor 2",
+            tags=[Tag("Location", "Building B", "tag2")],
+            location_x=20.0,
+            location_y=30.0,
+            mounting_height=3.3,
+            azimuth=0.0,
+            tilt=12.0,
+        ),
     ]
     antennas = [
         Antenna("ANT-2513P4M-N-R", "ant1"),
@@ -46,7 +93,7 @@ def sample_project_data():
         antennas=antennas,
         radios=radios,
         floors=floors,
-        project_name="Test Project"
+        project_name="Test Project",
     )
 
 
@@ -65,7 +112,7 @@ class TestPDFExporterAvailable:
 
         assert len(files) == 1
         assert files[0].exists()
-        assert files[0].suffix == '.pdf'
+        assert files[0].suffix == ".pdf"
         assert "Test Project" in files[0].name
 
     def test_format_name(self, tmp_path):
@@ -87,10 +134,10 @@ class TestPDFExporterAvailable:
         files = exporter.export(sample_project_data)
 
         # Read first bytes to check PDF signature
-        with open(files[0], 'rb') as f:
+        with open(files[0], "rb") as f:
             header = f.read(5)
 
-        assert header == b'%PDF-', "File should start with PDF signature"
+        assert header == b"%PDF-", "File should start with PDF signature"
 
     def test_pdf_file_not_empty(self, sample_project_data, tmp_path):
         """Test that PDF file is not empty."""
@@ -139,7 +186,7 @@ class TestPDFExporterAvailable:
             antennas=antennas,
             radios=[],
             floors=floors,
-            project_name="Minimal Project"
+            project_name="Minimal Project",
         )
 
         exporter = PDFExporter(tmp_path)
@@ -158,12 +205,12 @@ class TestPDFExporterAvailable:
         html_content = exporter._generate_pdf_html(sample_project_data)
 
         # Check for key sections
-        assert '<h1>Ekahau BOM Report</h1>' in html_content
-        assert 'Test Project' in html_content
-        assert '<h3>Summary</h3>' in html_content
-        assert '<h3>Distribution Statistics</h3>' in html_content
-        assert '<h3>Analytics</h3>' in html_content
-        assert '<h3>Access Points</h3>' in html_content
+        assert "<h1>Ekahau BOM Report</h1>" in html_content
+        assert "Test Project" in html_content
+        assert "<h3>Summary</h3>" in html_content
+        assert "<h3>Distribution Statistics</h3>" in html_content
+        assert "<h3>Analytics</h3>" in html_content
+        assert "<h3>Access Points</h3>" in html_content
 
     def test_html_has_css_styles(self, sample_project_data, tmp_path):
         """Test that HTML includes CSS styles."""
@@ -175,10 +222,10 @@ class TestPDFExporterAvailable:
         html_content = exporter._generate_pdf_html(sample_project_data)
 
         # Check for CSS
-        assert '<style>' in html_content
-        assert '@page' in html_content  # PDF-specific CSS
-        assert 'font-family' in html_content
-        assert '</style>' in html_content
+        assert "<style>" in html_content
+        assert "@page" in html_content  # PDF-specific CSS
+        assert "font-family" in html_content
+        assert "</style>" in html_content
 
     def test_grouping_tables_generated(self, sample_project_data, tmp_path):
         """Test that grouping tables are generated."""
@@ -190,10 +237,10 @@ class TestPDFExporterAvailable:
         html_content = exporter._generate_pdf_html(sample_project_data)
 
         # Check for grouping tables
-        assert '<h4>By Vendor</h4>' in html_content
-        assert '<h4>By Floor</h4>' in html_content
-        assert '<h4>By Color</h4>' in html_content
-        assert '<h4>By Model</h4>' in html_content
+        assert "<h4>By Vendor</h4>" in html_content
+        assert "<h4>By Floor</h4>" in html_content
+        assert "<h4>By Color</h4>" in html_content
+        assert "<h4>By Model</h4>" in html_content
 
     def test_analytics_section_with_mounting_data(self, sample_project_data, tmp_path):
         """Test analytics section includes mounting statistics."""
@@ -205,8 +252,8 @@ class TestPDFExporterAvailable:
         html_content = exporter._generate_pdf_html(sample_project_data)
 
         # Check for mounting analytics
-        assert 'Mounting Statistics' in html_content
-        assert 'Average Height' in html_content
+        assert "Mounting Statistics" in html_content
+        assert "Average Height" in html_content
 
     def test_analytics_section_with_radio_data(self, sample_project_data, tmp_path):
         """Test analytics section includes radio statistics."""
@@ -218,7 +265,11 @@ class TestPDFExporterAvailable:
         html_content = exporter._generate_pdf_html(sample_project_data)
 
         # Check for radio analytics
-        assert 'Radio Configuration' in html_content or '2.4 GHz' in html_content or '5 GHz' in html_content
+        assert (
+            "Radio Configuration" in html_content
+            or "2.4 GHz" in html_content
+            or "5 GHz" in html_content
+        )
 
     def test_detailed_aps_table_includes_installation_params(self, sample_project_data, tmp_path):
         """Test detailed APs table includes installation parameters."""
@@ -230,10 +281,10 @@ class TestPDFExporterAvailable:
         html_content = exporter._generate_pdf_html(sample_project_data)
 
         # Check for installation parameters in detailed table
-        assert 'Access Points Installation Details' in html_content
-        assert 'Height (m)' in html_content
-        assert 'Azimuth (°)' in html_content
-        assert 'Tilt (°)' in html_content
+        assert "Access Points Installation Details" in html_content
+        assert "Height (m)" in html_content
+        assert "Azimuth (°)" in html_content
+        assert "Tilt (°)" in html_content
 
     def test_export_with_full_metadata(self, tmp_path):
         """Test export with complete project metadata."""
@@ -247,34 +298,29 @@ class TestPDFExporterAvailable:
             customer="Acme Corporation",
             location="Building A, Floor 1-3",
             responsible_person="John Doe",
-            schema_version="1.0"
+            schema_version="1.0",
         )
 
         aps = [AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1")]
         project_data = ProjectData(
-            access_points=aps,
-            antennas=[],
-            floors={},
-            project_name="Test",
-            metadata=metadata
+            access_points=aps, antennas=[], floors={}, project_name="Test", metadata=metadata
         )
 
         exporter = PDFExporter(tmp_path)
         html_content = exporter._generate_pdf_html(project_data)
 
         # Check that all metadata fields are present
-        assert 'Project Information' in html_content
-        assert 'Enterprise WiFi Project' in html_content
-        assert 'Acme Corporation' in html_content
-        assert 'Building A, Floor 1-3' in html_content
-        assert 'John Doe' in html_content
-        assert 'Schema Version' in html_content
+        assert "Project Information" in html_content
+        assert "Enterprise WiFi Project" in html_content
+        assert "Acme Corporation" in html_content
+        assert "Building A, Floor 1-3" in html_content
+        assert "John Doe" in html_content
+        assert "Schema Version" in html_content
 
     def test_generate_grouping_table_empty_data(self, tmp_path):
         """Test _generate_grouping_table with empty data."""
         pytest.importorskip("weasyprint")
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
-
 
         exporter = PDFExporter(tmp_path)
         result = exporter._generate_grouping_table("Test Title", {})
@@ -286,7 +332,6 @@ class TestPDFExporterAvailable:
         """Test export with radios containing Wi-Fi standards."""
         pytest.importorskip("weasyprint")
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
-
 
         aps = [
             AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", mine=True, floor_id="f1"),
@@ -305,21 +350,20 @@ class TestPDFExporterAvailable:
             antennas=[],
             radios=radios,
             floors={},
-            project_name="WiFi Standards Test"
+            project_name="WiFi Standards Test",
         )
 
         exporter = PDFExporter(tmp_path)
         html_content = exporter._generate_pdf_html(project_data)
 
         # Check for Wi-Fi Standards section
-        assert 'Wi-Fi Standards' in html_content
-        assert '802.11ax' in html_content or '802.11ac' in html_content
+        assert "Wi-Fi Standards" in html_content
+        assert "802.11ax" in html_content or "802.11ac" in html_content
 
     def test_generate_detailed_aps_table_empty(self, tmp_path):
         """Test _generate_detailed_aps_table with empty access points list."""
         pytest.importorskip("weasyprint")
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
-
 
         exporter = PDFExporter(tmp_path)
         result = exporter._generate_detailed_aps_table([])
@@ -332,7 +376,6 @@ class TestPDFExporterAvailable:
         pytest.importorskip("weasyprint")
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
-
         exporter = PDFExporter(tmp_path)
         result = exporter._generate_antennas_table([])
 
@@ -343,7 +386,6 @@ class TestPDFExporterAvailable:
         """Test that export creates a valid PDF file with correct structure."""
         pytest.importorskip("weasyprint")
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
-
 
         exporter = PDFExporter(tmp_path)
         files = exporter.export(sample_project_data)
@@ -356,10 +398,10 @@ class TestPDFExporterAvailable:
         assert pdf_file.stat().st_size > 1000  # PDF should be at least 1KB
 
         # Check file extension
-        assert pdf_file.suffix == '.pdf'
+        assert pdf_file.suffix == ".pdf"
 
         # Check filename contains project name
-        assert 'Test Project' in pdf_file.stem or 'Test_Project' in pdf_file.stem
+        assert "Test Project" in pdf_file.stem or "Test_Project" in pdf_file.stem
 
 
 class TestPDFExporterUnavailable:
@@ -368,7 +410,7 @@ class TestPDFExporterUnavailable:
     def test_import_error_when_weasyprint_missing(self, sample_project_data, tmp_path):
         """Test that ImportError is raised when WeasyPrint is not installed."""
         # Mock the import to fail
-        with patch('ekahau_bom.exporters.pdf_exporter.WEASYPRINT_AVAILABLE', False):
+        with patch("ekahau_bom.exporters.pdf_exporter.WEASYPRINT_AVAILABLE", False):
             from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
             exporter = PDFExporter(tmp_path)
@@ -378,7 +420,7 @@ class TestPDFExporterUnavailable:
 
     def test_format_name_available_without_weasyprint(self, tmp_path):
         """Test that format_name works even without WeasyPrint."""
-        with patch('ekahau_bom.exporters.pdf_exporter.WEASYPRINT_AVAILABLE', False):
+        with patch("ekahau_bom.exporters.pdf_exporter.WEASYPRINT_AVAILABLE", False):
             from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
             exporter = PDFExporter(tmp_path)

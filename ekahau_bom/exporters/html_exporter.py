@@ -40,14 +40,11 @@ class HTMLExporter(BaseExporter):
         Returns:
             List containing path to the created HTML file
         """
-        output_file = self._get_output_filename(
-            project_data.project_name,
-            "report.html"
-        )
+        output_file = self._get_output_filename(project_data.project_name, "report.html")
 
         html_content = self._generate_html(project_data)
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         files = [output_file]
@@ -80,14 +77,16 @@ class HTMLExporter(BaseExporter):
             unique_vendors,
             unique_floors,
             unique_colors,
-            project_data.metadata
+            project_data.metadata,
         )
 
         aps_table_html = self._generate_aps_table(project_data.access_points)
         detailed_aps_table_html = self._generate_detailed_aps_table(project_data.access_points)
         antennas_table_html = self._generate_antennas_table(project_data.antennas)
         grouping_html = self._generate_grouping_section(project_data.access_points)
-        analytics_html = self._generate_analytics_section(project_data.access_points, project_data.radios)
+        analytics_html = self._generate_analytics_section(
+            project_data.access_points, project_data.radios
+        )
 
         # Assemble complete HTML
         html_doc = f"""<!DOCTYPE html>
@@ -132,7 +131,7 @@ class HTMLExporter(BaseExporter):
         unique_vendors: int,
         unique_floors: int,
         unique_colors: int,
-        metadata = None
+        metadata=None,
     ) -> str:
         """Generate summary statistics section."""
         # Generate metadata section if available
@@ -140,15 +139,25 @@ class HTMLExporter(BaseExporter):
         if metadata:
             metadata_items = []
             if metadata.name:
-                metadata_items.append(f"<div class='metadata-item'><strong>Project Name:</strong> {html.escape(metadata.name)}</div>")
+                metadata_items.append(
+                    f"<div class='metadata-item'><strong>Project Name:</strong> {html.escape(metadata.name)}</div>"
+                )
             if metadata.customer:
-                metadata_items.append(f"<div class='metadata-item'><strong>Customer:</strong> {html.escape(metadata.customer)}</div>")
+                metadata_items.append(
+                    f"<div class='metadata-item'><strong>Customer:</strong> {html.escape(metadata.customer)}</div>"
+                )
             if metadata.location:
-                metadata_items.append(f"<div class='metadata-item'><strong>Location:</strong> {html.escape(metadata.location)}</div>")
+                metadata_items.append(
+                    f"<div class='metadata-item'><strong>Location:</strong> {html.escape(metadata.location)}</div>"
+                )
             if metadata.responsible_person:
-                metadata_items.append(f"<div class='metadata-item'><strong>Responsible Person:</strong> {html.escape(metadata.responsible_person)}</div>")
+                metadata_items.append(
+                    f"<div class='metadata-item'><strong>Responsible Person:</strong> {html.escape(metadata.responsible_person)}</div>"
+                )
             if metadata.schema_version:
-                metadata_items.append(f"<div class='metadata-item'><strong>Schema Version:</strong> {html.escape(metadata.schema_version)}</div>")
+                metadata_items.append(
+                    f"<div class='metadata-item'><strong>Schema Version:</strong> {html.escape(metadata.schema_version)}</div>"
+                )
 
             if metadata_items:
                 metadata_html = f"""
@@ -199,7 +208,7 @@ class HTMLExporter(BaseExporter):
         rows_html = ""
         for (vendor, model, floor, color, tags), count in sorted(
             ap_counts.items(),
-            key=lambda x: (x[0][0], x[0][1], x[0][2])  # Sort by vendor, model, floor
+            key=lambda x: (x[0][0], x[0][1], x[0][2]),  # Sort by vendor, model, floor
         ):
             rows_html += f"""
                 <tr>
@@ -245,7 +254,11 @@ class HTMLExporter(BaseExporter):
         rows_html = ""
         for ap in access_points:
             # Format tags
-            tags_str = "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key)) if ap.tags else ""
+            tags_str = (
+                "; ".join(str(tag) for tag in sorted(ap.tags, key=lambda t: t.key))
+                if ap.tags
+                else ""
+            )
 
             # Format numeric values with appropriate precision
             location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else "—"
@@ -400,7 +413,7 @@ class HTMLExporter(BaseExporter):
             "title": title,
             "labels": labels,
             "data": data,
-            "colors": colors
+            "colors": colors,
         }
 
         return json.dumps(config)
@@ -1049,7 +1062,11 @@ class HTMLExporter(BaseExporter):
                             </tr>"""
 
             # Highlight if there are APs requiring adjustment
-            adjustment_style = 'style="color: #d32f2f; font-weight: bold;"' if installation_summary['aps_requiring_height_adjustment'] > 0 else ''
+            adjustment_style = (
+                'style="color: #d32f2f; font-weight: bold;"'
+                if installation_summary["aps_requiring_height_adjustment"] > 0
+                else ""
+            )
 
             mounting_html += f"""
                             <tr>
@@ -1218,7 +1235,11 @@ class HTMLExporter(BaseExporter):
                         <tbody>"""
 
             for width, count in sorted(radio_metrics.channel_width_distribution.items()):
-                percentage = (count / radio_metrics.total_radios * 100) if radio_metrics.total_radios > 0 else 0
+                percentage = (
+                    (count / radio_metrics.total_radios * 100)
+                    if radio_metrics.total_radios > 0
+                    else 0
+                )
                 width_str = f"{width} MHz" if width else "Unknown"
                 radio_html += f"""
                             <tr>

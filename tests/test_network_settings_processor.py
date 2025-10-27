@@ -22,8 +22,8 @@ def sample_settings_data():
                     {"rate": "1.0", "state": "MANDATORY"},
                     {"rate": "2.0", "state": "MANDATORY"},
                     {"rate": "5.5", "state": "SUPPORTED"},
-                    {"rate": "11.0", "state": "DISABLED"}
-                ]
+                    {"rate": "11.0", "state": "DISABLED"},
+                ],
             },
             {
                 "frequencyBand": "FIVE",
@@ -34,9 +34,9 @@ def sample_settings_data():
                     {"rate": "6.0", "state": "MANDATORY"},
                     {"rate": "9.0", "state": "SUPPORTED"},
                     {"rate": "12.0", "state": "SUPPORTED"},
-                    {"rate": "18.0", "state": "DISABLED"}
-                ]
-            }
+                    {"rate": "18.0", "state": "DISABLED"},
+                ],
+            },
         ]
     }
 
@@ -94,7 +94,7 @@ class TestNetworkSettingsProcessor:
             "numberOfSsids": 2,
             "rtsCtsEnabled": False,
             "maxAssociatedClientsAmount": 100,
-            "abgRates": []
+            "abgRates": [],
         }
 
         setting = NetworkSettingsProcessor._process_single_setting(setting_data)
@@ -112,7 +112,7 @@ class TestNetworkSettingsProcessor:
             "numberOfSsids": 1,
             "rtsCtsEnabled": False,
             "maxAssociatedClientsAmount": 200,
-            "abgRates": []
+            "abgRates": [],
         }
 
         setting = NetworkSettingsProcessor._process_single_setting(setting_data)
@@ -141,8 +141,8 @@ class TestNetworkSettingsProcessor:
             "abgRates": [
                 {"rate": "6.0", "state": "MANDATORY"},
                 {"rate": "12.0", "state": "SUPPORTED"},
-                {"rate": "24.0", "state": "DISABLED"}
-            ]
+                {"rate": "24.0", "state": "DISABLED"},
+            ],
         }
 
         setting = NetworkSettingsProcessor._process_single_setting(setting_data)
@@ -176,7 +176,7 @@ class TestNetworkSettingsProcessor:
                 number_of_ssids=2,
                 rts_cts_enabled=True,
                 max_associated_clients=100,
-                data_rates=[]
+                data_rates=[],
             )
         ]
 
@@ -221,7 +221,7 @@ class TestNetworkSettingsProcessor:
                 number_of_ssids=1,
                 rts_cts_enabled=False,
                 max_associated_clients=200,
-                data_rates=[]
+                data_rates=[],
             )
         ]
 
@@ -236,18 +236,10 @@ class TestNetworkSettingsProcessor:
         """Test processing with malformed data (should skip bad entries)."""
         data = {
             "networkCapacitySettings": [
-                {
-                    "frequencyBand": "TWO",
-                    "numberOfSsids": 1,
-                    "abgRates": []
-                },
+                {"frequencyBand": "TWO", "numberOfSsids": 1, "abgRates": []},
                 # This entry will cause an error
                 None,
-                {
-                    "frequencyBand": "FIVE",
-                    "numberOfSsids": 2,
-                    "abgRates": []
-                }
+                {"frequencyBand": "FIVE", "numberOfSsids": 2, "abgRates": []},
             ]
         }
 
