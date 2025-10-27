@@ -6,21 +6,41 @@
 import pytest
 from pathlib import Path
 from ekahau_bom.exporters.excel_exporter import ExcelExporter
-from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor
+from ekahau_bom.models import (
+    ProjectData, AccessPoint, Antenna, Tag, Floor,
+    ProjectMetadata, Radio
+)
 
 
 @pytest.fixture
 def sample_project_data():
     """Create sample project data."""
     aps = [
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
-                   tags=[Tag("Location", "Building A", "1")]),
-        AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1",
-                   tags=[Tag("Location", "Building A", "1")]),
-        AccessPoint("Cisco", "AP-635", "Red", "Floor 2", tags=[]),
-        AccessPoint("Aruba", "AP-515", "Yellow", "Floor 1", tags=[]),
-        AccessPoint("Aruba", "AP-635", "Blue", "Floor 2",
-                   tags=[Tag("Location", "Building B", "1")]),
+        AccessPoint(
+            id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
+            floor_name="Floor 1", floor_id="f1", mine=True,
+            tags=[Tag("Location", "Building A", "1")]
+        ),
+        AccessPoint(
+            id="ap2", vendor="Cisco", model="AP-515", color="Yellow",
+            floor_name="Floor 1", floor_id="f1", mine=True,
+            tags=[Tag("Location", "Building A", "1")]
+        ),
+        AccessPoint(
+            id="ap3", vendor="Cisco", model="AP-635", color="Red",
+            floor_name="Floor 2", floor_id="f2", mine=True,
+            tags=[]
+        ),
+        AccessPoint(
+            id="ap4", vendor="Aruba", model="AP-515", color="Yellow",
+            floor_name="Floor 1", floor_id="f1", mine=True,
+            tags=[]
+        ),
+        AccessPoint(
+            id="ap5", vendor="Aruba", model="AP-635", color="Blue",
+            floor_name="Floor 2", floor_id="f2", mine=True,
+            tags=[Tag("Location", "Building B", "1")]
+        ),
     ]
     antennas = [
         Antenna("ANT-2513P4M-N-R", "ant1"),
@@ -36,6 +56,60 @@ def sample_project_data():
         access_points=aps,
         antennas=antennas,
         floors=floors
+    )
+
+
+@pytest.fixture
+def detailed_project_data():
+    """Create project data with detailed AP installation parameters."""
+    aps = [
+        AccessPoint(
+            id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
+            floor_name="Floor 1", floor_id="f1", mine=True,
+            name="AP-Office-01",
+            location_x=10.5, location_y=20.3,
+            mounting_height=3.0, azimuth=45.0, tilt=10.0,
+            enabled=True,
+            tags=[Tag("Location", "Office", "1")]
+        ),
+        AccessPoint(
+            id="ap2", vendor="Aruba", model="AP-635", color="Red",
+            floor_name="Floor 2", floor_id="f2", mine=True,
+            name="AP-Lobby-01",
+            location_x=5.2, location_y=15.8,
+            mounting_height=2.5, azimuth=90.0, tilt=15.0,
+            enabled=False,
+            tags=[]
+        ),
+    ]
+    radios = [
+        Radio(
+            id="radio1",
+            access_point_id="ap1",
+            frequency_band="5GHz",
+            channel=36,
+            channel_width=80,
+            tx_power=20,
+            antenna_direction=45.0,
+            antenna_tilt=10.0,
+            antenna_height=3.0
+        ),
+    ]
+    floors = {"f1": Floor("f1", "Floor 1"), "f2": Floor("f2", "Floor 2")}
+    metadata = ProjectMetadata(
+        name="Enterprise Campus Project",
+        customer="Acme Corporation",
+        location="Building A, Floor 3",
+        responsible_person="John Doe",
+        schema_version="1.0"
+    )
+    return ProjectData(
+        project_name="Detailed Project",
+        access_points=aps,
+        antennas=[],
+        floors=floors,
+        radios=radios,
+        metadata=metadata
     )
 
 
@@ -223,3 +297,188 @@ class TestExcelExporter:
                 break
 
         assert has_tags, "At least one AP should have tags exported"
+
+    def test_detailed_access_points_sheet(self, detailed_project_data, tmp_path):
+        """Test AP Installation Details sheet with coordinates and mounting info."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(detailed_project_data)
+
+        wb = load_workbook(files[0])
+
+        # Check sheet exists
+        assert "AP Installation Details" in wb.sheetnames
+
+        ws = wb["AP Installation Details"]
+
+        # Check headers
+        headers = [cell.value for cell in ws[1]]
+        assert "AP Name" in headers
+        assert "Vendor" in headers
+        assert "Model" in headers
+        assert "Floor" in headers
+        assert "Location X (m)" in headers
+        assert "Location Y (m)" in headers
+        assert "Mounting Height (m)" in headers
+        assert "Azimuth (°)" in headers
+        assert "Tilt (°)" in headers
+        assert "Color" in headers
+        assert "Tags" in headers
+        assert "Enabled" in headers
+
+        # Check data rows (should have 2 APs)
+        assert ws.max_row == 3  # header + 2 APs
+
+        # Verify AP-Office-01 data
+        assert ws.cell(2, headers.index("AP Name") + 1).value == "AP-Office-01"
+        assert ws.cell(2, headers.index("Location X (m)") + 1).value == 10.5
+        assert ws.cell(2, headers.index("Location Y (m)") + 1).value == 20.3
+        assert ws.cell(2, headers.index("Mounting Height (m)") + 1).value == 3.0
+        assert ws.cell(2, headers.index("Azimuth (°)") + 1).value == 45.0
+        assert ws.cell(2, headers.index("Tilt (°)") + 1).value == 10.0
+        assert ws.cell(2, headers.index("Enabled") + 1).value == "Yes"
+
+        # Verify AP-Lobby-01 data
+        assert ws.cell(3, headers.index("AP Name") + 1).value == "AP-Lobby-01"
+        assert ws.cell(3, headers.index("Enabled") + 1).value == "No"
+
+    def test_analytics_sheet_with_radios(self, detailed_project_data, tmp_path):
+        """Test Analytics sheet creation when radio data is available."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(detailed_project_data)
+
+        wb = load_workbook(files[0])
+
+        # Check Analytics sheet exists (should be created because we have radios)
+        assert "Analytics" in wb.sheetnames
+
+        ws = wb["Analytics"]
+
+        # Check for analytics sections
+        # Look for key section headers
+        all_values = []
+        for row in ws.iter_rows(values_only=True):
+            all_values.extend([str(cell) for cell in row if cell is not None])
+
+        content = " ".join(all_values)
+
+        # Should have some analytics content
+        assert len(content) > 0
+        assert ws.max_row > 1  # Should have more than just headers
+
+    def test_summary_sheet_with_metadata(self, detailed_project_data, tmp_path):
+        """Test Summary sheet includes project metadata."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(detailed_project_data)
+
+        wb = load_workbook(files[0])
+        ws = wb["Summary"]
+
+        # Collect all cell values
+        all_values = []
+        for row in ws.iter_rows(values_only=True):
+            all_values.extend([str(cell) for cell in row if cell is not None])
+
+        content = " ".join(all_values)
+
+        # Check for metadata content
+        assert "Enterprise Campus Project" in content
+        assert "Acme Corporation" in content
+        assert "Building A, Floor 3" in content
+        assert "John Doe" in content
+        assert "Project Information" in content
+
+    def test_export_without_metadata(self, sample_project_data, tmp_path):
+        """Test export works correctly without metadata."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(sample_project_data)
+
+        wb = load_workbook(files[0])
+        ws = wb["Summary"]
+
+        # Should still have Project Statistics section
+        all_values = []
+        for row in ws.iter_rows(values_only=True):
+            all_values.extend([str(cell) for cell in row if cell is not None])
+
+        content = " ".join(all_values)
+        assert "Project Statistics" in content
+        assert "Total Access Points:" in content
+
+    def test_export_with_radios_creates_analytics_sheet(self, detailed_project_data, tmp_path):
+        """Test that Analytics sheet is created when radios data is available."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(detailed_project_data)
+
+        wb = load_workbook(files[0])
+        sheet_names = wb.sheetnames
+
+        # Analytics sheet should exist because we have radios
+        assert "Analytics" in sheet_names
+
+    def test_export_without_radios_no_analytics_sheet(self, sample_project_data, tmp_path):
+        """Test that Analytics sheet is NOT created when no radios/mounting data."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(sample_project_data)
+
+        wb = load_workbook(files[0])
+        sheet_names = wb.sheetnames
+
+        # Analytics sheet should NOT exist (no radios, no mounting height)
+        assert "Analytics" not in sheet_names
+
+    def test_number_formatting_in_detailed_sheet(self, detailed_project_data, tmp_path):
+        """Test that numeric columns have proper number formatting."""
+        try:
+            from openpyxl import load_workbook
+        except ImportError:
+            pytest.skip("openpyxl not installed")
+
+        exporter = ExcelExporter(tmp_path)
+        files = exporter.export(detailed_project_data)
+
+        wb = load_workbook(files[0])
+        ws = wb["AP Installation Details"]
+
+        headers = [cell.value for cell in ws[1]]
+
+        # Check number format for Location X (should be 0.00)
+        loc_x_col = headers.index("Location X (m)") + 1
+        assert ws.cell(2, loc_x_col).number_format == '0.00'
+
+        # Check number format for Mounting Height (should be 0.00)
+        height_col = headers.index("Mounting Height (m)") + 1
+        assert ws.cell(2, height_col).number_format == '0.00'
+
+        # Check number format for Azimuth (should be 0.0)
+        azimuth_col = headers.index("Azimuth (°)") + 1
+        assert ws.cell(2, azimuth_col).number_format == '0.0'
