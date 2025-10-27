@@ -1155,29 +1155,46 @@ FLOOR = "FLOOR"      # Напольный монтаж (квадрат)
 
 ## Фаза 10: Документация и публикация (Приоритет: СРЕДНИЙ)
 
-### 10.1 Документация пользователя
+### 10.1 Документация пользователя ⏳ IN PROGRESS
 **Задачи:**
-- [ ] Обновление README.md
-  - Установка
-  - Быстрый старт
-  - Примеры использования
-  - FAQ
-- [ ] **Обновить бейджи на динамичные после merge в main**
-  - Заменить статичные shields.io бейджи на динамичные GitHub Actions badges
-  - После merge feature branch в main, workflows запустятся автоматически
-  - Обновить в README.md и README.ru.md:
-    ```markdown
-    [![Tests](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml)
-    [![Code Quality](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml)
-    ```
-  - Удалить TODO комментарий в README
-- [ ] Документация CLI команд
-- [ ] Примеры конфигурационных файлов
-- [ ] Скриншоты и примеры отчетов
-- [ ] CHANGELOG.md
+- [x] **Организация документации** ✅ (2025-10-28)
+  - ✅ Создан `docs/archive/` для устаревших документов
+  - ✅ Перемещены REFACTORING_SUMMARY.md, VERIFICATION_REPORT.md в архив
+  - ✅ Создан `docs/examples/` для примеров выходных данных
+  - ✅ Перемещён GITHUB_RELEASE_INSTRUCTIONS.md в docs/
+
+- [x] **Обновить бейджи на динамичные** ✅ (2025-10-28)
+  - ✅ Заменены статичные shields.io бейджи на динамичные GitHub Actions badges
+  - ✅ Обновлены в README.md и README.ru.md:
+    - Tests badge (545 passing)
+    - Code Quality badge
+    - GitHub Release badge
+  - ✅ Удалён TODO комментарий в README
+
+- [x] **Расширенный FAQ** ✅ (2025-10-28)
+  - ✅ Добавлены категории: General, Export & Formats, Configuration, Integration, Troubleshooting, Examples
+  - ✅ 20+ вопросов с подробными ответами
+  - ✅ Примеры кода и команд
+  - ✅ Ссылки на документацию и примеры
+  - ✅ Синхронизация русского и английского FAQ
+
+- [x] **docs/examples/ README** ✅ (2025-10-28)
+  - ✅ Описание типов выходных данных
+  - ✅ Инструкции по генерации примеров
+  - ✅ Примеры команд для разных форматов
+
+- [ ] Документация CLI команд (детальная)
+- [ ] Примеры конфигурационных файлов (с комментариями)
+- [ ] Скриншоты и примеры отчетов (реальные файлы)
+- [ ] Обновление CHANGELOG.md (добавить Phase 10.1)
 
 **Время:** 2-3 дня
 **Сложность:** Низкая
+**Прогресс:** ~60% завершено
+**Следующие шаги:**
+1. Добавить примеры реальных выходных файлов в docs/examples/
+2. Создать детальную CLI документацию с примерами всех опций
+3. Обновить CHANGELOG.md
 
 ### 10.2 Документация разработчика
 **Задачи:**

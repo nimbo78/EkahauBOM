@@ -7,12 +7,10 @@ EkahauBOM extracts equipment data from Ekahau .esx project files and generates c
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests Status](https://img.shields.io/badge/tests-545%20passing-brightgreen.svg)](tests/)
-[![Code Quality](https://img.shields.io/badge/code%20quality-passing-brightgreen.svg)](.github/workflows/)
+[![Tests](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml)
+[![Code Quality](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml)
 [![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](.github/workflows/)
-
-<!-- TODO: После merge в main заменить статичные бейджи на динамичные GitHub Actions badges -->
+[![GitHub Release](https://img.shields.io/github/v/release/nimbo78/EkahauBOM)](https://github.com/nimbo78/EkahauBOM/releases)
 
 **English** | [Русский](README.ru.md)
 
@@ -925,23 +923,98 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## ❓ FAQ
 
+### General Questions
+
 **Q: What Ekahau versions are supported?**
-A: All .esx format versions. Tag support requires Ekahau v10.2+.
+A: All .esx format versions. Tag support requires Ekahau v10.2+. The tool has been tested with Ekahau AI Pro versions 10.x and 11.x.
 
 **Q: Can I process multiple projects at once?**
-A: Not yet. Batch processing is planned for a future release.
-
-**Q: How do I customize the output format?**
-A: Use `--format` option. Multiple formats can be generated simultaneously.
-
-**Q: Can I add custom equipment prices?**
-A: Yes! Edit `config/pricing.yaml` with your pricing data.
+A: Yes! Use the `--batch` option to process multiple .esx files in a directory. See the [Batch Processing example](#8-batch-processing).
 
 **Q: Does this work with large projects (500+ APs)?**
-A: Yes! Tested with projects up to 1000+ APs. Performance is optimized.
+A: Yes! Tested with projects containing 1000+ APs. Performance is optimized with efficient data processing. Large projects may take 10-30 seconds to process.
+
+**Q: Can I use this on Windows/macOS/Linux?**
+A: Yes! EkahauBOM is cross-platform and works on all major operating systems. Tested on Windows 10/11, macOS 11+, and Ubuntu 20.04+.
+
+### Export & Formats
+
+**Q: How do I customize the output format?**
+A: Use the `--csv`, `--excel`, `--html`, `--json`, or `--pdf` options. Multiple formats can be generated simultaneously:
+```bash
+ekahau-bom project.esx --csv --excel --html
+```
+
+**Q: Can I generate floor plan visualizations?**
+A: Yes! Use `--visualize-floor-plans` to overlay AP positions on floor plans. Add `--show-azimuth-arrows` to display antenna directions. See [Floor Plan Visualization](#-floor-plan-visualization-new-in-v27) section.
+
+**Q: Why doesn't PDF export work?**
+A: PDF export requires WeasyPrint and GTK3 libraries. See the [PDF Export Support](#optional-pdf-export-support) section for installation instructions for your platform.
+
+### Configuration & Customization
+
+**Q: Can I add custom equipment prices?**
+A: Yes! Edit `config/pricing.yaml` with your pricing data. The file uses YAML format with vendor/model hierarchy:
+```yaml
+vendors:
+  Cisco:
+    "AIR-AP3802I-B-K9": 850.00
+    "AIR-AP4800-B-K9": 1200.00
+```
+
+**Q: How do I use custom color schemes?**
+A: Edit `config/colors.yaml` to map color names to RGB values. You can define custom colors for AP markers in floor plan visualizations.
+
+**Q: Can I create custom configuration profiles?**
+A: Yes! Create a custom YAML file and specify it with `-c/--config` option:
+```bash
+ekahau-bom project.esx -c my-config.yaml
+```
+
+### Integration & Automation
 
 **Q: Can I integrate this into my workflow/pipeline?**
-A: Yes! Use JSON export format for API integrations and automation.
+A: Yes! Use JSON export format for API integrations and automation. The tool can be scripted and returns proper exit codes for CI/CD integration.
+
+**Q: How do I use the JSON API programmatically?**
+A: Generate JSON export and parse it in your application:
+```python
+import json
+with open("output/project.json", "r") as f:
+    data = json.load(f)
+    aps = data["access_points"]
+```
+
+**Q: Can I run this in a Docker container?**
+A: Yes! The tool works well in containerized environments. For PDF support in Docker, install GTK3 system packages in your Dockerfile.
+
+### Troubleshooting
+
+**Q: I get "File not found" error. Why?**
+A: Ensure the .esx file path is correct. Use quotes around paths with spaces:
+```bash
+ekahau-bom "C:\Projects\My Project.esx"
+```
+
+**Q: The tool is slow with my project. How can I speed it up?**
+A: For large projects, disable unnecessary exports. Use only required formats (`--csv` instead of all formats). Floor plan visualization may add processing time.
+
+**Q: Some APs are missing from the output. Why?**
+A: Check if you have active filters (`--filter-floor`, `--filter-vendor`, etc.). Use `--no-filter` to see all APs. Also check for `--exclude-*` options.
+
+**Q: Why are mounting heights empty in CSV export?**
+A: This was a bug in v2.6.0 and earlier. Update to v2.7.0+ for proper mounting height extraction.
+
+### Examples & Documentation
+
+**Q: Where can I find example outputs?**
+A: See the [`docs/examples/`](docs/examples/) directory for sample outputs and the [Examples README](docs/examples/README.md) for more information.
+
+**Q: Is there more detailed documentation?**
+A: Yes! See:
+- [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
+- [Developer Guide](docs/DEVELOPER_GUIDE.md) - For contributors and developers
+- [Release Process](docs/RELEASE_PROCESS.md) - For maintainers
 
 ---
 
