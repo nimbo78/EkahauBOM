@@ -17,8 +17,10 @@ def _weasyprint_usable():
     """Check if WeasyPrint can actually be used (GTK libraries available)."""
     try:
         import weasyprint
+
         # Try to actually use WeasyPrint to catch GTK loading errors
         from weasyprint import HTML
+
         return True
     except (ImportError, OSError):
         return False
@@ -26,8 +28,7 @@ def _weasyprint_usable():
 
 WEASYPRINT_USABLE = _weasyprint_usable()
 requires_weasyprint = pytest.mark.skipif(
-    not WEASYPRINT_USABLE,
-    reason="WeasyPrint not usable (GTK libraries required)"
+    not WEASYPRINT_USABLE, reason="WeasyPrint not usable (GTK libraries required)"
 )
 
 
