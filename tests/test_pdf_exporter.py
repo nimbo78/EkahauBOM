@@ -12,6 +12,25 @@ from unittest.mock import patch, MagicMock
 from ekahau_bom.models import ProjectData, AccessPoint, Antenna, Tag, Floor, Radio
 
 
+# Check if WeasyPrint is actually usable (not just importable)
+def _weasyprint_usable():
+    """Check if WeasyPrint can actually be used (GTK libraries available)."""
+    try:
+        import weasyprint
+        # Try to actually use WeasyPrint to catch GTK loading errors
+        from weasyprint import HTML
+        return True
+    except (ImportError, OSError):
+        return False
+
+
+WEASYPRINT_USABLE = _weasyprint_usable()
+requires_weasyprint = pytest.mark.skipif(
+    not WEASYPRINT_USABLE,
+    reason="WeasyPrint not usable (GTK libraries required)"
+)
+
+
 @pytest.fixture
 def sample_project_data():
     """Create sample project data for testing."""
@@ -100,6 +119,7 @@ def sample_project_data():
     )
 
 
+@requires_weasyprint
 class TestPDFExporterAvailable:
     """Test PDFExporter when WeasyPrint is available."""
 
@@ -407,6 +427,7 @@ class TestPDFExporterAvailable:
         assert "Test Project" in pdf_file.stem or "Test_Project" in pdf_file.stem
 
 
+@requires_weasyprint
 class TestPDFExporterUnavailable:
     """Test PDFExporter when WeasyPrint is not available."""
 
