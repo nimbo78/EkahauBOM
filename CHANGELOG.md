@@ -8,7 +8,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Integration Tests** (Phase 9.2 - NEW!)
+
+- **Developer Documentation** (Phase 10.2 - NEW!)
+  - **CONTRIBUTING.md** (450+ lines) - Complete contribution guide
+    - Development workflow and setup
+    - Coding standards (PEP 8, type hints, docstrings)
+    - Testing guidelines with pytest examples
+    - Commit message format and best practices
+    - Pull request process with checklist
+    - Bug report and feature request templates
+
+  - **CODE_OF_CONDUCT.md** - Contributor Covenant v2.1
+    - Community standards and expectations
+    - Enforcement guidelines
+    - Reporting mechanisms
+
+  - **docs/EXTENDING.md** (800+ lines) - Extension guide
+    - Adding new exporters (complete XML exporter example)
+    - Adding new processors (Floor processor example)
+    - Adding new analytics
+    - Adding CLI options
+    - Best practices for code quality, testing, performance
+
+  - Updated **docs/DEVELOPER_GUIDE.md**
+    - Added "Extending EkahauBOM" section
+    - Links to EXTENDING.md for detailed guides
+
+- **User Documentation** (Phase 10.1 - NEW!)
+  - **docs/CLI_REFERENCE.md** (700+ lines) - Complete CLI reference
+    - All command-line options documented
+    - Detailed usage examples for every option
+    - Filtering, grouping, pricing, batch processing
+    - Visualization options
+    - Advanced workflows and automation examples
+
+  - **docs/examples/config-examples.md** (900+ lines) - Configuration guide
+    - Commented configuration examples for common scenarios
+    - Pricing configuration examples
+    - Custom colors configuration
+    - Production workflow configs
+    - Batch processing configs
+    - High-performance configs
+    - Troubleshooting tips
+
+  - **Documentation Organization**
+    - Created `docs/archive/` for historical documentation
+    - Created `docs/examples/` for examples and samples
+    - Moved REFACTORING_SUMMARY.md, VERIFICATION_REPORT.md to archive
+    - Updated README.md documentation section (split Users/Developers)
+
+  - **Enhanced FAQ** (20+ questions)
+    - General, Export & Formats, Configuration
+    - Integration & Automation, Troubleshooting
+    - Examples & Documentation sections
+    - Detailed answers with code examples
+
+  - **Dynamic Badges**
+    - Replaced static shields.io badges with GitHub Actions badges
+    - Real-time Tests and Code Quality status
+    - GitHub Release version badge
+
+- **Integration Tests** (Phase 9.2)
   - Added comprehensive end-to-end integration tests
   - Total: 25 new integration tests (520 → 545 tests)
   - All tests passing: 545/545 ✅
