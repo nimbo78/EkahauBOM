@@ -158,3 +158,21 @@ class TestTagProcessor:
         processor = TagProcessor(malformed_data)
         # Should have processed what it could
         assert isinstance(processor.tag_keys_map, dict)
+
+    def test_has_tag_key_exists(self, sample_tag_keys_data):
+        """Test has_tag_key when tag key exists."""
+        processor = TagProcessor(sample_tag_keys_data)
+        assert processor.has_tag_key("Location") is True
+        assert processor.has_tag_key("Zone") is True
+        assert processor.has_tag_key("Department") is True
+
+    def test_has_tag_key_not_exists(self, sample_tag_keys_data):
+        """Test has_tag_key when tag key does not exist."""
+        processor = TagProcessor(sample_tag_keys_data)
+        assert processor.has_tag_key("NonExistent") is False
+        assert processor.has_tag_key("Building") is False
+
+    def test_has_tag_key_empty_processor(self):
+        """Test has_tag_key on empty processor."""
+        processor = TagProcessor({})
+        assert processor.has_tag_key("Location") is False

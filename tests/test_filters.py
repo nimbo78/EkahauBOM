@@ -165,3 +165,75 @@ class TestAPFilter:
         """Test apply_filters with no filters returns all."""
         result = APFilter.apply_filters(sample_aps)
         assert len(result) == 4
+
+    def test_by_colors_empty_list(self, sample_aps):
+        """Test by_colors with empty list returns all."""
+        result = APFilter.by_colors(sample_aps, [])
+        assert len(result) == 4
+
+    def test_by_vendors_empty_list(self, sample_aps):
+        """Test by_vendors with empty list returns all."""
+        result = APFilter.by_vendors(sample_aps, [])
+        assert len(result) == 4
+
+    def test_by_models_empty_list(self, sample_aps):
+        """Test by_models with empty list returns all."""
+        result = APFilter.by_models(sample_aps, [])
+        assert len(result) == 4
+
+    def test_by_tag_empty_values(self, sample_aps):
+        """Test by_tag with empty values list returns all."""
+        result = APFilter.by_tag(sample_aps, "Location", [])
+        assert len(result) == 4
+
+    def test_by_tags_empty_dict(self, sample_aps):
+        """Test by_tags with empty dict returns all."""
+        result = APFilter.by_tags(sample_aps, {})
+        assert len(result) == 4
+
+    def test_exclude_floors_empty_list(self, sample_aps):
+        """Test exclude_floors with empty list returns all."""
+        result = APFilter.exclude_floors(sample_aps, [])
+        assert len(result) == 4
+
+    def test_exclude_colors_empty_list(self, sample_aps):
+        """Test exclude_colors with empty list returns all."""
+        result = APFilter.exclude_colors(sample_aps, [])
+        assert len(result) == 4
+
+    def test_exclude_vendors_empty_list(self, sample_aps):
+        """Test exclude_vendors with empty list returns all."""
+        result = APFilter.exclude_vendors(sample_aps, [])
+        assert len(result) == 4
+
+    def test_apply_filters_with_include_vendors(self, sample_aps):
+        """Test apply_filters with include_vendors."""
+        result = APFilter.apply_filters(
+            sample_aps,
+            include_vendors=["Cisco"]
+        )
+        assert len(result) == 2
+
+    def test_apply_filters_with_include_models(self, sample_aps):
+        """Test apply_filters with include_models."""
+        result = APFilter.apply_filters(
+            sample_aps,
+            include_models=["AP-515"]
+        )
+        assert len(result) == 2
+
+    def test_apply_filters_with_exclude_floors(self, sample_aps):
+        """Test apply_filters with exclude_floors."""
+        result = APFilter.apply_filters(
+            sample_aps,
+            exclude_floors=["Floor 1"]
+        )
+        assert len(result) == 2
+
+    def test_apply_filters_with_exclude_colors(self, sample_aps):
+        """Test apply_filters with exclude_colors."""
+        result = APFilter.apply_filters(
+            sample_aps,
+            exclude_colors=["Yellow"]
+        )
+        assert len(result) == 2

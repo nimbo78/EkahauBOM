@@ -411,3 +411,349 @@ class TestConfigValidationExtended:
 
         with pytest.raises(ConfigError, match="Invalid configuration file format"):
             Config.load(config_file)
+
+    def test_merge_with_colors_config_arg(self):
+        """Test merging with colors_config CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = Path('custom_colors.csv')
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['colors_config'] == Path('custom_colors.csv')
+
+    def test_merge_with_colors_database_in_config(self):
+        """Test merging with colors database in config."""
+        config = Config({
+            'colors': {
+                'database': 'config_colors.csv'
+            }
+        })
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        # Should resolve path from config
+        assert merged['colors_config'] is not None
+
+    def test_merge_with_pricing_file_arg(self):
+        """Test merging with pricing_file CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = Path('custom_pricing.csv')
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['pricing_file'] == Path('custom_pricing.csv')
+
+    def test_merge_with_pricing_database_in_config(self):
+        """Test merging with pricing database in config."""
+        config = Config({
+            'pricing': {
+                'database': 'config_pricing.csv'
+            }
+        })
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        # Should resolve path from config
+        assert merged['pricing_file'] is not None
+
+    def test_merge_with_discount_arg(self):
+        """Test merging with discount CLI argument > 0."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 10.5
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['discount'] == 10.5
+
+    def test_merge_with_group_by_arg(self):
+        """Test merging with group_by CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = 'vendor'
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['group_by'] == 'vendor'
+
+    def test_merge_with_tag_key_arg(self):
+        """Test merging with tag_key CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = 'Location'
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['tag_key'] == 'Location'
+
+    def test_merge_with_verbose_arg(self):
+        """Test merging with verbose CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = True
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['log_level'] == 'DEBUG'
+
+    def test_merge_with_log_file_arg(self):
+        """Test merging with log_file CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = Path('custom.log')
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = False
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['log_file'] == Path('custom.log')
+
+    def test_merge_with_recursive_arg(self):
+        """Test merging with recursive CLI argument."""
+        config = Config({})
+
+        class MockArgs:
+            output_dir = None
+            format = None
+            colors_config = None
+            verbose = False
+            log_file = None
+            filter_floor = None
+            filter_color = None
+            filter_vendor = None
+            filter_model = None
+            filter_tag = None
+            exclude_floor = None
+            exclude_color = None
+            exclude_vendor = None
+            group_by = None
+            tag_key = None
+            enable_pricing = False
+            pricing_file = None
+            discount = 0.0
+            no_volume_discounts = False
+            batch = None
+            recursive = True
+
+        merged = config.merge_with_args(MockArgs())
+        assert merged['recursive'] is True
+
+    def test_to_dict(self):
+        """Test to_dict returns config data as dict."""
+        config = Config({
+            'export': {
+                'output_dir': 'output',
+                'formats': ['csv']
+            }
+        })
+
+        result = config.to_dict()
+        assert result == {'export': {'output_dir': 'output', 'formats': ['csv']}}
+        assert isinstance(result, dict)
+        # to_dict() uses shallow copy, so top-level keys are copied
+        # but nested dicts are still references
+        result['new_key'] = 'new_value'
+        assert 'new_key' not in config.to_dict()
+
+    def test_load_config_convenience_function(self):
+        """Test load_config convenience function."""
+        from ekahau_bom.config import load_config
+
+        # Load with None (should use default path)
+        config = load_config(None)
+        assert isinstance(config, Config)
+
+    def test_resolve_path_config_relative(self, tmp_path):
+        """Test resolve_path when path exists relative to config directory."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("export:\n  formats: [csv]\n", encoding='utf-8')
+
+        # Create a file relative to config directory
+        relative_file = tmp_path / "data.csv"
+        relative_file.write_text("test", encoding='utf-8')
+
+        config = Config.load(config_file)
+        resolved = config.resolve_path('data.csv')
+
+        # Should resolve to path relative to config directory
+        assert resolved == tmp_path / 'data.csv'
