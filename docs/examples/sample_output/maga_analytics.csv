@@ -1,0 +1,47 @@
+"=== MOUNTING METRICS ==="
+
+"Metric","Value","Unit"
+"APs with Height Data","0","count"
+"Average Azimuth","62.7","degrees"
+"Average Tilt","-4.0","degrees"
+
+"=== HEIGHT DISTRIBUTION ==="
+
+"Height Range","AP Count"
+"Unknown","10"
+
+"=== INSTALLATION SUMMARY ==="
+
+"Total APs","10"
+"APs with Tilt Data","10"
+"APs with Azimuth Data","10"
+"APs Requiring Height Adjustment","0"
+
+"=== RADIO CONFIGURATION ANALYTICS ==="
+
+"Metric","Value","Unit"
+"Total Radios","20","count"
+
+"=== FREQUENCY BANDS ==="
+
+"Band","Count","Percentage"
+
+"=== WI-FI STANDARDS ==="
+
+"Standard","Count","Percentage"
+"802.11ac","1","5.0%"
+"802.11ax","18","90.0%"
+"802.11n","1","5.0%"
+
+"=== TRANSMIT POWER ==="
+
+"Metric","Value","Unit"
+"Average TX Power","7.4","dBm"
+"Minimum TX Power","5.0","dBm"
+"Maximum TX Power","14.0","dBm"
+
+"=== TX POWER DISTRIBUTION ==="
+
+"Power Range","Count"
+"< 10 dBm","18"
+"10-15 dBm","2"

@@ -1,0 +1,811 @@
+{
+  "metadata": {
+    "file_name": "maga",
+    "export_format": "json",
+    "version": "2.3.0",
+    "project_info": {
+      "project_name": "maga",
+      "customer": "78",
+      "location": "Санкт-Петербург",
+      "responsible_person": "Аз есмъ",
+      "schema_version": "1.8.0",
+      "project_ancestors": [
+        "109cf12b-a300-4dc9-b09d-953f1d046ae7"
+      ]
+    }
+  },
+  "summary": {
+    "total_access_points": 10,
+    "total_antennas": 20,
+    "unique_vendors": 2,
+    "unique_floors": 1,
+    "unique_colors": 9,
+    "unique_models": 4
+  },
+  "floors": [
+    {
+      "id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+      "name": "maga-flat"
+    }
+  ],
+  "access_points": {
+    "bill_of_materials": [
+      {
+        "vendor": "Huawei",
+        "model": "AirEngine 6760-X1E + Huawei 27013718",
+        "floor": "maga-flat",
+        "color": "Red",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "color": "Mint",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "color": "Green",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "color": "Gray",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "color": "Blue",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "color": "Orange",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 Pro",
+        "floor": "maga-flat",
+        "color": null,
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 Pro",
+        "floor": "maga-flat",
+        "color": "Yellow",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "U6 Pro",
+        "floor": "maga-flat",
+        "color": "Pink",
+        "tags": [],
+        "quantity": 1
+      },
+      {
+        "vendor": "Ubiquiti",
+        "model": "UniFi UAP-AC-IW",
+        "floor": "maga-flat",
+        "color": "Violet",
+        "tags": [],
+        "quantity": 1
+      }
+    ],
+    "details": [
+      {
+        "name": "Simulated AP-001",
+        "vendor": "Huawei",
+        "model": "AirEngine 6760-X1E + Huawei 27013718",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 334.7923240090149,
+          "y": 102.95611825533605
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 180.71839363229805,
+          "tilt": 0.0,
+          "antenna_height": 2.4
+        },
+        "color": "Red",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-05",
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 887.1295903486675,
+          "y": 389.855230014583
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 88.50566640873336,
+          "tilt": -10.0,
+          "antenna_height": 1.2
+        },
+        "color": "Mint",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-03",
+        "vendor": "Ubiquiti",
+        "model": "U6 Pro",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 537.3526474325654,
+          "y": 346.49827558015227
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 0.0,
+          "tilt": 0.0,
+          "antenna_height": 2.5
+        },
+        "color": null,
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-02",
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 735.7733660347342,
+          "y": 401.15047063502584
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 179.70158718000513,
+          "tilt": -10.0,
+          "antenna_height": 1.2
+        },
+        "color": "Green",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-07",
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 673.4913330088244,
+          "y": 316.9235577764773
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 89.630354938153,
+          "tilt": 0.0,
+          "antenna_height": 1.2
+        },
+        "color": "Gray",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-08",
+        "vendor": "Ubiquiti",
+        "model": "U6 Pro",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 676.4345776990376,
+          "y": 587.2373714306095
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 0.0,
+          "tilt": 0.0,
+          "antenna_height": 2.5
+        },
+        "color": "Yellow",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-01",
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 227.8217055593196,
+          "y": 230.04372256634005
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 0.0,
+          "tilt": -10.0,
+          "antenna_height": 1.2
+        },
+        "color": "Blue",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-04",
+        "vendor": "Ubiquiti",
+        "model": "U6 In-Wall",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 677.5704445995375,
+          "y": 142.76870921830175
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 88.8639984849641,
+          "tilt": -10.0,
+          "antenna_height": 1.2
+        },
+        "color": "Orange",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-06",
+        "vendor": "Ubiquiti",
+        "model": "U6 Pro",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 472.43126746787505,
+          "y": 155.8212635706702
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 0.0,
+          "tilt": 0.0,
+          "antenna_height": 2.5
+        },
+        "color": "Pink",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      },
+      {
+        "name": "maga-ap01-09",
+        "vendor": "Ubiquiti",
+        "model": "UniFi UAP-AC-IW",
+        "floor": "maga-flat",
+        "floor_id": "788fbd99-dac0-4aba-9768-a96e78beaf6c",
+        "location": {
+          "x": 794.5086172610366,
+          "y": 641.7390958504573
+        },
+        "installation": {
+          "mounting_height": null,
+          "azimuth": 0.0,
+          "tilt": 0.0,
+          "antenna_height": 2.4
+        },
+        "color": "Violet",
+        "mine": true,
+        "enabled": true,
+        "tags": []
+      }
+    ]
+  },
+  "antennas": {
+    "bill_of_materials": [
+      {
+        "name": "Huawei 27013718 2.4GHz 13dBi",
+        "quantity": 1
+      },
+      {
+        "name": "Huawei 27013718 5GHz 16dBi",
+        "quantity": 1
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 2.4GHz",
+        "quantity": 5
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 5GHz",
+        "quantity": 5
+      },
+      {
+        "name": "Ubiquiti U6 Pro 2.4GHz",
+        "quantity": 3
+      },
+      {
+        "name": "Ubiquiti U6 Pro 5GHz",
+        "quantity": 3
+      },
+      {
+        "name": "Ubiquiti UniFi UAP-AC-IW 2.4GHz",
+        "quantity": 1
+      },
+      {
+        "name": "Ubiquiti UniFi UAP-AC-IW 5GHz",
+        "quantity": 1
+      }
+    ],
+    "details": [
+      {
+        "name": "Ubiquiti U6 In-Wall 5GHz",
+        "antenna_type_id": "20606c47-df73-4cb1-83fa-08f59308b939"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 5GHz",
+        "antenna_type_id": "20606c47-df73-4cb1-83fa-08f59308b939"
+      },
+      {
+        "name": "Ubiquiti UniFi UAP-AC-IW 5GHz",
+        "antenna_type_id": "074bf053-96e1-4f7e-ba40-c3430b956a06"
+      },
+      {
+        "name": "Ubiquiti U6 Pro 5GHz",
+        "antenna_type_id": "e7cc2e48-acab-4640-9885-1006a2a78539"
+      },
+      {
+        "name": "Ubiquiti U6 Pro 5GHz",
+        "antenna_type_id": "e7cc2e48-acab-4640-9885-1006a2a78539"
+      },
+      {
+        "name": "Ubiquiti UniFi UAP-AC-IW 2.4GHz",
+        "antenna_type_id": "b814ccb4-f4c6-4877-af9d-c17dae7484cb"
+      },
+      {
+        "name": "Ubiquiti U6 Pro 5GHz",
+        "antenna_type_id": "e7cc2e48-acab-4640-9885-1006a2a78539"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 2.4GHz",
+        "antenna_type_id": "1c5febdc-1861-4979-bc43-af41fdb693a1"
+      },
+      {
+        "name": "Ubiquiti U6 Pro 2.4GHz",
+        "antenna_type_id": "b6aa4cc8-ded5-436f-8b8e-0eaee4ea51a5"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 5GHz",
+        "antenna_type_id": "20606c47-df73-4cb1-83fa-08f59308b939"
+      },
+      {
+        "name": "Ubiquiti U6 Pro 2.4GHz",
+        "antenna_type_id": "b6aa4cc8-ded5-436f-8b8e-0eaee4ea51a5"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 5GHz",
+        "antenna_type_id": "20606c47-df73-4cb1-83fa-08f59308b939"
+      },
+      {
+        "name": "Ubiquiti U6 Pro 2.4GHz",
+        "antenna_type_id": "b6aa4cc8-ded5-436f-8b8e-0eaee4ea51a5"
+      },
+      {
+        "name": "Huawei 27013718 2.4GHz 13dBi",
+        "antenna_type_id": "ac5f9c55-0c48-48cd-af29-fd01604a7902"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 5GHz",
+        "antenna_type_id": "20606c47-df73-4cb1-83fa-08f59308b939"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 2.4GHz",
+        "antenna_type_id": "1c5febdc-1861-4979-bc43-af41fdb693a1"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 2.4GHz",
+        "antenna_type_id": "1c5febdc-1861-4979-bc43-af41fdb693a1"
+      },
+      {
+        "name": "Huawei 27013718 5GHz 16dBi",
+        "antenna_type_id": "deaeb8f3-4c1d-49bb-84f7-1140b59a4ce9"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 2.4GHz",
+        "antenna_type_id": "1c5febdc-1861-4979-bc43-af41fdb693a1"
+      },
+      {
+        "name": "Ubiquiti U6 In-Wall 2.4GHz",
+        "antenna_type_id": "1c5febdc-1861-4979-bc43-af41fdb693a1"
+      }
+    ]
+  },
+  "analytics": {
+    "by_vendor": {
+      "total": 10,
+      "groups": [
+        {
+          "name": "Ubiquiti",
+          "count": 9,
+          "percentage": 90.0
+        },
+        {
+          "name": "Huawei",
+          "count": 1,
+          "percentage": 10.0
+        }
+      ]
+    },
+    "by_floor": {
+      "total": 10,
+      "groups": [
+        {
+          "name": "maga-flat",
+          "count": 10,
+          "percentage": 100.0
+        }
+      ]
+    },
+    "by_color": {
+      "total": 10,
+      "groups": [
+        {
+          "name": "Red",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Mint",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "No Color",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Green",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Gray",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Yellow",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Blue",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Orange",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Pink",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "Violet",
+          "count": 1,
+          "percentage": 10.0
+        }
+      ]
+    },
+    "by_model": {
+      "total": 10,
+      "groups": [
+        {
+          "name": "U6 In-Wall",
+          "count": 5,
+          "percentage": 50.0
+        },
+        {
+          "name": "U6 Pro",
+          "count": 3,
+          "percentage": 30.0
+        },
+        {
+          "name": "AirEngine 6760-X1E + Huawei 27013718",
+          "count": 1,
+          "percentage": 10.0
+        },
+        {
+          "name": "UniFi UAP-AC-IW",
+          "count": 1,
+          "percentage": 10.0
+        }
+      ]
+    },
+    "mounting": {
+      "avg_height_m": null,
+      "min_height_m": null,
+      "max_height_m": null,
+      "height_variance": null,
+      "aps_with_height_data": 0,
+      "avg_azimuth_deg": 62.742000064415365,
+      "avg_tilt_deg": -4.0,
+      "height_distribution": [
+        {
+          "range": "2.5-3.5m",
+          "count": 0
+        },
+        {
+          "range": "3.5-4.5m",
+          "count": 0
+        },
+        {
+          "range": "4.5-6.0m",
+          "count": 0
+        },
+        {
+          "range": "< 2.5m",
+          "count": 0
+        },
+        {
+          "range": "> 6.0m",
+          "count": 0
+        },
+        {
+          "range": "Unknown",
+          "count": 10
+        }
+      ]
+    },
+    "radio": {
+      "total_radios": 20,
+      "frequency_bands": {},
+      "channel_distribution": {},
+      "channel_widths": {},
+      "wifi_standards": {
+        "802.11ax": 18,
+        "802.11ac": 1,
+        "802.11n": 1
+      },
+      "tx_power": {
+        "avg_dbm": 7.398086804876172,
+        "min_dbm": 5.0,
+        "max_dbm": 13.979400086720377
+      }
+    }
+  },
+  "notes": {
+    "text_notes": [],
+    "cable_notes": [],
+    "picture_notes": [],
+    "summary": {
+      "total_text_notes": 0,
+      "total_cable_notes": 0,
+      "total_picture_notes": 0
+    },
+    "cable_infrastructure": null
+  },
+  "network_settings": {
+    "ssid_configuration": {
+      "ssids_2_4ghz": 2,
+      "ssids_5ghz": 2,
+      "max_clients_2_4ghz": 30,
+      "max_clients_5ghz": 30
+    },
+    "data_rates": {
+      "6GHz": {
+        "mandatory_rates": [
+          "R24",
+          "R36",
+          "R48",
+          "R54"
+        ],
+        "disabled_rates": [
+          "R6",
+          "R9",
+          "R12",
+          "R18"
+        ],
+        "total_rates": 8
+      },
+      "5GHz": {
+        "mandatory_rates": [
+          "R24",
+          "R36",
+          "R48",
+          "R54"
+        ],
+        "disabled_rates": [
+          "R6",
+          "R9",
+          "R12",
+          "R18"
+        ],
+        "total_rates": 8
+      },
+      "2.4GHz": {
+        "mandatory_rates": [
+          "R12",
+          "R18",
+          "R24",
+          "R36",
+          "R48",
+          "R54"
+        ],
+        "disabled_rates": [
+          "R1",
+          "R2",
+          "R5D5",
+          "R6",
+          "R9",
+          "R11"
+        ],
+        "total_rates": 12
+      }
+    },
+    "bands": [
+      {
+        "frequency_band": "6GHz",
+        "number_of_ssids": 2,
+        "rts_cts_enabled": true,
+        "max_associated_clients": 0,
+        "data_rates": [
+          {
+            "rate": "R6",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R9",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R12",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R18",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R24",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R36",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R48",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R54",
+            "state": "MANDATORY"
+          }
+        ]
+      },
+      {
+        "frequency_band": "5GHz",
+        "number_of_ssids": 2,
+        "rts_cts_enabled": true,
+        "max_associated_clients": 30,
+        "data_rates": [
+          {
+            "rate": "R6",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R9",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R12",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R18",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R24",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R36",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R48",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R54",
+            "state": "MANDATORY"
+          }
+        ]
+      },
+      {
+        "frequency_band": "2.4GHz",
+        "number_of_ssids": 2,
+        "rts_cts_enabled": true,
+        "max_associated_clients": 30,
+        "data_rates": [
+          {
+            "rate": "R1",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R2",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R5D5",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R6",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R9",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R11",
+            "state": "DISABLED"
+          },
+          {
+            "rate": "R12",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R18",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R24",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R36",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R48",
+            "state": "MANDATORY"
+          },
+          {
+            "rate": "R54",
+            "state": "MANDATORY"
+          }
+        ]
+      }
+    ]
+  }
+}

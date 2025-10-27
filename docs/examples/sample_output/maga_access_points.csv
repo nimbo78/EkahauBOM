@@ -1,0 +1,17 @@
+# Ekahau BOM - Access Points Bill of Materials
+# Project Name: maga
+# Customer: 78
+# Location: Санкт-Петербург
+# Responsible Person: Аз есмъ
+#
+"Vendor","Model","Floor","Color","Tags","Quantity"
+"Huawei","AirEngine 6760-X1E + Huawei 27013718","maga-flat","Red","","1"
+"Ubiquiti","U6 In-Wall","maga-flat","Mint","","1"
+"Ubiquiti","U6 Pro","maga-flat","","","1"
+"Ubiquiti","U6 In-Wall","maga-flat","Green","","1"
+"Ubiquiti","U6 In-Wall","maga-flat","Gray","","1"
+"Ubiquiti","U6 Pro","maga-flat","Yellow","","1"
+"Ubiquiti","U6 In-Wall","maga-flat","Blue","","1"
+"Ubiquiti","U6 In-Wall","maga-flat","Orange","","1"
+"Ubiquiti","U6 Pro","maga-flat","Pink","","1"
+"Ubiquiti","UniFi UAP-AC-IW","maga-flat","Violet","","1"

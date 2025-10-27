@@ -878,10 +878,38 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
+## 📸 Example Outputs
+
+Explore real example outputs in the **[docs/examples/](docs/examples/)** directory.
+
+### Floor Plan Visualization
+
+![Floor Plan Visualization Example](docs/examples/sample_output/visualizations/maga-flat_visualization.png)
+
+**Features shown in sample:**
+- 10 Access Points with different colors (Blue, Green, Red, Orange, etc.)
+- 7 Azimuth direction arrows showing antenna orientation
+- AP names and locations
+- Professional floor plan overlay
+- Color legend with AP counts
+
+### Report Samples
+
+- **[CSV Reports](docs/examples/sample_output/)** - Access points, antennas, analytics
+- **[JSON Export](docs/examples/sample_output/maga_data.json)** - Complete structured data
+- **[HTML Report](docs/examples/sample_output/maga_report.html)** - Interactive web report
+
+See the **[Examples README](docs/examples/README.md)** for detailed information about all output formats.
+
+---
+
 ## 📚 Documentation
 
 **For Users:**
+- **[Examples](docs/examples/)** - Sample outputs and visualizations
 - **[User Guide](docs/USER_GUIDE.md)** - Detailed usage examples and scenarios ([Русский](docs/USER_GUIDE.ru.md))
+- **[CLI Reference](docs/CLI_REFERENCE.md)** - Complete command-line reference
+- **[Configuration Examples](docs/examples/config-examples.md)** - Configuration file examples
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 - **[FAQ](#-faq)** - Frequently asked questions
 

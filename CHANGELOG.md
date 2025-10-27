@@ -68,6 +68,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Real-time Tests and Code Quality status
     - GitHub Release version badge
 
+  - **Example Output Samples** (Phase 10.1 - NEW!)
+    - Created `docs/examples/sample_output/` directory
+    - Real examples generated from maga.esx project (10 AP, 10 colors)
+    - **CSV Reports**: access_points.csv, antennas.csv, analytics.csv
+    - **JSON Export**: Complete structured project data
+    - **HTML Report**: Interactive web report with sortable tables
+    - **Floor Plan Visualization**: PNG with 10 colored AP markers and 7 azimuth arrows
+    - Updated **docs/examples/README.md** with links and screenshots
+    - Added **"Example Outputs"** section in README.md and README.ru.md
+      - Embedded floor plan visualization image
+      - Links to all sample formats
+      - Feature descriptions for each format
+
 - **Integration Tests** (Phase 9.2)
   - Added comprehensive end-to-end integration tests
   - Total: 25 new integration tests (520 → 545 tests)
