@@ -474,3 +474,68 @@ class TestHTMLExporter:
         assert 'Project Information' in content
         assert 'Test Project' in content
         assert 'Test Customer' in content
+
+    def test_html_with_none_wifi_standard(self, tmp_path):
+        """Test HTML with radio analytics when Wi-Fi standard is None."""
+        aps = [
+            AccessPoint(
+                id="ap1", vendor="Cisco", model="AP-515", color="Yellow",
+                floor_name="Floor 1", tags=[], mine=True, floor_id="f1",
+                mounting_height=3.0
+            ),
+            AccessPoint(
+                id="ap2", vendor="Aruba", model="AP-635", color="Red",
+                floor_name="Floor 1", tags=[], mine=True, floor_id="f1",
+                mounting_height=3.0
+            ),
+        ]
+        radios = [
+            Radio(
+                id="radio1",
+                access_point_id="ap1",
+                frequency_band="5GHz",
+                channel=36,
+                channel_width=80,
+                tx_power=20,
+                antenna_height=3.0,
+                standard=None  # None value - should be handled as "Unknown"
+            ),
+            Radio(
+                id="radio2",
+                access_point_id="ap2",
+                frequency_band="2.4GHz",
+                channel=6,
+                channel_width=20,
+                tx_power=17,
+                antenna_height=3.0,
+                standard="802.11ax"  # Valid standard
+            ),
+            Radio(
+                id="radio3",
+                access_point_id="ap2",
+                frequency_band="5GHz",
+                channel=48,
+                channel_width=40,
+                tx_power=18,
+                antenna_height=3.0,
+                standard=""  # Empty string - should also be handled as "Unknown"
+            ),
+        ]
+        project_data = ProjectData(
+            access_points=aps,
+            antennas=[],
+            floors={},
+            project_name="Wi-Fi Standard Test",
+            radios=radios
+        )
+
+        exporter = HTMLExporter(tmp_path)
+        files = exporter.export(project_data)
+
+        with open(files[0], 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Check that HTML was generated successfully with None/empty standards
+        assert 'Wi-Fi Standard Test' in content
+        # The analytics should handle None and empty string standards
+        assert len(content) > 0

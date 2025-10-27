@@ -348,13 +348,28 @@ class TestEkahauParserGetMethods:
     def test_get_project_metadata_missing_file(self, tmp_path):
         """Test get_project_metadata when file is missing."""
         esx_path = tmp_path / 'minimal.esx'
-        
+
         # Create minimal archive without project.json
         with ZipFile(esx_path, 'w') as zf:
             zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
-        
+
         with EkahauParser(esx_path) as parser:
             metadata = parser.get_project_metadata()
+            assert metadata == {}
+
+    def test_get_project_metadata_missing_project_key(self, tmp_path):
+        """Test get_project_metadata when project.json exists but has no 'project' key."""
+        esx_path = tmp_path / 'minimal.esx'
+
+        # Create archive with project.json but without 'project' key
+        project_data = {"someOtherKey": "value"}  # No 'project' key
+        with ZipFile(esx_path, 'w') as zf:
+            zf.writestr(ESX_ACCESS_POINTS_FILE, json.dumps({'accessPoints': []}))
+            zf.writestr(ESX_PROJECT_FILE, json.dumps(project_data))
+
+        with EkahauParser(esx_path) as parser:
+            metadata = parser.get_project_metadata()
+            # Should return empty dict when 'project' key is missing
             assert metadata == {}
 
     def test_get_cable_notes_missing_file(self, tmp_path):
