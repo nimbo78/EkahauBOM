@@ -490,28 +490,30 @@ class ExcelExporter(BaseExporter):
         # Filter to only external antennas (exclude integrated antennas)
         external_antennas = [ant for ant in antennas if ant.is_external]
 
-        # Group dual-band antennas by (AP ID, model_number)
+        # Group dual-band antennas by (AP ID, antenna_model)
         from collections import defaultdict
 
         antenna_groups = defaultdict(list)
         for ant in external_antennas:
-            if ant.access_point_id and ant.model_number:
-                key = (ant.access_point_id, ant.model_number)
+            if ant.access_point_id and ant.antenna_model:
+                key = (ant.access_point_id, ant.antenna_model)
                 antenna_groups[key].append(ant)
 
         # Calculate physical antenna counts
         antenna_counts = Counter()
 
-        for (ap_id, model_number), group_antennas in antenna_groups.items():
+        for (ap_id, antenna_model), group_antennas in antenna_groups.items():
             max_spatial_streams = max(ant.spatial_streams for ant in group_antennas)
 
-            first_name = group_antennas[0].name
-            vendor = first_name.split()[0] if first_name else "Unknown"
+            # antenna_model already contains clean name (e.g., "Huawei 27013718")
+            # extracted from AP model (part after " + ")
 
             if len(group_antennas) > 1:
-                antenna_display_name = f"{vendor} {model_number} Dual-Band"
+                # Multiple radios (2.4GHz + 5GHz) = Dual-Band
+                antenna_display_name = f"{antenna_model} Dual-Band"
             else:
-                antenna_display_name = f"{vendor} {model_number}"
+                # Single radio = keep antenna model as-is
+                antenna_display_name = antenna_model
 
             antenna_counts[antenna_display_name] += max_spatial_streams
 

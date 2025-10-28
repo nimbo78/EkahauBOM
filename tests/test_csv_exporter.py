@@ -98,7 +98,7 @@ def sample_antennas():
             access_point_id="ap1",
             is_external=True,
             spatial_streams=2,
-            model_number="ANT-2513P4M-N-R",
+            antenna_model="ANT-2513P4M-N-R",
         ),
         Antenna(
             "ANT-2513P4M-N-R",
@@ -106,7 +106,7 @@ def sample_antennas():
             access_point_id="ap2",
             is_external=True,
             spatial_streams=2,
-            model_number="ANT-2513P4M-N-R",
+            antenna_model="ANT-2513P4M-N-R",
         ),
         Antenna(
             "ANT-20",
@@ -114,7 +114,7 @@ def sample_antennas():
             access_point_id="ap3",
             is_external=True,
             spatial_streams=1,
-            model_number="ANT-20",
+            antenna_model="ANT-20",
         ),
     ]
 
@@ -473,7 +473,7 @@ class TestCSVExporter:
                 access_point_id="ap1",
                 is_external=True,
                 spatial_streams=4,
-                model_number="27013718",
+                antenna_model="Huawei 27013718",
             ),
             Antenna(
                 "Huawei 27013718 5GHz 16dBi",
@@ -481,7 +481,7 @@ class TestCSVExporter:
                 access_point_id="ap1",
                 is_external=True,
                 spatial_streams=6,  # Max spatial streams = physical antenna count
-                model_number="27013718",
+                antenna_model="Huawei 27013718",
             ),
             # Single-band antenna
             Antenna(
@@ -490,7 +490,7 @@ class TestCSVExporter:
                 access_point_id="ap2",
                 is_external=True,
                 spatial_streams=2,
-                model_number="ANT-20",
+                antenna_model="Cisco ANT-20",
             ),
             # Integrated antenna (filtered out)
             Antenna("Integrated Antenna", "ant4", is_external=False),

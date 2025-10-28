@@ -18,22 +18,22 @@ class AntennaProcessor:
     """Process antennas data from Ekahau project."""
 
     @staticmethod
-    def _extract_model_number(antenna_name: str) -> str | None:
-        """Extract model number from antenna name.
+    def _extract_antenna_model(ap_model: str) -> str | None:
+        """Extract antenna model from AP model string.
 
-        Antenna names typically follow pattern: "Vendor ModelNumber Frequency Gain"
-        Example: "Huawei 27013718 2.4GHz 13dBi" → "27013718"
+        AP models with external antennas follow pattern: "AP Model + Antenna Model"
+        Example: "Huawei AirEngine 6760-X1E + Huawei 27013718" → "Huawei 27013718"
 
         Args:
-            antenna_name: Full antenna name
+            ap_model: Full AP model string
 
         Returns:
-            Model number (second token) or None if pattern doesn't match
+            Antenna model (part after " + ") or None if no " + " found
         """
-        parts = antenna_name.split()
-        if len(parts) >= 2:
-            # Second token is typically the model number
-            return parts[1]
+        if " + " in ap_model:
+            parts = ap_model.split(" + ", 1)
+            if len(parts) > 1:
+                return parts[1].strip()
         return None
 
     def process(
@@ -95,8 +95,13 @@ class AntennaProcessor:
 
             antenna_name = antenna_info["name"]
 
-            # Extract model number for dual-band aggregation
-            model_number = self._extract_model_number(antenna_name)
+            # Get AP model for external antenna detection and model extraction
+            ap_model = ap_models.get(ap_id, "")
+
+            # Extract antenna model from AP model (part after " + ")
+            # This gives us the clean antenna name for dual-band aggregation
+            # Example: "Huawei AirEngine 6760-X1E + Huawei 27013718" → "Huawei 27013718"
+            antenna_model = self._extract_antenna_model(ap_model)
 
             # Get spatial streams from radio
             # Ekahau stores this in "spatialStreamCount" field
@@ -105,7 +110,6 @@ class AntennaProcessor:
             # Detect external antennas
             # PRIMARY METHOD: Check if AP model contains " + " (space-plus-space)
             is_external = False
-            ap_model = ap_models.get(ap_id, "")
 
             if " + " in ap_model:
                 is_external = True
@@ -131,7 +135,7 @@ class AntennaProcessor:
                 access_point_id=ap_id,
                 is_external=is_external,
                 spatial_streams=spatial_streams,
-                model_number=model_number,
+                antenna_model=antenna_model,
             )
             antennas.append(antenna)
 
