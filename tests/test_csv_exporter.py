@@ -92,9 +92,9 @@ def sample_access_points():
 def sample_antennas():
     """Create sample antennas for testing."""
     return [
-        Antenna("ANT-2513P4M-N-R", "ant1"),
-        Antenna("ANT-2513P4M-N-R", "ant1"),
-        Antenna("ANT-20", "ant2"),
+        Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),
+        Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),
+        Antenna("ANT-20", "ant2", is_external=True),
     ]
 
 
@@ -443,12 +443,13 @@ class TestCSVExporter:
         assert len(rows) > 1
 
     def test_export_antennas_aggregation(self, output_dir):
-        """Test antenna counting."""
+        """Test antenna counting (only external antennas)."""
         antennas = [
-            Antenna("ANT-2513P4M-N-R", "ant1"),
-            Antenna("ANT-2513P4M-N-R", "ant1"),
-            Antenna("ANT-2513P4M-N-R", "ant1"),
-            Antenna("ANT-20", "ant2"),
+            Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),  # External
+            Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),  # External
+            Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),  # External
+            Antenna("ANT-20", "ant2", is_external=True),  # External
+            Antenna("Integrated Antenna", "ant3", is_external=False),  # Filtered out
         ]
 
         exporter = CSVExporter(output_dir)
@@ -458,7 +459,7 @@ class TestCSVExporter:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Header + 2 unique rows
+        # Header + 2 unique external antenna rows (integrated one is filtered out)
         assert len(rows) == 3
 
         # Find ANT-2513P4M-N-R and check quantity

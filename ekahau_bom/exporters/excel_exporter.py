@@ -468,6 +468,9 @@ class ExcelExporter(BaseExporter):
     ):
         """Create antennas sheet.
 
+        Only exports external antennas (those that need to be purchased separately).
+        Integrated antennas are filtered out as they're built into the AP.
+
         Args:
             wb: Workbook
             antennas: List of antennas
@@ -480,12 +483,17 @@ class ExcelExporter(BaseExporter):
         ws.append(headers)
         self._apply_header_style(ws)
 
+        # Filter to only external antennas (exclude integrated antennas)
+        external_antennas = [ant for ant in antennas if ant.is_external]
+
         # Count antennas
-        antenna_names = [antenna.name for antenna in antennas]
+        antenna_names = [antenna.name for antenna in external_antennas]
         antenna_counts = Counter(antenna_names)
 
         logger.info(
-            f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique) to Excel"
+            f"Exporting {len(external_antennas)} external antennas "
+            f"({len(antenna_counts)} unique) to Excel "
+            f"[filtered out {len(antennas) - len(external_antennas)} integrated]"
         )
 
         # Write data

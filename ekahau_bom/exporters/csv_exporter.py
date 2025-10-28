@@ -227,6 +227,9 @@ class CSVExporter(BaseExporter):
     def _export_antennas(self, antennas: list[Antenna], project_name: str) -> Path:
         """Export antennas to CSV file.
 
+        Only exports external antennas (those that need to be purchased separately).
+        Integrated antennas are filtered out as they're built into the AP.
+
         Args:
             antennas: List of antennas to export
             project_name: Name of the project
@@ -236,12 +239,17 @@ class CSVExporter(BaseExporter):
         """
         output_file = self._get_output_filename(project_name, "antennas.csv")
 
+        # Filter to only external antennas (exclude integrated antennas)
+        external_antennas = [ant for ant in antennas if ant.is_external]
+
         # Count occurrences of each antenna type
-        antenna_names = [antenna.name for antenna in antennas]
+        antenna_names = [antenna.name for antenna in external_antennas]
         antenna_counts = Counter(antenna_names)
 
         logger.info(
-            f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique)"
+            f"Exporting {len(external_antennas)} external antennas "
+            f"({len(antenna_counts)} unique) "
+            f"[filtered out {len(antennas) - len(external_antennas)} integrated]"
         )
 
         with open(output_file, "w", newline="", encoding="utf-8") as f:

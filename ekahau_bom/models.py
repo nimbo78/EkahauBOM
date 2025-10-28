@@ -320,10 +320,16 @@ class Antenna:
     Attributes:
         name: Model name of the antenna
         antenna_type_id: Unique identifier for the antenna type
+        access_point_id: ID of the AP this antenna belongs to (optional)
+        is_external: Whether this is an external (separately purchasable) antenna
+                     True = external antenna (needs to be purchased separately)
+                     False = integrated antenna (built into the AP)
     """
 
     name: str
     antenna_type_id: str
+    access_point_id: str | None = None
+    is_external: bool = False
 
     def __hash__(self):
         """Make Antenna hashable for use in Counter."""
