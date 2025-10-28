@@ -40,7 +40,7 @@ class FloorPlanVisualizer:
         show_ap_names: bool = True,
         font_size: int = 12,
         show_azimuth_arrows: bool = False,
-        ap_opacity: float = 0.4,
+        ap_opacity: float = 0.6,
     ):
         """Initialize floor plan visualizer.
 
@@ -52,7 +52,7 @@ class FloorPlanVisualizer:
             show_ap_names: Whether to show AP names next to markers (default: True)
             font_size: Font size for AP names (default: 12)
             show_azimuth_arrows: Whether to show azimuth direction arrows on AP markers (default: False)
-            ap_opacity: Opacity for AP markers (0.0-1.0, default: 0.4 = 40%)
+            ap_opacity: Opacity for AP markers (0.0-1.0, default: 0.6 = 60%)
         """
         if not PIL_AVAILABLE:
             raise ImportError(
@@ -208,9 +208,7 @@ class FloorPlanVisualizer:
         # First, try exact match with normalized name
         if hex_color_normalized in color_names:
             hex_color = color_names[hex_color_normalized]
-            logger.debug(
-                f"Converted color name '{original_color}' to hex: #{hex_color}"
-            )
+            logger.debug(f"Converted color name '{original_color}' to hex: #{hex_color}")
         # If not found, try fixing common typos (RReedd -> red, BBllue -> blue, etc.)
         else:
             import re
@@ -266,9 +264,7 @@ class FloorPlanVisualizer:
         if mounting_type == "CEILING":
             self._draw_circle(draw, x, y, fill_color, adaptive_sizes)
         elif mounting_type == "WALL":
-            self._draw_oriented_rectangle(
-                draw, x, y, fill_color, azimuth, adaptive_sizes
-            )
+            self._draw_oriented_rectangle(draw, x, y, fill_color, azimuth, adaptive_sizes)
         elif mounting_type == "FLOOR":
             self._draw_square(draw, x, y, fill_color, adaptive_sizes)
         else:
@@ -296,12 +292,10 @@ class FloorPlanVisualizer:
         """
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = (
-            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
-        )
+        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
 
-        # Outer circle (border)
-        border_color = (0, 0, 0, 255)
+        # Outer circle (border) - always fully opaque for clear visibility
+        border_color = (0, 0, 0, 255)  # Black border, fully opaque
         draw.ellipse(
             [x - radius, y - radius, x + radius, y + radius],
             fill=border_color,
@@ -340,9 +334,7 @@ class FloorPlanVisualizer:
 
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = (
-            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
-        )
+        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
 
         # Rectangle dimensions (2:1 ratio)
         width = radius * 2  # Long dimension
@@ -375,8 +367,8 @@ class FloorPlanVisualizer:
             # Translate to actual position
             rotated_corners.append((x + rx, y + ry))
 
-        # Draw border
-        border_color = (0, 0, 0, 255)
+        # Draw border - always fully opaque for clear visibility
+        border_color = (0, 0, 0, 255)  # Black border, fully opaque
         draw.polygon(rotated_corners, fill=border_color, outline=border_color)
 
         # Draw inner rectangle (smaller for border effect)
@@ -414,15 +406,13 @@ class FloorPlanVisualizer:
         """
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = (
-            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
-        )
+        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
 
         # Use circle radius as half-side length
         half_side = radius
 
-        # Draw border square
-        border_color = (0, 0, 0, 255)
+        # Draw border square - always fully opaque for clear visibility
+        border_color = (0, 0, 0, 255)  # Black border, fully opaque
         draw.rectangle(
             [x - half_side, y - half_side, x + half_side, y + half_side],
             fill=border_color,
@@ -499,19 +489,22 @@ class FloorPlanVisualizer:
 
     def _draw_legend(
         self,
-        draw: ImageDraw.ImageDraw,
+        image: Image.Image,
         access_points: list,
-        image_size: tuple[int, int],
-    ) -> None:
-        """Draw color legend on the visualization.
+    ) -> Image.Image:
+        """Draw color legend on the visualization and return new image.
 
         Args:
-            draw: ImageDraw object
+            image: Image to draw legend on
             access_points: List of access points to analyze
-            image_size: Image dimensions (width, height)
+
+        Returns:
+            New image with legend drawn
         """
         if not access_points:
-            return
+            return image
+
+        image_size = image.size
 
         # Collect color statistics
         from collections import Counter
@@ -522,7 +515,7 @@ class FloorPlanVisualizer:
             color_counts[color_name] += 1
 
         if not color_counts:
-            return
+            return image
 
         # Legend parameters
         legend_padding = 15
@@ -616,26 +609,17 @@ class FloorPlanVisualizer:
 
             entry_y += legend_line_height
 
-        # Paste the legend overlay onto the original image
-        # Convert original draw context image to RGBA
-        base_image = draw._image
-        if base_image.mode != "RGBA":
-            base_image_rgba = base_image.convert("RGBA")
-        else:
-            base_image_rgba = base_image
+        # Composite the legend onto the image
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
 
         # Composite the legend
-        base_image_rgba = Image.alpha_composite(base_image_rgba, legend_overlay)
+        image = Image.alpha_composite(image, legend_overlay)
 
-        # Convert back to RGB
-        base_image_rgb = base_image_rgba.convert("RGB")
+        # Return the new image with legend
+        return image
 
-        # Update the original image
-        draw._image.paste(base_image_rgb, (0, 0))
-
-    def _get_floor_plan_image(
-        self, floor: Floor
-    ) -> Optional[tuple[Image.Image, float, float]]:
+    def _get_floor_plan_image(self, floor: Floor) -> Optional[tuple[Image.Image, float, float]]:
         """Extract floor plan image from .esx archive with coordinate scale factors.
 
         Ekahau stores coordinates relative to the floor plan dimensions in floorPlans.json.
@@ -690,8 +674,7 @@ class FloorPlanVisualizer:
                     logger.warning(f"No image ID for floor: {floor.name}")
                     return None
                 logger.debug(
-                    f"Using imageId for floor {floor.name} "
-                    f"(no bitmapImageId, may fail for SVG)"
+                    f"Using imageId for floor {floor.name} " f"(no bitmapImageId, may fail for SVG)"
                 )
 
             # Read image file from archive
@@ -759,9 +742,7 @@ class FloorPlanVisualizer:
             ]
             for font_name in font_names:
                 try:
-                    adaptive_font = ImageFont.truetype(
-                        font_name, adaptive_sizes["font_size"]
-                    )
+                    adaptive_font = ImageFont.truetype(font_name, adaptive_sizes["font_size"])
                     break
                 except (OSError, IOError):
                     continue
@@ -864,7 +845,10 @@ class FloorPlanVisualizer:
             )
 
         # Composite the overlay onto the base image
+        # Note: Fill colors have opacity applied, borders are fully opaque for clarity
         image = Image.alpha_composite(image, overlay)
+
+        logger.info(f"After composite, image mode: {image.mode}")
 
         # Now create a new draw context for text labels and arrows (after compositing)
         draw = ImageDraw.Draw(image)
@@ -914,9 +898,7 @@ class FloorPlanVisualizer:
             logger.debug(
                 f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}"
             )
-            self._draw_azimuth_arrow(
-                draw, x, y, azimuth, arrow_color, arrow_length=arrow_length
-            )
+            self._draw_azimuth_arrow(draw, x, y, azimuth, arrow_color, arrow_length=arrow_length)
 
         # Draw AP names on top of the composited image
         for ap in floor_aps:
@@ -953,18 +935,18 @@ class FloorPlanVisualizer:
                         )
 
                 # Main text on top
-                draw.text(
-                    (text_x, text_y), ap.name, font=adaptive_font, fill=text_color
-                )
+                draw.text((text_x, text_y), ap.name, font=adaptive_font, fill=text_color)
 
-        # Draw legend
-        self._draw_legend(draw, floor_aps, image.size)
+        # Draw legend (returns new image with legend)
+        # TEMPORARILY DISABLED FOR DEBUGGING
+        # image = self._draw_legend(image, floor_aps)
 
         # Save image
         floor_name = floor.name.replace("/", "_").replace("\\", "_")
         output_filename = f"{floor_name}_visualization.png"
         output_path = self.output_dir / output_filename
 
+        logger.info(f"Final image mode before save: {image.mode}")
         image.save(output_path, "PNG")
         logger.info(f"Saved floor plan visualization: {output_path}")
 

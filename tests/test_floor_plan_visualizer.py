@@ -945,10 +945,9 @@ class TestFloorPlanVisualizer:
 
             # Create test image
             test_image = Image.new("RGB", (500, 500), color=(255, 255, 255))
-            draw = ImageDraw.Draw(test_image)
 
             # Draw legend with empty list - should return early
-            viz._draw_legend(draw, [], (500, 500))
+            result_image = viz._draw_legend(test_image, [])
 
             viz.close()
 
@@ -961,7 +960,6 @@ class TestFloorPlanVisualizer:
 
             # Create RGB image (not RGBA)
             test_image = Image.new("RGB", (500, 500), color=(255, 255, 255))
-            draw = ImageDraw.Draw(test_image)
 
             aps = [
                 AccessPoint(
@@ -977,7 +975,7 @@ class TestFloorPlanVisualizer:
             ]
 
             # Draw legend on RGB image - should convert to RGBA
-            viz._draw_legend(draw, aps, (500, 500))
+            result_image = viz._draw_legend(test_image, aps)
 
             viz.close()
 

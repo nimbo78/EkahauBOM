@@ -235,8 +235,8 @@ def create_argument_parser() -> argparse.ArgumentParser:
     viz_group.add_argument(
         "--ap-opacity",
         type=float,
-        default=1.0,
-        help="Opacity for AP markers (0.0-1.0, default: 1.0 = 100%%, 0.75 = 75%% for better floor plan visibility)",
+        default=0.6,
+        help="Opacity for AP markers (0.0-1.0, default: 0.6 = 60%% for better floor plan visibility)",
     )
 
     return parser
@@ -445,7 +445,7 @@ def process_project(
     ap_circle_radius: int = 15,
     show_ap_names: bool = True,
     show_azimuth_arrows: bool = False,
-    ap_opacity: float = 1.0,
+    ap_opacity: float = 0.6,
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -472,7 +472,7 @@ def process_project(
         ap_circle_radius: Radius of AP marker circles in pixels
         show_ap_names: Whether to show AP names on visualizations
         show_azimuth_arrows: Whether to show azimuth direction arrows on AP markers
-        ap_opacity: Opacity for AP markers (0.0-1.0, 1.0 = 100%)
+        ap_opacity: Opacity for AP markers (0.0-1.0, 0.6 = 60%)
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -1104,7 +1104,7 @@ def main(args: list[str] | None = None) -> int:
                 ap_circle_radius=merged_config.get("ap_circle_radius", 15),
                 show_ap_names=not merged_config.get("no_ap_names", False),
                 show_azimuth_arrows=merged_config.get("show_azimuth_arrows", False),
-                ap_opacity=merged_config.get("ap_opacity", 1.0),
+                ap_opacity=merged_config.get("ap_opacity", 0.6),
             )
 
             if exit_code != 0:

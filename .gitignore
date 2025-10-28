@@ -11,8 +11,9 @@ env/
 *.swo
 *~
 
-# Claude Code session notes
+# Claude Code session notes and test tracking
 CLAUDE.md
+TEST.md
 .claude/
 
 # Planning and development process (local only, not for git)
