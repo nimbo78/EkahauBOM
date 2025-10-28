@@ -632,14 +632,23 @@ class FloorPlanVisualizer:
         # Update the original image
         draw._image.paste(base_image_rgb, (0, 0))
 
-    def _get_floor_plan_image(self, floor: Floor) -> Optional[Image.Image]:
-        """Extract floor plan image from .esx archive.
+    def _get_floor_plan_image(
+        self, floor: Floor
+    ) -> Optional[tuple[Image.Image, float, float]]:
+        """Extract floor plan image from .esx archive with coordinate scale factors.
+
+        Ekahau stores coordinates relative to the floor plan dimensions in floorPlans.json.
+        When using bitmapImageId (high-res JPEG/PNG) instead of imageId (SVG), we need
+        to scale coordinates to match the actual image dimensions.
 
         Args:
             floor: Floor object with floor plan metadata
 
         Returns:
-            PIL Image object or None if not found
+            Tuple of (image, scale_x, scale_y) or None if not found
+            - image: PIL Image object
+            - scale_x: X-coordinate scale factor (actual_width / plan_width)
+            - scale_y: Y-coordinate scale factor (actual_height / plan_height)
         """
         try:
             # Floor plans metadata
@@ -657,6 +666,18 @@ class FloorPlanVisualizer:
             if not floor_plan:
                 logger.warning(f"Floor plan not found for floor: {floor.name}")
                 return None
+
+            # Get floor plan dimensions (these are the coordinate system dimensions)
+            plan_width = floor_plan.get("width", 0)
+            plan_height = floor_plan.get("height", 0)
+
+            if plan_width == 0 or plan_height == 0:
+                logger.warning(
+                    f"Invalid floor plan dimensions for {floor.name}: "
+                    f"{plan_width}x{plan_height}"
+                )
+                # Fall back to 1:1 scaling
+                plan_width = plan_height = 1
 
             # Get bitmap image ID (JPEG/PNG) for compatibility with Pillow
             # bitmapImageId contains raster version, imageId may contain SVG
@@ -682,8 +703,18 @@ class FloorPlanVisualizer:
             image_data = self.archive.read(image_filename)
             image = Image.open(BytesIO(image_data))
 
-            logger.info(f"Loaded floor plan image for {floor.name}: {image.size}")
-            return image
+            # Calculate scale factors
+            actual_width, actual_height = image.size
+            scale_x = actual_width / plan_width
+            scale_y = actual_height / plan_height
+
+            logger.info(
+                f"Loaded floor plan for {floor.name}: {image.size} "
+                f"(plan dims: {plan_width}x{plan_height}, "
+                f"scale: {scale_x:.3f}x{scale_y:.3f})"
+            )
+
+            return (image, scale_x, scale_y)
 
         except Exception as e:
             logger.error(f"Error loading floor plan image for {floor.name}: {e}")
@@ -702,10 +733,12 @@ class FloorPlanVisualizer:
         Returns:
             Path to generated image file or None if failed
         """
-        # Get floor plan image
-        image = self._get_floor_plan_image(floor)
-        if image is None:
+        # Get floor plan image with coordinate scale factors
+        result = self._get_floor_plan_image(floor)
+        if result is None:
             return None
+
+        image, scale_x, scale_y = result
 
         # Convert to RGBA for transparency support
         if image.mode != "RGBA":
@@ -763,7 +796,8 @@ class FloorPlanVisualizer:
                 logger.warning(f"AP {ap.name} has no location, skipping")
                 continue
 
-            x, y = ap.location_x, ap.location_y
+            # Scale coordinates from floor plan dimensions to actual image dimensions
+            x, y = ap.location_x * scale_x, ap.location_y * scale_y
 
             # Determine AP color with configured opacity
             opacity_value = int(255 * self.ap_opacity)  # Convert 0.0-1.0 to 0-255
@@ -888,7 +922,8 @@ class FloorPlanVisualizer:
             if ap.location_x is None or ap.location_y is None:
                 continue
 
-            x, y = ap.location_x, ap.location_y
+            # Scale coordinates from floor plan dimensions to actual image dimensions
+            x, y = ap.location_x * scale_x, ap.location_y * scale_y
 
             # Draw AP name if enabled
             if self.show_ap_names and adaptive_font:
