@@ -40,7 +40,7 @@ class FloorPlanVisualizer:
         show_ap_names: bool = True,
         font_size: int = 12,
         show_azimuth_arrows: bool = False,
-        ap_opacity: float = 1.0,
+        ap_opacity: float = 0.4,
     ):
         """Initialize floor plan visualizer.
 
@@ -52,7 +52,7 @@ class FloorPlanVisualizer:
             show_ap_names: Whether to show AP names next to markers (default: True)
             font_size: Font size for AP names (default: 12)
             show_azimuth_arrows: Whether to show azimuth direction arrows on AP markers (default: False)
-            ap_opacity: Opacity for AP markers (0.0-1.0, default: 1.0 = 100%)
+            ap_opacity: Opacity for AP markers (0.0-1.0, default: 0.4 = 40%)
         """
         if not PIL_AVAILABLE:
             raise ImportError(
@@ -208,7 +208,9 @@ class FloorPlanVisualizer:
         # First, try exact match with normalized name
         if hex_color_normalized in color_names:
             hex_color = color_names[hex_color_normalized]
-            logger.debug(f"Converted color name '{original_color}' to hex: #{hex_color}")
+            logger.debug(
+                f"Converted color name '{original_color}' to hex: #{hex_color}"
+            )
         # If not found, try fixing common typos (RReedd -> red, BBllue -> blue, etc.)
         else:
             import re
@@ -264,7 +266,9 @@ class FloorPlanVisualizer:
         if mounting_type == "CEILING":
             self._draw_circle(draw, x, y, fill_color, adaptive_sizes)
         elif mounting_type == "WALL":
-            self._draw_oriented_rectangle(draw, x, y, fill_color, azimuth, adaptive_sizes)
+            self._draw_oriented_rectangle(
+                draw, x, y, fill_color, azimuth, adaptive_sizes
+            )
         elif mounting_type == "FLOOR":
             self._draw_square(draw, x, y, fill_color, adaptive_sizes)
         else:
@@ -292,7 +296,9 @@ class FloorPlanVisualizer:
         """
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
 
         # Outer circle (border)
         border_color = (0, 0, 0, 255)
@@ -334,7 +340,9 @@ class FloorPlanVisualizer:
 
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
 
         # Rectangle dimensions (2:1 ratio)
         width = radius * 2  # Long dimension
@@ -406,7 +414,9 @@ class FloorPlanVisualizer:
         """
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
 
         # Use circle radius as half-side length
         half_side = radius
@@ -623,7 +633,9 @@ class FloorPlanVisualizer:
         # Update the original image
         draw._image.paste(base_image_rgb, (0, 0))
 
-    def _get_floor_plan_image(self, floor: Floor) -> Optional[tuple[Image.Image, float, float]]:
+    def _get_floor_plan_image(
+        self, floor: Floor
+    ) -> Optional[tuple[Image.Image, float, float]]:
         """Extract floor plan image from .esx archive with coordinate scale factors.
 
         Ekahau stores coordinates relative to the floor plan dimensions in floorPlans.json.
@@ -678,7 +690,8 @@ class FloorPlanVisualizer:
                     logger.warning(f"No image ID for floor: {floor.name}")
                     return None
                 logger.debug(
-                    f"Using imageId for floor {floor.name} " f"(no bitmapImageId, may fail for SVG)"
+                    f"Using imageId for floor {floor.name} "
+                    f"(no bitmapImageId, may fail for SVG)"
                 )
 
             # Read image file from archive
@@ -746,7 +759,9 @@ class FloorPlanVisualizer:
             ]
             for font_name in font_names:
                 try:
-                    adaptive_font = ImageFont.truetype(font_name, adaptive_sizes["font_size"])
+                    adaptive_font = ImageFont.truetype(
+                        font_name, adaptive_sizes["font_size"]
+                    )
                     break
                 except (OSError, IOError):
                     continue
@@ -899,7 +914,9 @@ class FloorPlanVisualizer:
             logger.debug(
                 f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}"
             )
-            self._draw_azimuth_arrow(draw, x, y, azimuth, arrow_color, arrow_length=arrow_length)
+            self._draw_azimuth_arrow(
+                draw, x, y, azimuth, arrow_color, arrow_length=arrow_length
+            )
 
         # Draw AP names on top of the composited image
         for ap in floor_aps:
@@ -916,21 +933,29 @@ class FloorPlanVisualizer:
                 text_x = x + adaptive_sizes["radius"] + text_offset
                 text_y = y - adaptive_sizes["font_size"] // 2
 
-                # Draw text with shadow for better visibility
-                shadow_color = (255, 255, 255)  # White shadow
+                # Draw text with white outline for better visibility
+                outline_color = (255, 255, 255)  # White outline
                 text_color = (0, 0, 0)  # Black text
 
-                # Shadow (offset scaled with font size)
-                shadow_offset = max(1, int(adaptive_sizes["font_size"] * 0.05))
-                draw.text(
-                    (text_x + shadow_offset, text_y + shadow_offset),
-                    ap.name,
-                    font=adaptive_font,
-                    fill=shadow_color,
-                )
+                # Outline width (scaled with font size, but keep it small)
+                outline_width = max(1, int(adaptive_sizes["font_size"] * 0.08))
 
-                # Main text
-                draw.text((text_x, text_y), ap.name, font=adaptive_font, fill=text_color)
+                # Draw outline by rendering text in 8 directions
+                for dx in [-outline_width, 0, outline_width]:
+                    for dy in [-outline_width, 0, outline_width]:
+                        if dx == 0 and dy == 0:
+                            continue  # Skip center (will draw main text there)
+                        draw.text(
+                            (text_x + dx, text_y + dy),
+                            ap.name,
+                            font=adaptive_font,
+                            fill=outline_color,
+                        )
+
+                # Main text on top
+                draw.text(
+                    (text_x, text_y), ap.name, font=adaptive_font, fill=text_color
+                )
 
         # Draw legend
         self._draw_legend(draw, floor_aps, image.size)
