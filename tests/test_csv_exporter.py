@@ -92,9 +92,30 @@ def sample_access_points():
 def sample_antennas():
     """Create sample antennas for testing."""
     return [
-        Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),
-        Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),
-        Antenna("ANT-20", "ant2", is_external=True),
+        Antenna(
+            "ANT-2513P4M-N-R",
+            "ant1",
+            access_point_id="ap1",
+            is_external=True,
+            spatial_streams=2,
+            model_number="ANT-2513P4M-N-R",
+        ),
+        Antenna(
+            "ANT-2513P4M-N-R",
+            "ant1",
+            access_point_id="ap2",
+            is_external=True,
+            spatial_streams=2,
+            model_number="ANT-2513P4M-N-R",
+        ),
+        Antenna(
+            "ANT-20",
+            "ant2",
+            access_point_id="ap3",
+            is_external=True,
+            spatial_streams=1,
+            model_number="ANT-20",
+        ),
     ]
 
 
@@ -443,13 +464,36 @@ class TestCSVExporter:
         assert len(rows) > 1
 
     def test_export_antennas_aggregation(self, output_dir):
-        """Test antenna counting (only external antennas)."""
+        """Test antenna counting with dual-band aggregation."""
         antennas = [
-            Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),  # External
-            Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),  # External
-            Antenna("ANT-2513P4M-N-R", "ant1", is_external=True),  # External
-            Antenna("ANT-20", "ant2", is_external=True),  # External
-            Antenna("Integrated Antenna", "ant3", is_external=False),  # Filtered out
+            # Dual-band antenna (2.4GHz + 5GHz) with different spatial streams
+            Antenna(
+                "Huawei 27013718 2.4GHz 13dBi",
+                "ant1",
+                access_point_id="ap1",
+                is_external=True,
+                spatial_streams=4,
+                model_number="27013718",
+            ),
+            Antenna(
+                "Huawei 27013718 5GHz 16dBi",
+                "ant2",
+                access_point_id="ap1",
+                is_external=True,
+                spatial_streams=6,  # Max spatial streams = physical antenna count
+                model_number="27013718",
+            ),
+            # Single-band antenna
+            Antenna(
+                "Cisco ANT-20",
+                "ant3",
+                access_point_id="ap2",
+                is_external=True,
+                spatial_streams=2,
+                model_number="ANT-20",
+            ),
+            # Integrated antenna (filtered out)
+            Antenna("Integrated Antenna", "ant4", is_external=False),
         ]
 
         exporter = CSVExporter(output_dir)
@@ -459,12 +503,17 @@ class TestCSVExporter:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Header + 2 unique external antenna rows (integrated one is filtered out)
+        # Header + 2 unique external antenna rows (dual-band aggregated, integrated filtered)
         assert len(rows) == 3
 
-        # Find ANT-2513P4M-N-R and check quantity
-        ant1_row = [row for row in rows[1:] if "2513" in row[0]][0]
-        assert ant1_row[1] == "3"
+        # Find Huawei dual-band antenna - should show max spatial streams (6)
+        huawei_row = [row for row in rows[1:] if "27013718" in row[0]][0]
+        assert "Dual-Band" in huawei_row[0]  # Dual-band label
+        assert huawei_row[1] == "6"  # Max spatial streams from 5GHz radio
+
+        # Find Cisco single-band antenna
+        cisco_row = [row for row in rows[1:] if "ANT-20" in row[0]][0]
+        assert cisco_row[1] == "2"
 
     def test_export_analytics_with_data(
         self, output_dir, sample_access_points, sample_radios

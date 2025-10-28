@@ -230,6 +230,10 @@ class CSVExporter(BaseExporter):
         Only exports external antennas (those that need to be purchased separately).
         Integrated antennas are filtered out as they're built into the AP.
 
+        For dual-band external antennas (same model on multiple frequency bands),
+        aggregates them by AP + model number and counts physical antenna units
+        based on max spatial streams.
+
         Args:
             antennas: List of antennas to export
             project_name: Name of the project
@@ -242,13 +246,42 @@ class CSVExporter(BaseExporter):
         # Filter to only external antennas (exclude integrated antennas)
         external_antennas = [ant for ant in antennas if ant.is_external]
 
-        # Count occurrences of each antenna type
-        antenna_names = [antenna.name for antenna in external_antennas]
-        antenna_counts = Counter(antenna_names)
+        # Group dual-band antennas by (AP ID, model_number)
+        # This aggregates 2.4GHz + 5GHz radios into physical antenna count
+        from collections import defaultdict
+
+        antenna_groups = defaultdict(list)
+        for ant in external_antennas:
+            # Group by AP ID + model number for dual-band detection
+            if ant.access_point_id and ant.model_number:
+                key = (ant.access_point_id, ant.model_number)
+                antenna_groups[key].append(ant)
+
+        # Calculate physical antenna counts
+        antenna_counts = Counter()
+
+        for (ap_id, model_number), group_antennas in antenna_groups.items():
+            # Get max spatial streams across all radios (determines physical antenna count)
+            max_spatial_streams = max(ant.spatial_streams for ant in group_antennas)
+
+            # Extract vendor from first antenna name
+            first_name = group_antennas[0].name
+            vendor = first_name.split()[0] if first_name else "Unknown"
+
+            # Create aggregated name for dual-band antennas
+            if len(group_antennas) > 1:
+                # Multiple radios (2.4GHz + 5GHz) = Dual-Band
+                antenna_display_name = f"{vendor} {model_number} Dual-Band"
+            else:
+                # Single radio = keep original name (without frequency suffix)
+                antenna_display_name = f"{vendor} {model_number}"
+
+            # Add quantity based on max spatial streams
+            antenna_counts[antenna_display_name] += max_spatial_streams
 
         logger.info(
             f"Exporting {len(external_antennas)} external antennas "
-            f"({len(antenna_counts)} unique) "
+            f"({len(antenna_counts)} unique after dual-band aggregation) "
             f"[filtered out {len(antennas) - len(external_antennas)} integrated]"
         )
 
@@ -258,8 +291,8 @@ class CSVExporter(BaseExporter):
             # Write header
             writer.writerow(["Antenna Model", "Quantity"])
 
-            # Write data rows
-            for antenna_name, count in antenna_counts.items():
+            # Write data rows - sorted by antenna name
+            for antenna_name, count in sorted(antenna_counts.items()):
                 writer.writerow([antenna_name, count])
 
         logger.debug(f"Antennas exported to {output_file}")

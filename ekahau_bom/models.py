@@ -324,12 +324,17 @@ class Antenna:
         is_external: Whether this is an external (separately purchasable) antenna
                      True = external antenna (needs to be purchased separately)
                      False = integrated antenna (built into the AP)
+        spatial_streams: Number of spatial streams for this radio (for dual-band aggregation)
+        model_number: Extracted model number from antenna name (e.g., "27013718")
+                      Used to identify dual-band antennas with same physical model
     """
 
     name: str
     antenna_type_id: str
     access_point_id: str | None = None
     is_external: bool = False
+    spatial_streams: int = 1
+    model_number: str | None = None
 
     def __hash__(self):
         """Make Antenna hashable for use in Counter."""

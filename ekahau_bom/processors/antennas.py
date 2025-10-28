@@ -17,6 +17,25 @@ logger = logging.getLogger(__name__)
 class AntennaProcessor:
     """Process antennas data from Ekahau project."""
 
+    @staticmethod
+    def _extract_model_number(antenna_name: str) -> str | None:
+        """Extract model number from antenna name.
+
+        Antenna names typically follow pattern: "Vendor ModelNumber Frequency Gain"
+        Example: "Huawei 27013718 2.4GHz 13dBi" → "27013718"
+
+        Args:
+            antenna_name: Full antenna name
+
+        Returns:
+            Model number (second token) or None if pattern doesn't match
+        """
+        parts = antenna_name.split()
+        if len(parts) >= 2:
+            # Second token is typically the model number
+            return parts[1]
+        return None
+
     def process(
         self,
         simulated_radios_data: dict[str, Any],
@@ -76,6 +95,13 @@ class AntennaProcessor:
 
             antenna_name = antenna_info["name"]
 
+            # Extract model number for dual-band aggregation
+            model_number = self._extract_model_number(antenna_name)
+
+            # Get spatial streams from radio
+            # Ekahau stores this in "spatialStreamCount" field
+            spatial_streams = radio.get("spatialStreamCount", 1)
+
             # Detect external antennas
             # PRIMARY METHOD: Check if AP model contains " + " (space-plus-space)
             is_external = False
@@ -84,7 +110,8 @@ class AntennaProcessor:
             if " + " in ap_model:
                 is_external = True
                 logger.debug(
-                    f"External antenna detected via AP model: {ap_model} → {antenna_name}"
+                    f"External antenna detected via AP model: {ap_model} → {antenna_name} "
+                    f"(spatial streams: {spatial_streams})"
                 )
             else:
                 # ALTERNATIVE: Validate with apCoupling field
@@ -103,6 +130,8 @@ class AntennaProcessor:
                 antenna_type_id=antenna_type_id,
                 access_point_id=ap_id,
                 is_external=is_external,
+                spatial_streams=spatial_streams,
+                model_number=model_number,
             )
             antennas.append(antenna)
 
