@@ -88,9 +88,7 @@ class AntennaProcessor:
             antenna_info = antenna_types_map.get(antenna_type_id)
 
             if not antenna_info:
-                logger.warning(
-                    f"Antenna type ID {antenna_type_id} not found in antenna types"
-                )
+                logger.warning(f"Antenna type ID {antenna_type_id} not found in antenna types")
                 continue
 
             antenna_name = antenna_info["name"]

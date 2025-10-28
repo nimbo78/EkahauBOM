@@ -187,9 +187,7 @@ class TestCSVExporter:
             assert file_path.exists()
             assert file_path.suffix == ".csv"
 
-    def test_export_access_points_file_structure(
-        self, output_dir, sample_access_points
-    ):
+    def test_export_access_points_file_structure(self, output_dir, sample_access_points):
         """Test access points file has correct structure."""
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(sample_access_points, "Test")
@@ -313,14 +311,10 @@ class TestCSVExporter:
         assert len(rows) == 2
         assert rows[1] == ["Cisco", "C9120AXI", "3"]  # Quantity 3
 
-    def test_export_detailed_access_points_structure(
-        self, output_dir, sample_access_points
-    ):
+    def test_export_detailed_access_points_structure(self, output_dir, sample_access_points):
         """Test detailed access points file has correct structure."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_detailed_access_points(
-            sample_access_points, [], "Test"
-        )
+        output_file = exporter._export_detailed_access_points(sample_access_points, [], "Test")
 
         with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
@@ -515,14 +509,10 @@ class TestCSVExporter:
         cisco_row = [row for row in rows[1:] if "ANT-20" in row[0]][0]
         assert cisco_row[1] == "2"
 
-    def test_export_analytics_with_data(
-        self, output_dir, sample_access_points, sample_radios
-    ):
+    def test_export_analytics_with_data(self, output_dir, sample_access_points, sample_radios):
         """Test analytics export with data."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_analytics(
-            sample_access_points, sample_radios, "Test"
-        )
+        output_file = exporter._export_analytics(sample_access_points, sample_radios, "Test")
 
         assert output_file is not None
         assert output_file.exists()
@@ -593,9 +583,7 @@ class TestCSVExporter:
 
         # Should have average height (3.5m)
         height_rows = [
-            row
-            for row in content
-            if len(row) > 0 and "Average Mounting Height" in row[0]
+            row for row in content if len(row) > 0 and "Average Mounting Height" in row[0]
         ]
         assert len(height_rows) == 1
         assert "3.50" in height_rows[0][1]
@@ -658,14 +646,10 @@ class TestCSVExporter:
         assert "4.5-6.0m" in content
         assert "> 6.0m" in content
 
-    def test_export_analytics_radio_metrics(
-        self, output_dir, sample_access_points, sample_radios
-    ):
+    def test_export_analytics_radio_metrics(self, output_dir, sample_access_points, sample_radios):
         """Test radio metrics in analytics."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_analytics(
-            sample_access_points, sample_radios, "Test"
-        )
+        output_file = exporter._export_analytics(sample_access_points, sample_radios, "Test")
 
         with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
@@ -730,24 +714,20 @@ class TestCSVExporter:
         summary_section = content[summary_start:]
 
         # Total APs
-        total_aps_row = [
-            row for row in summary_section if len(row) > 0 and "Total APs" in row[0]
-        ][0]
+        total_aps_row = [row for row in summary_section if len(row) > 0 and "Total APs" in row[0]][
+            0
+        ]
         assert total_aps_row[1] == "2"
 
         # APs with tilt
         tilt_row = [
-            row
-            for row in summary_section
-            if len(row) > 0 and "APs with Tilt Data" in row[0]
+            row for row in summary_section if len(row) > 0 and "APs with Tilt Data" in row[0]
         ][0]
         assert tilt_row[1] == "2"
 
         # APs with azimuth
         azimuth_row = [
-            row
-            for row in summary_section
-            if len(row) > 0 and "APs with Azimuth Data" in row[0]
+            row for row in summary_section if len(row) > 0 and "APs with Azimuth Data" in row[0]
         ][0]
         assert azimuth_row[1] == "1"
 
