@@ -9,9 +9,10 @@ from __future__ import annotations
 import logging
 import re
 from abc import ABC, abstractmethod
+from collections import Counter, defaultdict
 from pathlib import Path
 
-from ..models import ProjectData
+from ..models import Antenna, ProjectData
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,66 @@ class BaseExporter(ABC):
         Args:
             files: List of exported files
         """
-        logger.info(f"{self.format_name} export completed: {len(files)} file(s) created")
+        logger.info(
+            f"{self.format_name} export completed: {len(files)} file(s) created"
+        )
         for file in files:
             logger.info(f"  - {file}")
+
+    def _filter_and_group_antennas(self, antennas: list[Antenna]) -> Counter:
+        """Filter and group antennas for BOM export.
+
+        Only processes external antennas (those that need to be purchased separately).
+        Integrated antennas are filtered out as they're built into the AP.
+
+        For dual-band external antennas (same model on multiple frequency bands),
+        aggregates them by AP + model number and counts physical antenna units
+        based on max spatial streams.
+
+        Args:
+            antennas: List of all antennas
+
+        Returns:
+            Counter with antenna display names and quantities
+        """
+        # Filter to only external antennas (exclude integrated antennas)
+        external_antennas = [ant for ant in antennas if ant.is_external]
+
+        # Group dual-band antennas by (AP ID, antenna_model)
+        # This aggregates 2.4GHz + 5GHz radios into physical antenna count
+        antenna_groups = defaultdict(list)
+        for ant in external_antennas:
+            # Group by AP ID + antenna model (extracted from AP model)
+            if ant.access_point_id and ant.antenna_model:
+                key = (ant.access_point_id, ant.antenna_model)
+                antenna_groups[key].append(ant)
+
+        # Calculate physical antenna counts
+        antenna_counts = Counter()
+
+        for (ap_id, antenna_model), group_antennas in antenna_groups.items():
+            # Get max spatial streams across all radios (determines physical antenna count)
+            max_spatial_streams = max(
+                ant.spatial_streams or 0 for ant in group_antennas
+            )
+            # Note: antenna_model is already the cleaned antenna name
+            # extracted from AP model (part after " + ")
+
+            # Create aggregated name for dual-band antennas
+            if len(group_antennas) > 1:
+                # Multiple radios (2.4GHz + 5GHz) = Dual-Band
+                antenna_display_name = f"{antenna_model} Dual-Band"
+            else:
+                # Single radio = keep antenna model as-is
+                antenna_display_name = antenna_model
+
+            # Add quantity based on max spatial streams
+            antenna_counts[antenna_display_name] += max_spatial_streams
+
+        logger.debug(
+            f"Filtered antennas: {len(external_antennas)} external, "
+            f"{len(antenna_counts)} unique after dual-band aggregation, "
+            f"filtered out {len(antennas) - len(external_antennas)} integrated"
+        )
+
+        return antenna_counts
