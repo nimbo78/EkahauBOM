@@ -106,6 +106,58 @@ class FloorPlanVisualizer:
             logger.warning(f"Error loading font: {e}")
             return None
 
+    def _calculate_adaptive_sizes(self, image_width: int, image_height: int) -> dict:
+        """Calculate adaptive marker sizes based on image dimensions.
+
+        For large high-resolution images (e.g., 5000x3534), fixed pixel sizes become
+        microscopic. This method scales marker sizes proportionally to image size.
+
+        Formula: base_radius = max(min_radius, avg_dimension * scale_factor)
+        where avg_dimension = (width + height) / 2
+
+        Args:
+            image_width: Width of floor plan image in pixels
+            image_height: Height of floor plan image in pixels
+
+        Returns:
+            dict with adaptive sizes: radius, border_width, font_size, arrow_length
+        """
+        # Average dimension for scaling
+        avg_dimension = (image_width + image_height) / 2
+
+        # Scale factor: ~0.8% of average dimension
+        # Examples:
+        #   - 1000px avg → 8px radius (but min 10)
+        #   - 2500px avg → 20px radius
+        #   - 5000px avg → 40px radius
+        scale_factor = 0.008
+        min_radius = 10
+
+        # Calculate adaptive radius (override user-provided radius for large images)
+        if avg_dimension > 2000:  # Only apply adaptive sizing for large images
+            base_radius = max(min_radius, int(avg_dimension * scale_factor))
+        else:
+            # For small images, use user-provided radius
+            base_radius = self.ap_circle_radius
+
+        # Scale other elements proportionally
+        border_width = max(2, int(base_radius * 0.15))  # 15% of radius
+        font_size = max(10, int(base_radius * 0.8))  # 80% of radius
+        arrow_length = int(base_radius * 2.0)  # 2x radius
+
+        logger.debug(
+            f"Adaptive sizes for {image_width}x{image_height}: "
+            f"radius={base_radius}px, border={border_width}px, "
+            f"font={font_size}pt, arrow={arrow_length}px"
+        )
+
+        return {
+            "radius": base_radius,
+            "border_width": border_width,
+            "font_size": font_size,
+            "arrow_length": arrow_length,
+        }
+
     def _hex_to_rgb(self, hex_color: str) -> tuple[int, int, int]:
         """Convert hex color to RGB tuple.
 
@@ -155,7 +207,9 @@ class FloorPlanVisualizer:
         # First, try exact match with normalized name
         if hex_color_normalized in color_names:
             hex_color = color_names[hex_color_normalized]
-            logger.debug(f"Converted color name '{original_color}' to hex: #{hex_color}")
+            logger.debug(
+                f"Converted color name '{original_color}' to hex: #{hex_color}"
+            )
         # If not found, try fixing common typos (RReedd -> red, BBllue -> blue, etc.)
         else:
             import re
@@ -196,6 +250,7 @@ class FloorPlanVisualizer:
         fill_color: tuple,
         mounting_type: str = "CEILING",
         azimuth: float = 0.0,
+        adaptive_sizes: dict = None,
     ) -> None:
         """Draw AP marker based on mounting type.
 
@@ -205,22 +260,30 @@ class FloorPlanVisualizer:
             fill_color: RGBA color tuple
             mounting_type: CEILING, WALL, or FLOOR
             azimuth: Direction in degrees (0=N, 90=E, 180=S, 270=W)
+            adaptive_sizes: dict with adaptive sizes (radius, border_width, etc.)
         """
         if mounting_type == "CEILING":
-            self._draw_circle(draw, x, y, fill_color)
+            self._draw_circle(draw, x, y, fill_color, adaptive_sizes)
         elif mounting_type == "WALL":
-            self._draw_oriented_rectangle(draw, x, y, fill_color, azimuth)
+            self._draw_oriented_rectangle(
+                draw, x, y, fill_color, azimuth, adaptive_sizes
+            )
         elif mounting_type == "FLOOR":
-            self._draw_square(draw, x, y, fill_color)
+            self._draw_square(draw, x, y, fill_color, adaptive_sizes)
         else:
             # Default to circle
-            self._draw_circle(draw, x, y, fill_color)
+            self._draw_circle(draw, x, y, fill_color, adaptive_sizes)
 
         # Note: Arrows are now drawn separately after compositing for better visibility
         # This method only draws the shapes (circles, rectangles, squares)
 
     def _draw_circle(
-        self, draw: ImageDraw.ImageDraw, x: float, y: float, fill_color: tuple
+        self,
+        draw: ImageDraw.ImageDraw,
+        x: float,
+        y: float,
+        fill_color: tuple,
+        adaptive_sizes: dict = None,
     ) -> None:
         """Draw circular AP marker (for ceiling-mounted APs).
 
@@ -228,22 +291,24 @@ class FloorPlanVisualizer:
             draw: ImageDraw context
             x, y: Center coordinates
             fill_color: RGBA color tuple
+            adaptive_sizes: dict with adaptive sizes (radius, border_width, etc.)
         """
+        # Use adaptive sizes if provided, otherwise use defaults
+        radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
+
         # Outer circle (border)
         border_color = (0, 0, 0, 255)
         draw.ellipse(
-            [
-                x - self.ap_circle_radius,
-                y - self.ap_circle_radius,
-                x + self.ap_circle_radius,
-                y + self.ap_circle_radius,
-            ],
+            [x - radius, y - radius, x + radius, y + radius],
             fill=border_color,
             outline=border_color,
         )
 
         # Inner circle (AP color)
-        inner_radius = self.ap_circle_radius - self.ap_border_width
+        inner_radius = radius - border_width
         draw.ellipse(
             [x - inner_radius, y - inner_radius, x + inner_radius, y + inner_radius],
             fill=fill_color,
@@ -257,6 +322,7 @@ class FloorPlanVisualizer:
         y: float,
         fill_color: tuple,
         azimuth: float,
+        adaptive_sizes: dict = None,
     ) -> None:
         """Draw rotated rectangle for wall-mounted AP.
 
@@ -267,12 +333,19 @@ class FloorPlanVisualizer:
             x, y: Center coordinates
             fill_color: RGBA color tuple
             azimuth: Direction in degrees (0=N, 90=E, 180=S, 270=W)
+            adaptive_sizes: dict with adaptive sizes (radius, border_width, etc.)
         """
         import math
 
+        # Use adaptive sizes if provided, otherwise use defaults
+        radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
+
         # Rectangle dimensions (2:1 ratio)
-        width = self.ap_circle_radius * 2  # Long dimension
-        height = self.ap_circle_radius  # Short dimension
+        width = radius * 2  # Long dimension
+        height = radius  # Short dimension
 
         # Convert azimuth to radians (note: 0° = North = up, clockwise)
         # Need to adjust: image coords have Y increasing downward
@@ -306,7 +379,7 @@ class FloorPlanVisualizer:
         draw.polygon(rotated_corners, fill=border_color, outline=border_color)
 
         # Draw inner rectangle (smaller for border effect)
-        border_offset = self.ap_border_width
+        border_offset = border_width
         inner_corners = []
         for cx, cy in corners:
             # Shrink corners by scaling from center
@@ -323,7 +396,12 @@ class FloorPlanVisualizer:
         draw.polygon(inner_corners, fill=fill_color, outline=fill_color)
 
     def _draw_square(
-        self, draw: ImageDraw.ImageDraw, x: float, y: float, fill_color: tuple
+        self,
+        draw: ImageDraw.ImageDraw,
+        x: float,
+        y: float,
+        fill_color: tuple,
+        adaptive_sizes: dict = None,
     ) -> None:
         """Draw square AP marker (for floor-mounted APs).
 
@@ -331,9 +409,16 @@ class FloorPlanVisualizer:
             draw: ImageDraw context
             x, y: Center coordinates
             fill_color: RGBA color tuple
+            adaptive_sizes: dict with adaptive sizes (radius, border_width, etc.)
         """
+        # Use adaptive sizes if provided, otherwise use defaults
+        radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
+
         # Use circle radius as half-side length
-        half_side = self.ap_circle_radius
+        half_side = radius
 
         # Draw border square
         border_color = (0, 0, 0, 255)
@@ -344,7 +429,7 @@ class FloorPlanVisualizer:
         )
 
         # Draw inner square
-        inner_half = half_side - self.ap_border_width
+        inner_half = half_side - border_width
         draw.rectangle(
             [x - inner_half, y - inner_half, x + inner_half, y + inner_half],
             fill=fill_color,
@@ -359,7 +444,8 @@ class FloorPlanVisualizer:
         azimuth: float,
         color: tuple = (255, 0, 0, 255),
         arrow_length: float = None,
-        arrow_head_size: float = 6,
+        arrow_head_size: float = None,
+        line_width: int = None,
     ) -> None:
         """Draw an arrow indicating azimuth direction.
 
@@ -369,12 +455,21 @@ class FloorPlanVisualizer:
             azimuth: Direction in degrees (0=N, 90=E, 180=S, 270=W)
             color: Arrow color (default: red)
             arrow_length: Length of arrow (default: 2 * ap_circle_radius)
-            arrow_head_size: Size of arrow head (default: 6)
+            arrow_head_size: Size of arrow head (default: adaptive or 6)
+            line_width: Width of arrow line (default: adaptive or 3)
         """
         import math
 
         if arrow_length is None:
             arrow_length = self.ap_circle_radius * 2  # Default arrow length
+
+        if arrow_head_size is None:
+            # Scale arrow head with arrow length (15% of length)
+            arrow_head_size = max(4, int(arrow_length * 0.15))
+
+        if line_width is None:
+            # Scale line width with arrow length (7.5% of length)
+            line_width = max(2, int(arrow_length * 0.075))
 
         # Convert azimuth to radians (adjust for image coordinates)
         # 0° = North = up, but in image coords Y increases downward
@@ -385,9 +480,7 @@ class FloorPlanVisualizer:
         end_y = y + arrow_length * math.sin(angle_rad)
 
         # Draw arrow line
-        draw.line(
-            [(x, y), (end_x, end_y)], fill=color, width=3
-        )  # Increased width for better visibility
+        draw.line([(x, y), (end_x, end_y)], fill=color, width=line_width)
 
         # Calculate arrow head points (triangle)
         # Create two points at 150 degrees from the main line
@@ -565,11 +658,19 @@ class FloorPlanVisualizer:
                 logger.warning(f"Floor plan not found for floor: {floor.name}")
                 return None
 
-            # Get image ID
-            image_id = floor_plan.get("imageId")
+            # Get bitmap image ID (JPEG/PNG) for compatibility with Pillow
+            # bitmapImageId contains raster version, imageId may contain SVG
+            image_id = floor_plan.get("bitmapImageId")
             if not image_id:
-                logger.warning(f"No image ID for floor: {floor.name}")
-                return None
+                # Fallback to imageId for projects without bitmap version
+                image_id = floor_plan.get("imageId")
+                if not image_id:
+                    logger.warning(f"No image ID for floor: {floor.name}")
+                    return None
+                logger.debug(
+                    f"Using imageId for floor {floor.name} "
+                    f"(no bitmapImageId, may fail for SVG)"
+                )
 
             # Read image file from archive
             image_filename = f"image-{image_id}"
@@ -609,6 +710,32 @@ class FloorPlanVisualizer:
         # Convert to RGBA for transparency support
         if image.mode != "RGBA":
             image = image.convert("RGBA")
+
+        # Calculate adaptive marker sizes based on image dimensions
+        adaptive_sizes = self._calculate_adaptive_sizes(image.width, image.height)
+
+        # Create adaptive font based on calculated font size
+        adaptive_font = None
+        try:
+            font_names = [
+                "arial.ttf",
+                "Arial.ttf",
+                "DejaVuSans.ttf",
+                "LiberationSans-Regular.ttf",
+            ]
+            for font_name in font_names:
+                try:
+                    adaptive_font = ImageFont.truetype(
+                        font_name, adaptive_sizes["font_size"]
+                    )
+                    break
+                except (OSError, IOError):
+                    continue
+            if adaptive_font is None:
+                adaptive_font = ImageFont.load_default()
+        except Exception as e:
+            logger.debug(f"Error loading adaptive font: {e}")
+            adaptive_font = self.font  # Fallback to default font
 
         # Create a transparent overlay for AP markers (for proper alpha blending)
         overlay = Image.new("RGBA", image.size, (255, 255, 255, 0))
@@ -698,6 +825,7 @@ class FloorPlanVisualizer:
                 fill_color,
                 mounting_type=mounting_type,
                 azimuth=azimuth,
+                adaptive_sizes=adaptive_sizes,
             )
 
         # Composite the overlay onto the base image
@@ -751,7 +879,9 @@ class FloorPlanVisualizer:
             logger.debug(
                 f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}"
             )
-            self._draw_azimuth_arrow(draw, x, y, azimuth, arrow_color, arrow_length=arrow_length)
+            self._draw_azimuth_arrow(
+                draw, x, y, azimuth, arrow_color, arrow_length=arrow_length
+            )
 
         # Draw AP names on top of the composited image
         for ap in floor_aps:
@@ -761,20 +891,29 @@ class FloorPlanVisualizer:
             x, y = ap.location_x, ap.location_y
 
             # Draw AP name if enabled
-            if self.show_ap_names and self.font:
-                # Position text to the right of the circle
-                text_x = x + self.ap_circle_radius + 5
-                text_y = y - self.font_size // 2
+            if self.show_ap_names and adaptive_font:
+                # Position text to the right of the circle (using adaptive radius)
+                text_offset = max(5, int(adaptive_sizes["radius"] * 0.3))
+                text_x = x + adaptive_sizes["radius"] + text_offset
+                text_y = y - adaptive_sizes["font_size"] // 2
 
                 # Draw text with shadow for better visibility
                 shadow_color = (255, 255, 255)  # White shadow
                 text_color = (0, 0, 0)  # Black text
 
-                # Shadow
-                draw.text((text_x + 1, text_y + 1), ap.name, font=self.font, fill=shadow_color)
+                # Shadow (offset scaled with font size)
+                shadow_offset = max(1, int(adaptive_sizes["font_size"] * 0.05))
+                draw.text(
+                    (text_x + shadow_offset, text_y + shadow_offset),
+                    ap.name,
+                    font=adaptive_font,
+                    fill=shadow_color,
+                )
 
                 # Main text
-                draw.text((text_x, text_y), ap.name, font=self.font, fill=text_color)
+                draw.text(
+                    (text_x, text_y), ap.name, font=adaptive_font, fill=text_color
+                )
 
         # Draw legend
         self._draw_legend(draw, floor_aps, image.size)
