@@ -58,7 +58,9 @@ class CSVExporter(BaseExporter):
         files.append(detailed_ap_file)
 
         # Export antennas
-        antenna_file = self._export_antennas(project_data.antennas, project_data.project_name)
+        antenna_file = self._export_antennas(
+            project_data.antennas, project_data.project_name
+        )
         files.append(antenna_file)
 
         # Export analytics if data available
@@ -76,6 +78,9 @@ class CSVExporter(BaseExporter):
     ) -> Path:
         """Export access points to CSV file.
 
+        Creates a simple BOM (Bill of Materials) for purchasing, grouped by vendor and model only.
+        For detailed per-AP information, see _access_points_detailed.csv.
+
         Args:
             access_points: List of access points to export
             project_name: Name of the project
@@ -86,22 +91,13 @@ class CSVExporter(BaseExporter):
         """
         output_file = self._get_output_filename(project_name, "access_points.csv")
 
-        # Count occurrences of each unique AP configuration
-        # Create tuples for counting: (vendor, model, floor, color, tags)
-        # Tags are converted to frozenset for hashability
-        ap_tuples = [
-            (
-                ap.vendor,
-                ap.model,
-                ap.floor_name,
-                ap.color,
-                frozenset(str(tag) for tag in ap.tags),
-            )
-            for ap in access_points
-        ]
+        # Simple BOM for purchasing - group by vendor and model only
+        ap_tuples = [(ap.vendor, ap.model) for ap in access_points]
         ap_counts = Counter(ap_tuples)
 
-        logger.info(f"Exporting {len(access_points)} access points ({len(ap_counts)} unique)")
+        logger.info(
+            f"Exporting {len(access_points)} access points ({len(ap_counts)} unique)"
+        )
 
         with open(output_file, "w", newline="", encoding="utf-8") as f:
             # Write metadata as comments if available
@@ -119,14 +115,12 @@ class CSVExporter(BaseExporter):
 
             writer = csv.writer(f, dialect="excel", quoting=csv.QUOTE_ALL)
 
-            # Write header
-            writer.writerow(["Vendor", "Model", "Floor", "Color", "Tags", "Quantity"])
+            # Write header - simple BOM with vendor, model, quantity only
+            writer.writerow(["Vendor", "Model", "Quantity"])
 
-            # Write data rows
-            for (vendor, model, floor, color, tags), count in ap_counts.items():
-                # Format tags as "Key1:Value1; Key2:Value2"
-                tags_str = "; ".join(sorted(tags)) if tags else ""
-                writer.writerow([vendor, model, floor, color or "", tags_str, count])
+            # Write data rows - sorted by vendor, then model
+            for (vendor, model), count in sorted(ap_counts.items()):
+                writer.writerow([vendor, model, count])
 
         logger.debug(f"Access points exported to {output_file}")
         return output_file
@@ -147,9 +141,13 @@ class CSVExporter(BaseExporter):
         Returns:
             Path to created CSV file
         """
-        output_file = self._get_output_filename(project_name, "access_points_detailed.csv")
+        output_file = self._get_output_filename(
+            project_name, "access_points_detailed.csv"
+        )
 
-        logger.info(f"Exporting {len(access_points)} access points with detailed parameters")
+        logger.info(
+            f"Exporting {len(access_points)} access points with detailed parameters"
+        )
 
         # Create AP ID -> Radio mapping for quick lookup of antenna height
         ap_radio_map = {}
@@ -199,7 +197,9 @@ class CSVExporter(BaseExporter):
                     mounting_height_value = first_radio.antenna_height
 
                 mounting_height = (
-                    f"{mounting_height_value:.2f}" if mounting_height_value is not None else ""
+                    f"{mounting_height_value:.2f}"
+                    if mounting_height_value is not None
+                    else ""
                 )
                 azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else ""
                 tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else ""
@@ -240,7 +240,9 @@ class CSVExporter(BaseExporter):
         antenna_names = [antenna.name for antenna in antennas]
         antenna_counts = Counter(antenna_names)
 
-        logger.info(f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique)")
+        logger.info(
+            f"Exporting {len(antennas)} antennas ({len(antenna_counts)} unique)"
+        )
 
         with open(output_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f, dialect="excel", quoting=csv.QUOTE_ALL)
@@ -301,13 +303,19 @@ class CSVExporter(BaseExporter):
                         "meters",
                     ]
                 )
-                writer.writerow(["Minimum Height", f"{mounting_metrics.min_height:.2f}", "meters"])
-                writer.writerow(["Maximum Height", f"{mounting_metrics.max_height:.2f}", "meters"])
+                writer.writerow(
+                    ["Minimum Height", f"{mounting_metrics.min_height:.2f}", "meters"]
+                )
+                writer.writerow(
+                    ["Maximum Height", f"{mounting_metrics.max_height:.2f}", "meters"]
+                )
                 writer.writerow(
                     ["Height Variance", f"{mounting_metrics.height_variance:.4f}", "m²"]
                 )
 
-            writer.writerow(["APs with Height Data", mounting_metrics.aps_with_height, "count"])
+            writer.writerow(
+                ["APs with Height Data", mounting_metrics.aps_with_height, "count"]
+            )
 
             if mounting_metrics.avg_azimuth is not None:
                 writer.writerow(
@@ -319,7 +327,9 @@ class CSVExporter(BaseExporter):
                 )
 
             if mounting_metrics.avg_tilt is not None:
-                writer.writerow(["Average Tilt", f"{mounting_metrics.avg_tilt:.1f}", "degrees"])
+                writer.writerow(
+                    ["Average Tilt", f"{mounting_metrics.avg_tilt:.1f}", "degrees"]
+                )
 
             # Height Distribution Section
             writer.writerow([])
@@ -347,7 +357,8 @@ class CSVExporter(BaseExporter):
             aps_requiring_adjustment = sum(
                 1
                 for ap in access_points
-                if ap.mounting_height and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
+                if ap.mounting_height
+                and (ap.mounting_height < 2.5 or ap.mounting_height > 6.0)
             )
 
             writer.writerow(["Total APs", len(access_points)])
@@ -363,7 +374,9 @@ class CSVExporter(BaseExporter):
                     sum(1 for ap in access_points if ap.azimuth is not None),
                 ]
             )
-            writer.writerow(["APs Requiring Height Adjustment", aps_requiring_adjustment])
+            writer.writerow(
+                ["APs Requiring Height Adjustment", aps_requiring_adjustment]
+            )
 
             # Radio Analytics Section
             if radios:
@@ -395,7 +408,9 @@ class CSVExporter(BaseExporter):
                     writer.writerow(["=== WI-FI STANDARDS ==="])
                     writer.writerow([])
                     writer.writerow(["Standard", "Count", "Percentage"])
-                    for standard, count in sorted(radio_metrics.standard_distribution.items()):
+                    for standard, count in sorted(
+                        radio_metrics.standard_distribution.items()
+                    ):
                         percentage = (
                             (count / radio_metrics.total_radios * 100)
                             if radio_metrics.total_radios > 0
@@ -409,7 +424,9 @@ class CSVExporter(BaseExporter):
                     writer.writerow(["=== CHANNEL WIDTHS ==="])
                     writer.writerow([])
                     writer.writerow(["Width", "Count"])
-                    for width, count in sorted(radio_metrics.channel_width_distribution.items()):
+                    for width, count in sorted(
+                        radio_metrics.channel_width_distribution.items()
+                    ):
                         writer.writerow([f"{width} MHz", count])
 
                 # TX Power

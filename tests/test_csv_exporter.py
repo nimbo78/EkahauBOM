@@ -166,7 +166,9 @@ class TestCSVExporter:
             assert file_path.exists()
             assert file_path.suffix == ".csv"
 
-    def test_export_access_points_file_structure(self, output_dir, sample_access_points):
+    def test_export_access_points_file_structure(
+        self, output_dir, sample_access_points
+    ):
         """Test access points file has correct structure."""
         exporter = CSVExporter(output_dir)
         output_file = exporter._export_access_points(sample_access_points, "Test")
@@ -176,16 +178,15 @@ class TestCSVExporter:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Check header
-        assert rows[0] == ["Vendor", "Model", "Floor", "Color", "Tags", "Quantity"]
+        # Check header - simple BOM with vendor, model, quantity only
+        assert rows[0] == ["Vendor", "Model", "Quantity"]
 
-        # Should have aggregated rows (2 identical Cisco C9120AXI should be counted)
-        # AP-01 and AP-02 are identical except for name and location, so they aggregate to 1 row
+        # Should have aggregated rows (all identical vendor+model combinations are grouped)
         assert len(rows) > 1  # At least header + data
 
     def test_export_access_points_aggregation(self, output_dir):
-        """Test that identical access points are aggregated."""
-        # Create duplicate APs
+        """Test that identical access points are aggregated by vendor and model."""
+        # Create duplicate APs with same vendor+model but different color/floor/tags
         aps = [
             AccessPoint(
                 vendor="Cisco",
@@ -197,9 +198,9 @@ class TestCSVExporter:
             AccessPoint(
                 vendor="Cisco",
                 model="C9120AXI",
-                color="Red",
-                floor_name="Floor 1",
-                tags=[Tag("Zone", "Office", "zone-id")],
+                color="Blue",  # Different color
+                floor_name="Floor 2",  # Different floor
+                tags=[Tag("Zone", "Lobby", "zone-id")],  # Different tags
             ),
             AccessPoint(
                 vendor="Aruba",
@@ -217,15 +218,15 @@ class TestCSVExporter:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Header + 2 unique rows
+        # Header + 2 unique vendor+model combinations
         assert len(rows) == 3
 
-        # Find the Cisco row and check quantity
+        # Find the Cisco row and check quantity (should be 2 despite different color/floor/tags)
         cisco_row = [row for row in rows[1:] if row[0] == "Cisco"][0]
-        assert cisco_row[5] == "2"  # Quantity
+        assert cisco_row[2] == "2"  # Quantity is now at index 2
 
-    def test_export_access_points_tag_formatting(self, output_dir):
-        """Test that tags are formatted correctly."""
+    def test_export_access_points_simple_bom(self, output_dir):
+        """Test that BOM export only contains vendor, model, quantity (not tags, color, floor)."""
         aps = [
             AccessPoint(
                 vendor="Cisco",
@@ -247,44 +248,36 @@ class TestCSVExporter:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Tags should be formatted as "Key1:Value1; Key2:Value2" and sorted
-        tags_cell = rows[1][4]
-        assert "Area:North" in tags_cell
-        assert "Building:HQ" in tags_cell
-        assert "Zone:Office" in tags_cell
-        assert "; " in tags_cell
+        # BOM should only have 3 columns: Vendor, Model, Quantity
+        assert len(rows[0]) == 3
+        assert rows[0] == ["Vendor", "Model", "Quantity"]
+        assert len(rows[1]) == 3  # Data row also has 3 columns
+        assert rows[1] == ["Cisco", "C9120AXI", "1"]
 
-    def test_export_access_points_empty_tags(self, output_dir):
-        """Test handling of access points with no tags."""
+    def test_export_access_points_ignores_color_and_tags(self, output_dir):
+        """Test that BOM groups by vendor+model only, ignoring color, tags, floor."""
+        # Create 3 APs with same vendor+model but different color/tags/floor
         aps = [
             AccessPoint(
                 vendor="Cisco",
                 model="C9120AXI",
                 color="Red",
                 floor_name="Floor 1",
-                tags=[],
+                tags=[Tag("Zone", "Office", "zone-id")],
             ),
-        ]
-
-        exporter = CSVExporter(output_dir)
-        output_file = exporter._export_access_points(aps, "Test")
-
-        with open(output_file, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            rows = list(reader)
-
-        # Tags cell should be empty
-        assert rows[1][4] == ""
-
-    def test_export_access_points_none_color(self, output_dir):
-        """Test handling of None color values."""
-        aps = [
             AccessPoint(
                 vendor="Cisco",
                 model="C9120AXI",
-                color=None,
-                floor_name="Floor 1",
-                tags=[],
+                color=None,  # Different color (None)
+                floor_name="Floor 2",  # Different floor
+                tags=[],  # No tags
+            ),
+            AccessPoint(
+                vendor="Cisco",
+                model="C9120AXI",
+                color="Blue",  # Different color
+                floor_name="Floor 3",  # Different floor
+                tags=[Tag("Building", "HQ", "bldg-id")],  # Different tags
             ),
         ]
 
@@ -295,13 +288,18 @@ class TestCSVExporter:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Color cell should be empty string
-        assert rows[1][3] == ""
+        # Should have header + 1 data row (all 3 APs grouped into one)
+        assert len(rows) == 2
+        assert rows[1] == ["Cisco", "C9120AXI", "3"]  # Quantity 3
 
-    def test_export_detailed_access_points_structure(self, output_dir, sample_access_points):
+    def test_export_detailed_access_points_structure(
+        self, output_dir, sample_access_points
+    ):
         """Test detailed access points file has correct structure."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_detailed_access_points(sample_access_points, [], "Test")
+        output_file = exporter._export_detailed_access_points(
+            sample_access_points, [], "Test"
+        )
 
         with open(output_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
@@ -467,10 +465,14 @@ class TestCSVExporter:
         ant1_row = [row for row in rows[1:] if "2513" in row[0]][0]
         assert ant1_row[1] == "3"
 
-    def test_export_analytics_with_data(self, output_dir, sample_access_points, sample_radios):
+    def test_export_analytics_with_data(
+        self, output_dir, sample_access_points, sample_radios
+    ):
         """Test analytics export with data."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_analytics(sample_access_points, sample_radios, "Test")
+        output_file = exporter._export_analytics(
+            sample_access_points, sample_radios, "Test"
+        )
 
         assert output_file is not None
         assert output_file.exists()
@@ -541,7 +543,9 @@ class TestCSVExporter:
 
         # Should have average height (3.5m)
         height_rows = [
-            row for row in content if len(row) > 0 and "Average Mounting Height" in row[0]
+            row
+            for row in content
+            if len(row) > 0 and "Average Mounting Height" in row[0]
         ]
         assert len(height_rows) == 1
         assert "3.50" in height_rows[0][1]
@@ -604,10 +608,14 @@ class TestCSVExporter:
         assert "4.5-6.0m" in content
         assert "> 6.0m" in content
 
-    def test_export_analytics_radio_metrics(self, output_dir, sample_access_points, sample_radios):
+    def test_export_analytics_radio_metrics(
+        self, output_dir, sample_access_points, sample_radios
+    ):
         """Test radio metrics in analytics."""
         exporter = CSVExporter(output_dir)
-        output_file = exporter._export_analytics(sample_access_points, sample_radios, "Test")
+        output_file = exporter._export_analytics(
+            sample_access_points, sample_radios, "Test"
+        )
 
         with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
@@ -672,20 +680,24 @@ class TestCSVExporter:
         summary_section = content[summary_start:]
 
         # Total APs
-        total_aps_row = [row for row in summary_section if len(row) > 0 and "Total APs" in row[0]][
-            0
-        ]
+        total_aps_row = [
+            row for row in summary_section if len(row) > 0 and "Total APs" in row[0]
+        ][0]
         assert total_aps_row[1] == "2"
 
         # APs with tilt
         tilt_row = [
-            row for row in summary_section if len(row) > 0 and "APs with Tilt Data" in row[0]
+            row
+            for row in summary_section
+            if len(row) > 0 and "APs with Tilt Data" in row[0]
         ][0]
         assert tilt_row[1] == "2"
 
         # APs with azimuth
         azimuth_row = [
-            row for row in summary_section if len(row) > 0 and "APs with Azimuth Data" in row[0]
+            row
+            for row in summary_section
+            if len(row) > 0 and "APs with Azimuth Data" in row[0]
         ][0]
         assert azimuth_row[1] == "1"
 
@@ -720,10 +732,9 @@ class TestCSVExporter:
         with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
 
-        assert "Производитель" in content
-        assert "模型" in content
-        assert "Röt" in content
-        assert "étage" in content
+        # BOM only contains vendor and model, not color or floor
+        assert "Производитель" in content  # Vendor
+        assert "模型" in content  # Model
 
     def test_export_with_empty_lists(self, output_dir):
         """Test export with empty lists doesn't crash."""

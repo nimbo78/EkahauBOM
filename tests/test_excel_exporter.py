@@ -242,14 +242,9 @@ class TestExcelExporter:
         wb = load_workbook(files[0])
         ws = wb["Access Points"]
 
-        # Check headers
+        # Check headers - simple BOM with vendor, model, quantity only
         headers = [cell.value for cell in ws[1]]
-        assert "Vendor" in headers
-        assert "Model" in headers
-        assert "Floor" in headers
-        assert "Color" in headers
-        assert "Tags" in headers
-        assert "Quantity" in headers
+        assert headers == ["Vendor", "Model", "Quantity"]
 
         # Check we have data rows (header + data)
         assert ws.max_row > 1
@@ -309,8 +304,8 @@ class TestExcelExporter:
         assert len(files) == 1
         assert files[0].exists()
 
-    def test_tags_in_access_points_export(self, sample_project_data, tmp_path):
-        """Test that tags are correctly exported in Access Points sheet."""
+    def test_tags_in_detailed_sheet(self, sample_project_data, tmp_path):
+        """Test that tags are correctly exported in AP Installation Details sheet."""
         try:
             from openpyxl import load_workbook
         except ImportError:
@@ -320,7 +315,7 @@ class TestExcelExporter:
         files = exporter.export(sample_project_data)
 
         wb = load_workbook(files[0])
-        ws = wb["Access Points"]
+        ws = wb["AP Installation Details"]
 
         # Find Tags column
         headers = [cell.value for cell in ws[1]]
@@ -464,7 +459,9 @@ class TestExcelExporter:
         assert "Project Statistics" in content
         assert "Total Access Points:" in content
 
-    def test_export_with_radios_creates_analytics_sheet(self, detailed_project_data, tmp_path):
+    def test_export_with_radios_creates_analytics_sheet(
+        self, detailed_project_data, tmp_path
+    ):
         """Test that Analytics sheet is created when radios data is available."""
         try:
             from openpyxl import load_workbook
@@ -480,7 +477,9 @@ class TestExcelExporter:
         # Analytics sheet should exist because we have radios
         assert "Analytics" in sheet_names
 
-    def test_export_without_radios_no_analytics_sheet(self, sample_project_data, tmp_path):
+    def test_export_without_radios_no_analytics_sheet(
+        self, sample_project_data, tmp_path
+    ):
         """Test that Analytics sheet is NOT created when no radios/mounting data."""
         try:
             from openpyxl import load_workbook
@@ -613,7 +612,9 @@ class TestExcelExporter:
         exporter = ExcelExporter(tmp_path)
 
         # Mock workbook.save to raise an exception
-        with patch("openpyxl.Workbook.save", side_effect=PermissionError("File is locked")):
+        with patch(
+            "openpyxl.Workbook.save", side_effect=PermissionError("File is locked")
+        ):
             with pytest.raises(IOError, match="Failed to save Excel file"):
                 exporter.export(project_data)
 
@@ -776,7 +777,9 @@ class TestExcelExporter:
         problem_cell = ws["C1"]
 
         # Create a mock that raises exception when value property is accessed
-        with patch.object(type(problem_cell), "value", new_callable=PropertyMock) as mock_value:
+        with patch.object(
+            type(problem_cell), "value", new_callable=PropertyMock
+        ) as mock_value:
             mock_value.side_effect = RuntimeError("Simulated cell value error")
 
             # This should not raise, exception should be caught by except block
