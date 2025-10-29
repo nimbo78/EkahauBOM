@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from ..models import Antenna, ProjectData
+from ..models import AccessPoint, Antenna, ProjectData, Radio
 
 logger = logging.getLogger(__name__)
 
@@ -162,3 +162,30 @@ class BaseExporter(ABC):
         )
 
         return antenna_counts
+
+    def _get_mounting_height(
+        self, ap: AccessPoint, radios: list[Radio]
+    ) -> float | None:
+        """Get mounting height for an AP with fallback to radio antenna height.
+
+        Attempts to get mounting height from AccessPoint.mounting_height first.
+        If not available (None), falls back to antenna_height from the first
+        radio associated with this AP.
+
+        Args:
+            ap: AccessPoint to get mounting height for
+            radios: List of all radios to search for AP's radio
+
+        Returns:
+            Mounting height in meters, or None if not available from either source
+        """
+        # Try AP's mounting_height first
+        if ap.mounting_height is not None:
+            return ap.mounting_height
+
+        # Fallback to radio's antenna_height
+        for radio in radios:
+            if radio.access_point_id == ap.id and radio.antenna_height is not None:
+                return radio.antenna_height
+
+        return None

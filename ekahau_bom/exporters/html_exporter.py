@@ -12,7 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 from .base import BaseExporter
-from ..models import ProjectData, AccessPoint, Antenna
+from ..models import AccessPoint, Antenna, ProjectData, Radio
 from ..analytics import (
     GroupingAnalytics,
     CoverageAnalytics,
@@ -97,7 +97,7 @@ class HTMLExporter(BaseExporter):
 
         aps_table_html = self._generate_aps_table(project_data.access_points)
         detailed_aps_table_html = self._generate_detailed_aps_table(
-            project_data.access_points
+            project_data.access_points, project_data.radios
         )
         antennas_table_html = self._generate_antennas_table_from_counts(antenna_counts)
         grouping_html = self._generate_grouping_section(project_data.access_points)
@@ -261,11 +261,14 @@ class HTMLExporter(BaseExporter):
             </div>
         </section>"""
 
-    def _generate_detailed_aps_table(self, access_points: list[AccessPoint]) -> str:
+    def _generate_detailed_aps_table(
+        self, access_points: list[AccessPoint], radios: list[Radio]
+    ) -> str:
         """Generate detailed access points table with installation parameters.
 
         Args:
             access_points: List of access points
+            radios: List of radios (for mounting height fallback)
 
         Returns:
             HTML string for detailed access points table
@@ -282,8 +285,13 @@ class HTMLExporter(BaseExporter):
             # Format numeric values with appropriate precision
             location_x = f"{ap.location_x:.2f}" if ap.location_x is not None else "—"
             location_y = f"{ap.location_y:.2f}" if ap.location_y is not None else "—"
+
+            # Get mounting height with fallback to radio antenna_height
+            mounting_height_value = self._get_mounting_height(ap, radios)
             mounting_height = (
-                f"{ap.mounting_height:.2f}" if ap.mounting_height is not None else "—"
+                f"{mounting_height_value:.2f}"
+                if mounting_height_value is not None
+                else "—"
             )
             azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else "—"
             tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else "—"

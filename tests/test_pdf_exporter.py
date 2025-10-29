@@ -398,7 +398,7 @@ class TestPDFExporterAvailable:
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
         exporter = PDFExporter(tmp_path)
-        result = exporter._generate_detailed_aps_table([])
+        result = exporter._generate_detailed_aps_table([], [])
 
         # Should return empty string for empty list
         assert result == ""

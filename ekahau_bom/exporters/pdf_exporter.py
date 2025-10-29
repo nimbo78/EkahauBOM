@@ -20,7 +20,7 @@ except ImportError:
     WEASYPRINT_AVAILABLE = False
 
 from .base import BaseExporter
-from ..models import ProjectData, AccessPoint, Antenna
+from ..models import AccessPoint, Antenna, ProjectData, Radio
 from ..analytics import (
     GroupingAnalytics,
     CoverageAnalytics,
@@ -120,7 +120,7 @@ class PDFExporter(BaseExporter):
         )
         aps_table_html = self._generate_aps_table(project_data.access_points)
         detailed_aps_table_html = self._generate_detailed_aps_table(
-            project_data.access_points
+            project_data.access_points, project_data.radios
         )
         antennas_table_html = self._generate_antennas_table_from_counts(antenna_counts)
 
@@ -565,8 +565,18 @@ class PDFExporter(BaseExporter):
         html += "</tbody></table></section>"
         return html
 
-    def _generate_detailed_aps_table(self, access_points: list[AccessPoint]) -> str:
-        """Generate detailed access points installation table."""
+    def _generate_detailed_aps_table(
+        self, access_points: list[AccessPoint], radios: list[Radio]
+    ) -> str:
+        """Generate detailed access points installation table.
+
+        Args:
+            access_points: List of access points
+            radios: List of radios (for mounting height fallback)
+
+        Returns:
+            HTML string for detailed access points table
+        """
         if not access_points:
             return ""
 
@@ -585,9 +595,12 @@ class PDFExporter(BaseExporter):
                 if hasattr(ap, "location_y") and ap.location_y is not None
                 else "N/A"
             )
+
+            # Get mounting height with fallback to radio antenna_height
+            mounting_height_value = self._get_mounting_height(ap, radios)
             height = (
-                f"{ap.mounting_height:.2f}"
-                if hasattr(ap, "mounting_height") and ap.mounting_height is not None
+                f"{mounting_height_value:.2f}"
+                if mounting_height_value is not None
                 else "N/A"
             )
             azimuth = (
