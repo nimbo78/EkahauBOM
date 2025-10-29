@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2025-10-30
+
+### Summary
+Major release with comprehensive documentation overhaul, testing improvements (86% code coverage, 545 tests), pre-commit hooks, and multiple HTML export enhancements. This release brings EkahauBOM to production-ready quality with extensive user and developer documentation, automated code quality checks, and improved export accuracy.
+
+### Statistics
+- **Tests**: 367 → 545 (+178 tests, +48%)
+- **Code Coverage**: 63% → 86% (+23%)
+- **Documentation**: 2,000+ lines of new documentation
+- **Pre-commit Hooks**: Automated code formatting
+- **Bug Fixes**: 10+ critical fixes for antenna BOM, HTML charts, visualizations
+
 ### Added
 
 - **Developer Documentation** (Phase 10.2 - NEW!)
@@ -143,6 +155,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cable_analytics.py`: 100%
 
   **Real business logic coverage: 99-100%** (excluding CLI which requires E2E tests)
+
+- **Pre-commit Hooks** (Phase 9.3 - NEW!)
+  - Automated code formatting with black before each commit
+  - Ensures consistent code style across contributors
+  - Configured via `.pre-commit-config.yaml`
+  - Installation instructions in CONTRIBUTING.md
+  - Prevents formatting-related CI failures
+
+### Improved
+
+- **HTML Export Enhancements**
+  - **Conditional BOM Grouping** - HTML BOM table now respects `--group-by` flag
+    - Default: Simple BOM with Vendor | Model | Quantity (procurement-friendly)
+    - With `--group-by floor`: Adds Floor column for location-based grouping
+    - With `--group-by color`: Adds Color column for visual grouping
+    - With `--group-by tag`: Adds Tag column for custom grouping
+    - Consistent with CSV/JSON/Excel export grouping behavior
+
+  - **Real Ekahau Colors in Charts** - "APs by Color" chart now displays actual Ekahau colors
+    - Orange bar shows orange (#FF8500), Blue shows blue (#0068FF), etc.
+    - Matches colors from `config/colors.yaml` (Yellow, Orange, Red, Pink, Violet, Blue, Gray, Green, Brown, Mint)
+    - Falls back to gray (#CCCCCC) for "No Color" APs
+    - Improves visual consistency with Ekahau Planner and floor plan visualizations
+
+  - **Radio & Wi-Fi Analytics Charts** - Fixed rendering issues
+    - Fixed JavaScript syntax (double braces → single braces)
+    - Added frequency band fallback for radios without explicit band data
+    - Improved chart data interpolation for better display
+    - Charts now render correctly with data
+
+- **Floor Plan Visualization Improvements**
+  - **Azimuth Arrow Enhancements**
+    - Fixed arrow scaling to match AP marker sizes (arrow length = 2 × ap_circle_radius)
+    - Improved arrow color detection for Wi-Fi 6/6E APs (Huawei AirEngine support)
+    - Smart color selection based on actual radio Wi-Fi standard (not just AP model name)
+    - Better visual contrast on various background colors
+
+  - **AP Marker Transparency**
+    - Improved transparency handling with opaque borders
+    - Floor plan details show through transparent markers
+    - Better visibility on complex floor plans
+
+- **Antenna BOM Accuracy**
+  - Fixed antenna filtering logic across all export formats (CSV, JSON, HTML, Excel, PDF)
+  - Dual-band antennas now correctly aggregated (integrated antennas excluded from BOM)
+  - External antenna detection improved (only external antennas in BOM)
+  - More accurate antenna quantities for procurement
+
+### Fixed
+
+- **Export Format Consistency**
+  - Fixed PDF exporter method naming to match HTML exporter pattern
+  - Unified mounting height handling with antenna_height fallback (already in v2.7.0)
+  - Consistent data extraction across all export formats
 
 ## [2.7.0] - 2025-10-27
 
