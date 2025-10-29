@@ -403,10 +403,18 @@ class HTMLExporter(BaseExporter):
         by_color = analytics.group_by_dimension(access_points, "color")
         by_model = analytics.group_by_dimension(access_points, "model")
 
+        # For color chart, use real Ekahau colors
+        # Get sorted labels (same order as _prepare_chart_data will use)
+        sorted_color_items = sorted(by_color.items(), key=lambda x: x[1], reverse=True)
+        color_labels = [str(label) for label, _ in sorted_color_items]
+        real_colors = self._get_real_colors_for_labels(color_labels)
+
         # Generate chart data as JSON
         vendor_data = self._prepare_chart_data(by_vendor, "Vendor Distribution", "pie")
         floor_data = self._prepare_chart_data(by_floor, "APs by Floor", "bar")
-        color_data = self._prepare_chart_data(by_color, "APs by Color", "bar")
+        color_data = self._prepare_chart_data(
+            by_color, "APs by Color", "bar", custom_colors=real_colors
+        )
         model_data = self._prepare_chart_data(by_model, "APs by Model", "bar")
 
         return f"""
@@ -437,13 +445,20 @@ class HTMLExporter(BaseExporter):
             }};
         </script>"""
 
-    def _prepare_chart_data(self, grouped_data: dict, title: str, chart_type: str) -> str:
+    def _prepare_chart_data(
+        self,
+        grouped_data: dict,
+        title: str,
+        chart_type: str,
+        custom_colors: list[str] | None = None,
+    ) -> str:
         """Prepare chart data as JSON string.
 
         Args:
             grouped_data: Dictionary of {label: count}
             title: Chart title
             chart_type: Type of chart (pie, bar, etc.)
+            custom_colors: Optional list of custom colors (hex format)
 
         Returns:
             JSON string with chart configuration
@@ -456,8 +471,11 @@ class HTMLExporter(BaseExporter):
         labels = [str(label) for label, _ in sorted_items]
         data = [count for _, count in sorted_items]
 
-        # Generate colors
-        colors = self._generate_colors(len(labels))
+        # Use custom colors if provided, otherwise generate
+        if custom_colors:
+            colors = custom_colors
+        else:
+            colors = self._generate_colors(len(labels))
 
         config = {
             "type": chart_type,
@@ -496,6 +514,39 @@ class HTMLExporter(BaseExporter):
         colors = []
         for i in range(count):
             colors.append(base_colors[i % len(base_colors)])
+
+        return colors
+
+    def _get_real_colors_for_labels(self, labels: list[str]) -> list[str]:
+        """Get real hex colors for color labels based on colors.yaml.
+
+        Args:
+            labels: List of color names (e.g., ["Red", "Blue", "Orange"])
+
+        Returns:
+            List of hex colors matching the labels
+        """
+        # Ekahau color mapping (from config/colors.yaml)
+        ekahau_colors = {
+            "Yellow": "#FFE600",
+            "Orange": "#FF8500",
+            "Red": "#FF0000",
+            "Pink": "#FF00FF",
+            "Violet": "#C297FF",
+            "Blue": "#0068FF",
+            "Gray": "#6D6D6D",
+            "Grey": "#6D6D6D",  # Alternative spelling
+            "Green": "#00FF00",
+            "Brown": "#C97700",
+            "Mint": "#00FFCE",
+            "No Color": "#CCCCCC",  # Default for uncolored APs
+        }
+
+        # Map labels to real colors
+        colors = []
+        for label in labels:
+            color = ekahau_colors.get(label, "#CCCCCC")  # Default to gray if not found
+            colors.append(color)
 
         return colors
 
