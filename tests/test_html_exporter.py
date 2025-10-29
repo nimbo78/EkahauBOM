@@ -66,9 +66,30 @@ def sample_project_data():
         ),
     ]
     antennas = [
-        Antenna("ANT-2513P4M-N-R", "ant1"),
-        Antenna("ANT-2513P4M-N-R", "ant1"),
-        Antenna("ANT-20", "ant2"),
+        Antenna(
+            name="ANT-2513P4M-N-R",
+            antenna_type_id="ant1",
+            access_point_id="ap1",
+            is_external=True,
+            spatial_streams=2,
+            antenna_model="ANT-2513P4M-N-R",
+        ),
+        Antenna(
+            name="ANT-2513P4M-N-R",
+            antenna_type_id="ant1",
+            access_point_id="ap1",
+            is_external=True,
+            spatial_streams=2,
+            antenna_model="ANT-2513P4M-N-R",
+        ),
+        Antenna(
+            name="ANT-20",
+            antenna_type_id="ant2",
+            access_point_id="ap2",
+            is_external=True,
+            spatial_streams=1,
+            antenna_model="ANT-20",
+        ),
     ]
     floors = {
         "floor1": Floor("floor1", "Floor 1"),

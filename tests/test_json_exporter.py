@@ -68,9 +68,30 @@ def sample_project_data():
         ),
     ]
     antennas = [
-        Antenna("ANT-2513P4M-N-R", "ant1"),
-        Antenna("ANT-2513P4M-N-R", "ant1"),
-        Antenna("ANT-20", "ant2"),
+        Antenna(
+            name="ANT-2513P4M-N-R",
+            antenna_type_id="ant1",
+            access_point_id="ap1",
+            is_external=True,
+            spatial_streams=2,
+            antenna_model="ANT-2513P4M-N-R",
+        ),
+        Antenna(
+            name="ANT-2513P4M-N-R",
+            antenna_type_id="ant1",
+            access_point_id="ap1",
+            is_external=True,
+            spatial_streams=2,
+            antenna_model="ANT-2513P4M-N-R",
+        ),
+        Antenna(
+            name="ANT-20",
+            antenna_type_id="ant2",
+            access_point_id="ap2",
+            is_external=True,
+            spatial_streams=1,
+            antenna_model="ANT-20",
+        ),
     ]
     floors = {
         "floor1": Floor("floor1", "Floor 1"),
@@ -268,7 +289,9 @@ class TestJSONExporter:
             data = json.load(f)
 
         vendor_analytics = data["analytics"]["by_vendor"]
-        total_percentage = sum(group["percentage"] for group in vendor_analytics["groups"])
+        total_percentage = sum(
+            group["percentage"] for group in vendor_analytics["groups"]
+        )
 
         # Should sum to approximately 100%
         assert 99.9 <= total_percentage <= 100.1
@@ -372,7 +395,9 @@ class TestJSONExporter:
         )
 
         exporter = JSONExporter(tmp_path)
-        files = exporter.export(project_data)  # Use project_data instead of sample_project_data
+        files = exporter.export(
+            project_data
+        )  # Use project_data instead of sample_project_data
 
         with open(files[0], "r", encoding="utf-8") as f:
             data = json.load(f)
