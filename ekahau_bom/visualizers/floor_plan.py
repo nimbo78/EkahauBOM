@@ -891,6 +891,7 @@ class FloorPlanVisualizer:
                 or "u6" in model_lower
                 or "ax" in model_lower
                 or "6 " in model_lower
+                or "airengine" in model_lower  # Huawei AirEngine (Wi-Fi 6)
             ):
                 wifi_standard = "802.11ax"  # Wi-Fi 6
                 arrow_color = (0, 255, 255, 255)  # Cyan
