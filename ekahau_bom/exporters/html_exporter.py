@@ -95,7 +95,9 @@ class HTMLExporter(BaseExporter):
             project_data.metadata,
         )
 
-        aps_table_html = self._generate_aps_table(project_data.access_points)
+        aps_table_html = self._generate_aps_table(
+            project_data.access_points, project_data.group_by, project_data.tag_key
+        )
         detailed_aps_table_html = self._generate_detailed_aps_table(
             project_data.access_points, project_data.radios
         )
@@ -213,29 +215,67 @@ class HTMLExporter(BaseExporter):
             </div>
         </section>"""
 
-    def _generate_aps_table(self, access_points: list[AccessPoint]) -> str:
+    def _generate_aps_table(
+        self,
+        access_points: list[AccessPoint],
+        group_by: str | None = None,
+        tag_key: str | None = None,
+    ) -> str:
         """Generate access points table with BOM counts.
 
-        Groups by vendor and model only (simple BOM for procurement).
-        Detailed breakdown by floor/color/tags available in Distribution Analysis section.
+        By default groups by vendor and model only (simple BOM for procurement).
+        With --group-by flag, adds additional grouping column.
+
+        Args:
+            access_points: List of access points
+            group_by: Optional grouping dimension (floor, color, tag)
+            tag_key: Tag key name (required when group_by='tag')
         """
-        # Count by vendor/model only (simple BOM)
+        # Determine grouping key and headers
+        headers = ["Vendor", "Model"]
+
+        if group_by == "floor":
+            headers.insert(2, "Floor")
+        elif group_by == "color":
+            headers.insert(2, "Color")
+        elif group_by == "tag" and tag_key:
+            headers.insert(2, f"Tag: {tag_key}")
+
+        headers.append("Quantity")
+
+        # Count with appropriate grouping
         ap_counts = Counter()
         for ap in access_points:
-            key = (ap.vendor, ap.model)
+            if group_by == "floor":
+                key = (ap.vendor, ap.model, ap.floor_name)
+            elif group_by == "color":
+                key = (ap.vendor, ap.model, ap.color or "")
+            elif group_by == "tag" and tag_key:
+                # Find tag value for specified key
+                tag_value = next(
+                    (tag.value for tag in ap.tags if tag.key == tag_key), ""
+                )
+                key = (ap.vendor, ap.model, tag_value)
+            else:
+                # Default: group by vendor and model only
+                key = (ap.vendor, ap.model)
+
             ap_counts[key] += 1
 
+        # Generate rows
         rows_html = ""
-        for (vendor, model), count in sorted(
-            ap_counts.items(),
-            key=lambda x: (x[0][0], x[0][1]),  # Sort by vendor, model
-        ):
+        for key_tuple, count in sorted(ap_counts.items()):
+            row_cells = "".join(
+                f"<td>{html.escape(str(cell))}</td>" for cell in key_tuple
+            )
             rows_html += f"""
                 <tr>
-                    <td>{html.escape(vendor)}</td>
-                    <td>{html.escape(model)}</td>
+                    {row_cells}
                     <td class="count">{count}</td>
                 </tr>"""
+
+        # Generate header row
+        header_row = "".join(f"<th>{header}</th>" for header in headers)
 
         return f"""
         <section class="table-section">
@@ -244,9 +284,7 @@ class HTMLExporter(BaseExporter):
                 <table>
                     <thead>
                         <tr>
-                            <th>Vendor</th>
-                            <th>Model</th>
-                            <th>Quantity</th>
+                            {header_row}
                         </tr>
                     </thead>
                     <tbody>

@@ -392,6 +392,8 @@ class ProjectData:
         cable_notes: List of cable route annotations
         picture_notes: List of picture notes on floor plans
         network_settings: List of network capacity settings (SSID, rates, etc.)
+        group_by: Dimension to group BOM by (floor, color, vendor, model, tag)
+        tag_key: Tag key name (required when group_by='tag')
     """
 
     access_points: list[AccessPoint]
@@ -404,3 +406,5 @@ class ProjectData:
     cable_notes: list[CableNote] = field(default_factory=list)
     picture_notes: list[PictureNote] = field(default_factory=list)
     network_settings: list[NetworkCapacitySettings] = field(default_factory=list)
+    group_by: Optional[str] = None
+    tag_key: Optional[str] = None
