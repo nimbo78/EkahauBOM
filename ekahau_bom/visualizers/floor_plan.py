@@ -834,13 +834,14 @@ class FloorPlanVisualizer:
                 logger.debug(
                     f"Will draw arrow for AP {ap.name}: azimuth={azimuth}°, mounting={mounting_type}"
                 )
-                # Store arrow data for later drawing (include adaptive radius for scaling)
+                # Store arrow data for later drawing (include ap_id for Wi-Fi standard detection)
                 arrows_to_draw.append(
                     {
                         "x": x,
                         "y": y,
                         "azimuth": azimuth,
                         "fill_color": fill_color,
+                        "ap_id": ap.id,  # For radio lookup
                         "ap_name": ap.name,
                         "ap_model": ap.model,
                         "ap_vendor": ap.vendor,
@@ -881,31 +882,38 @@ class FloorPlanVisualizer:
             ap_model = arrow_data.get("ap_model", "")
             mounting_type = arrow_data.get("mounting_type", "CEILING")
 
-            # Determine Wi-Fi standard from AP model
-            model_lower = ap_model.lower() if ap_model else ""
-            if "wi-fi 6e" in model_lower or "u6e" in model_lower or "6e" in model_lower:
-                wifi_standard = "802.11ax"  # Wi-Fi 6E
-                arrow_color = (0, 255, 255, 255)  # Cyan
-            elif (
-                "wi-fi 6" in model_lower
-                or "u6" in model_lower
-                or "ax" in model_lower
-                or "6 " in model_lower
-                or "airengine" in model_lower  # Huawei AirEngine (Wi-Fi 6)
-            ):
-                wifi_standard = "802.11ax"  # Wi-Fi 6
-                arrow_color = (0, 255, 255, 255)  # Cyan
-            elif (
-                "ac" in model_lower
-                or "wave" in model_lower
-                or "u5" in model_lower
-                or "5 " in model_lower
-            ):
-                wifi_standard = "802.11ac"  # Wi-Fi 5
-                arrow_color = (255, 0, 255, 255)  # Magenta/Pink
-            else:
-                wifi_standard = "802.11n"  # Wi-Fi 4 or older
-                arrow_color = (255, 0, 255, 255)  # Magenta/Pink
+            # Determine Wi-Fi standard from radio data (prioritize 5GHz, fallback to 2.4GHz)
+            ap_id = arrow_data.get("ap_id")
+            wifi_standard = "802.11n"  # Default
+            arrow_color = (255, 0, 255, 255)  # Default: Magenta
+
+            if ap_id and ap_id in ap_radio_map:
+                ap_radios = ap_radio_map[ap_id]
+
+                # Prioritize 5GHz radio
+                selected_radio = None
+                for radio in ap_radios:
+                    if radio.frequency_band and "5" in radio.frequency_band:
+                        selected_radio = radio
+                        break
+
+                # Fallback to 2.4GHz if no 5GHz found
+                if not selected_radio and ap_radios:
+                    selected_radio = ap_radios[0]
+
+                # Get Wi-Fi standard from selected radio
+                if selected_radio and selected_radio.standard:
+                    wifi_standard = selected_radio.standard
+
+                    # Determine arrow color by Wi-Fi standard
+                    if "be" in wifi_standard.lower():  # 802.11be (Wi-Fi 7)
+                        arrow_color = (255, 165, 0, 255)  # Orange
+                    elif "ax" in wifi_standard.lower():  # 802.11ax (Wi-Fi 6/6E)
+                        arrow_color = (0, 255, 255, 255)  # Cyan
+                    elif "ac" in wifi_standard.lower():  # 802.11ac (Wi-Fi 5)
+                        arrow_color = (255, 0, 255, 255)  # Magenta
+                    else:  # 802.11n and older
+                        arrow_color = (255, 0, 255, 255)  # Magenta
 
             # Get adaptive radius for this AP (scales with image size and --ap-circle-radius)
             adaptive_radius = arrow_data.get("adaptive_radius", self.ap_circle_radius)
