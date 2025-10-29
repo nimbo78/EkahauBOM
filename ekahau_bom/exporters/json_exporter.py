@@ -101,12 +101,8 @@ class JSONExporter(BaseExporter):
         by_model = analytics.group_by_dimension(project_data.access_points, "model")
 
         # Calculate mounting metrics
-        mounting_metrics = MountingAnalytics.calculate_mounting_metrics(
-            project_data.access_points
-        )
-        height_distribution = MountingAnalytics.group_by_height_range(
-            project_data.access_points
-        )
+        mounting_metrics = MountingAnalytics.calculate_mounting_metrics(project_data.access_points)
+        height_distribution = MountingAnalytics.group_by_height_range(project_data.access_points)
 
         # Calculate radio metrics
         radio_metrics = None
@@ -139,17 +135,13 @@ class JSONExporter(BaseExporter):
             if project_data.metadata.location:
                 project_info["location"] = project_data.metadata.location
             if project_data.metadata.responsible_person:
-                project_info["responsible_person"] = (
-                    project_data.metadata.responsible_person
-                )
+                project_info["responsible_person"] = project_data.metadata.responsible_person
             if project_data.metadata.schema_version:
                 project_info["schema_version"] = project_data.metadata.schema_version
             if project_data.metadata.note_ids:
                 project_info["note_ids"] = project_data.metadata.note_ids
             if project_data.metadata.project_ancestors:
-                project_info["project_ancestors"] = (
-                    project_data.metadata.project_ancestors
-                )
+                project_info["project_ancestors"] = project_data.metadata.project_ancestors
 
             if project_info:
                 metadata_section["project_info"] = project_info
@@ -159,25 +151,16 @@ class JSONExporter(BaseExporter):
             "metadata": metadata_section,
             "summary": {
                 "total_access_points": len(project_data.access_points),
-                "total_antennas": sum(
-                    antenna_counts.values()
-                ),  # Total external antenna count
-                "unique_vendors": len(
-                    set(ap.vendor for ap in project_data.access_points)
-                ),
-                "unique_floors": len(
-                    set(ap.floor_name for ap in project_data.access_points)
-                ),
+                "total_antennas": sum(antenna_counts.values()),  # Total external antenna count
+                "unique_vendors": len(set(ap.vendor for ap in project_data.access_points)),
+                "unique_floors": len(set(ap.floor_name for ap in project_data.access_points)),
                 "unique_colors": len(
                     set(ap.color for ap in project_data.access_points if ap.color)
                 ),
-                "unique_models": len(
-                    set(ap.model for ap in project_data.access_points)
-                ),
+                "unique_models": len(set(ap.model for ap in project_data.access_points)),
             },
             "floors": [
-                {"id": floor.id, "name": floor.name}
-                for floor in project_data.floors.values()
+                {"id": floor.id, "name": floor.name} for floor in project_data.floors.values()
             ],
             "access_points": {
                 "bill_of_materials": [
@@ -187,10 +170,7 @@ class JSONExporter(BaseExporter):
                         "floor": floor,
                         "color": color if color else None,
                         "tags": (
-                            [
-                                {"key": key, "value": value}
-                                for key, value in sorted(tags_tuple)
-                            ]
+                            [{"key": key, "value": value} for key, value in sorted(tags_tuple)]
                             if tags_tuple
                             else []
                         ),
@@ -270,22 +250,14 @@ class JSONExporter(BaseExporter):
                 },
                 "radio": {
                     "total_radios": radio_metrics.total_radios if radio_metrics else 0,
-                    "frequency_bands": (
-                        radio_metrics.band_distribution if radio_metrics else {}
-                    ),
+                    "frequency_bands": (radio_metrics.band_distribution if radio_metrics else {}),
                     "channel_distribution": (
-                        {
-                            str(k): v
-                            for k, v in radio_metrics.channel_distribution.items()
-                        }
+                        {str(k): v for k, v in radio_metrics.channel_distribution.items()}
                         if radio_metrics
                         else {}
                     ),
                     "channel_widths": (
-                        {
-                            str(k): v
-                            for k, v in radio_metrics.channel_width_distribution.items()
-                        }
+                        {str(k): v for k, v in radio_metrics.channel_width_distribution.items()}
                         if radio_metrics
                         else {}
                     ),
@@ -324,9 +296,7 @@ class JSONExporter(BaseExporter):
                             if cable_note.floor_plan_id in project_data.floors
                             else None
                         ),
-                        "points": [
-                            {"x": point.x, "y": point.y} for point in cable_note.points
-                        ],
+                        "points": [{"x": point.x, "y": point.y} for point in cable_note.points],
                         "color": cable_note.color,
                         "note_ids": cable_note.note_ids,
                         "status": cable_note.status,
@@ -348,20 +318,11 @@ class JSONExporter(BaseExporter):
                                         picture_note.location.floor_plan_id
                                     ).name
                                     if picture_note.location
-                                    and picture_note.location.floor_plan_id
-                                    in project_data.floors
+                                    and picture_note.location.floor_plan_id in project_data.floors
                                     else None
                                 ),
-                                "x": (
-                                    picture_note.location.x
-                                    if picture_note.location
-                                    else None
-                                ),
-                                "y": (
-                                    picture_note.location.y
-                                    if picture_note.location
-                                    else None
-                                ),
+                                "x": (picture_note.location.x if picture_note.location else None),
+                                "y": (picture_note.location.y if picture_note.location else None),
                             }
                             if picture_note.location
                             else None
@@ -379,9 +340,7 @@ class JSONExporter(BaseExporter):
                 "cable_infrastructure": (
                     {
                         "metrics": {
-                            "total_cables": (
-                                cable_metrics.total_cables if cable_metrics else 0
-                            ),
+                            "total_cables": (cable_metrics.total_cables if cable_metrics else 0),
                             "total_length_units": (
                                 cable_metrics.total_length if cable_metrics else 0.0
                             ),
@@ -412,16 +371,12 @@ class JSONExporter(BaseExporter):
             },
             "network_settings": {
                 "ssid_configuration": (
-                    NetworkSettingsProcessor.get_ssid_summary(
-                        project_data.network_settings
-                    )
+                    NetworkSettingsProcessor.get_ssid_summary(project_data.network_settings)
                     if project_data.network_settings
                     else {}
                 ),
                 "data_rates": (
-                    NetworkSettingsProcessor.get_data_rate_summary(
-                        project_data.network_settings
-                    )
+                    NetworkSettingsProcessor.get_data_rate_summary(project_data.network_settings)
                     if project_data.network_settings
                     else {}
                 ),
@@ -466,9 +421,7 @@ class JSONExporter(BaseExporter):
                     "count": count,
                     "percentage": round((count / total * 100) if total > 0 else 0, 2),
                 }
-                for label, count in sorted(
-                    grouped_data.items(), key=lambda x: x[1], reverse=True
-                )
+                for label, count in sorted(grouped_data.items(), key=lambda x: x[1], reverse=True)
             ],
         }
 

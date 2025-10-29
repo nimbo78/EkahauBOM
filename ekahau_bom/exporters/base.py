@@ -99,9 +99,7 @@ class BaseExporter(ABC):
         Args:
             files: List of exported files
         """
-        logger.info(
-            f"{self.format_name} export completed: {len(files)} file(s) created"
-        )
+        logger.info(f"{self.format_name} export completed: {len(files)} file(s) created")
         for file in files:
             logger.info(f"  - {file}")
 
@@ -138,9 +136,7 @@ class BaseExporter(ABC):
 
         for (ap_id, antenna_model), group_antennas in antenna_groups.items():
             # Get max spatial streams across all radios (determines physical antenna count)
-            max_spatial_streams = max(
-                ant.spatial_streams or 0 for ant in group_antennas
-            )
+            max_spatial_streams = max(ant.spatial_streams or 0 for ant in group_antennas)
             # Note: antenna_model is already the cleaned antenna name
             # extracted from AP model (part after " + ")
 
@@ -163,9 +159,7 @@ class BaseExporter(ABC):
 
         return antenna_counts
 
-    def _get_mounting_height(
-        self, ap: AccessPoint, radios: list[Radio]
-    ) -> float | None:
+    def _get_mounting_height(self, ap: AccessPoint, radios: list[Radio]) -> float | None:
         """Get mounting height for an AP with fallback to radio antenna height.
 
         Attempts to get mounting height from AccessPoint.mounting_height first.

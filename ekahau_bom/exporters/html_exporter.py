@@ -48,9 +48,7 @@ class HTMLExporter(BaseExporter):
         Returns:
             List containing path to the created HTML file
         """
-        output_file = self._get_output_filename(
-            project_data.project_name, "report.html"
-        )
+        output_file = self._get_output_filename(project_data.project_name, "report.html")
 
         html_content = self._generate_html(project_data)
 
@@ -80,9 +78,7 @@ class HTMLExporter(BaseExporter):
         # Count unique values
         unique_vendors = len(set(ap.vendor for ap in project_data.access_points))
         unique_floors = len(set(ap.floor_name for ap in project_data.access_points))
-        unique_colors = len(
-            set(ap.color for ap in project_data.access_points if ap.color)
-        )
+        unique_colors = len(set(ap.color for ap in project_data.access_points if ap.color))
 
         # Generate sections
         summary_html = self._generate_summary(
@@ -252,9 +248,7 @@ class HTMLExporter(BaseExporter):
                 key = (ap.vendor, ap.model, ap.color or "")
             elif group_by == "tag" and tag_key:
                 # Find tag value for specified key
-                tag_value = next(
-                    (tag.value for tag in ap.tags if tag.key == tag_key), ""
-                )
+                tag_value = next((tag.value for tag in ap.tags if tag.key == tag_key), "")
                 key = (ap.vendor, ap.model, tag_value)
             else:
                 # Default: group by vendor and model only
@@ -265,9 +259,7 @@ class HTMLExporter(BaseExporter):
         # Generate rows
         rows_html = ""
         for key_tuple, count in sorted(ap_counts.items()):
-            row_cells = "".join(
-                f"<td>{html.escape(str(cell))}</td>" for cell in key_tuple
-            )
+            row_cells = "".join(f"<td>{html.escape(str(cell))}</td>" for cell in key_tuple)
             rows_html += f"""
                 <tr>
                     {row_cells}
@@ -322,9 +314,7 @@ class HTMLExporter(BaseExporter):
             # Get mounting height with fallback to radio antenna_height
             mounting_height_value = self._get_mounting_height(ap, radios)
             mounting_height = (
-                f"{mounting_height_value:.2f}"
-                if mounting_height_value is not None
-                else "—"
+                f"{mounting_height_value:.2f}" if mounting_height_value is not None else "—"
             )
             azimuth = f"{ap.azimuth:.1f}" if ap.azimuth is not None else "—"
             tilt = f"{ap.tilt:.1f}" if ap.tilt is not None else "—"
@@ -447,9 +437,7 @@ class HTMLExporter(BaseExporter):
             }};
         </script>"""
 
-    def _prepare_chart_data(
-        self, grouped_data: dict, title: str, chart_type: str
-    ) -> str:
+    def _prepare_chart_data(self, grouped_data: dict, title: str, chart_type: str) -> str:
         """Prepare chart data as JSON string.
 
         Args:
@@ -982,9 +970,7 @@ class HTMLExporter(BaseExporter):
         });
     </script>"""
 
-    def _generate_analytics_section(
-        self, access_points: list[AccessPoint], radios: list
-    ) -> str:
+    def _generate_analytics_section(self, access_points: list[AccessPoint], radios: list) -> str:
         """Generate analytics section with mounting and radio metrics.
 
         Args:
@@ -1008,13 +994,9 @@ class HTMLExporter(BaseExporter):
         height_distribution = None
         installation_summary = None
         if has_height_data:
-            mounting_metrics = MountingAnalytics.calculate_mounting_metrics(
-                access_points
-            )
+            mounting_metrics = MountingAnalytics.calculate_mounting_metrics(access_points)
             height_distribution = MountingAnalytics.group_by_height_range(access_points)
-            installation_summary = MountingAnalytics.get_installation_summary(
-                access_points
-            )
+            installation_summary = MountingAnalytics.get_installation_summary(access_points)
 
         # Calculate radio metrics
         radio_metrics = None
@@ -1224,9 +1206,7 @@ class HTMLExporter(BaseExporter):
             # Prepare channel width data
             width_labels = []
             width_counts = []
-            for width, count in sorted(
-                radio_metrics.channel_width_distribution.items()
-            ):
+            for width, count in sorted(radio_metrics.channel_width_distribution.items()):
                 width_labels.append(f"{width} MHz" if width else "Unknown")
                 width_counts.append(count)
 
@@ -1318,9 +1298,7 @@ class HTMLExporter(BaseExporter):
                         </thead>
                         <tbody>"""
 
-            for width, count in sorted(
-                radio_metrics.channel_width_distribution.items()
-            ):
+            for width, count in sorted(radio_metrics.channel_width_distribution.items()):
                 percentage = (
                     (count / radio_metrics.total_radios * 100)
                     if radio_metrics.total_radios > 0
@@ -1455,20 +1433,12 @@ class HTMLExporter(BaseExporter):
             # Manually replace placeholders (workaround for f-string interpolation issue)
             radio_html = radio_html.replace("{band_labels_json}", band_labels_json)
             radio_html = radio_html.replace("{band_counts_json}", band_counts_json)
-            radio_html = radio_html.replace(
-                "{standard_labels_json}", standard_labels_json
-            )
-            radio_html = radio_html.replace(
-                "{standard_counts_json}", standard_counts_json
-            )
+            radio_html = radio_html.replace("{standard_labels_json}", standard_labels_json)
+            radio_html = radio_html.replace("{standard_counts_json}", standard_counts_json)
             radio_html = radio_html.replace("{width_labels_json}", width_labels_json)
             radio_html = radio_html.replace("{width_counts_json}", width_counts_json)
-            radio_html = radio_html.replace(
-                "{tx_power_labels_json}", tx_power_labels_json
-            )
-            radio_html = radio_html.replace(
-                "{tx_power_counts_json}", tx_power_counts_json
-            )
+            radio_html = radio_html.replace("{tx_power_labels_json}", tx_power_labels_json)
+            radio_html = radio_html.replace("{tx_power_counts_json}", tx_power_counts_json)
 
             # Fix JavaScript syntax: convert double braces to single braces
             radio_html = radio_html.replace("{{", "{")
