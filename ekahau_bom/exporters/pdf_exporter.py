@@ -606,13 +606,17 @@ class PDFExporter(BaseExporter):
         html += "</tbody></table></section>"
         return html
 
-    def _generate_antennas_table(self, antennas: list[Antenna]) -> str:
-        """Generate antennas table."""
-        if not antennas:
-            return ""
+    def _generate_antennas_table_from_counts(self, antenna_counts: Counter) -> str:
+        """Generate antennas table from pre-calculated counts.
 
-        # Aggregate by name (model)
-        antenna_counts = Counter(antenna.name for antenna in antennas)
+        Args:
+            antenna_counts: Counter with antenna names and quantities
+
+        Returns:
+            HTML string for antenna table
+        """
+        if not antenna_counts:
+            return ""
 
         html = '<section class="antennas"><h3>Antennas</h3>'
         html += "<table><thead><tr><th>Model</th><th>Quantity</th></tr></thead><tbody>"

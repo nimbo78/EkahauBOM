@@ -295,7 +295,9 @@ class TestPDFExporterAvailable:
             or "5 GHz" in html_content
         )
 
-    def test_detailed_aps_table_includes_installation_params(self, sample_project_data, tmp_path):
+    def test_detailed_aps_table_includes_installation_params(
+        self, sample_project_data, tmp_path
+    ):
         """Test detailed APs table includes installation parameters."""
         pytest.importorskip("weasyprint")
 
@@ -362,7 +364,9 @@ class TestPDFExporterAvailable:
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
         aps = [
-            AccessPoint("Cisco", "AP-515", "Yellow", "Floor 1", mine=True, floor_id="f1"),
+            AccessPoint(
+                "Cisco", "AP-515", "Yellow", "Floor 1", mine=True, floor_id="f1"
+            ),
             AccessPoint("Aruba", "AP-635", "Red", "Floor 2", mine=True, floor_id="f2"),
         ]
 
@@ -400,14 +404,15 @@ class TestPDFExporterAvailable:
         assert result == ""
 
     def test_generate_antennas_table_empty(self, tmp_path):
-        """Test _generate_antennas_table with empty antennas list."""
+        """Test _generate_antennas_table_from_counts with empty Counter."""
         pytest.importorskip("weasyprint")
+        from collections import Counter
         from ekahau_bom.exporters.pdf_exporter import PDFExporter
 
         exporter = PDFExporter(tmp_path)
-        result = exporter._generate_antennas_table([])
+        result = exporter._generate_antennas_table_from_counts(Counter())
 
-        # Should return empty string for empty list
+        # Should return empty string for empty Counter
         assert result == ""
 
     def test_export_creates_valid_pdf_file(self, sample_project_data, tmp_path):
