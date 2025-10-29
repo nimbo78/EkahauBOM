@@ -1470,6 +1470,10 @@ class HTMLExporter(BaseExporter):
                 "{tx_power_counts_json}", tx_power_counts_json
             )
 
+            # Fix JavaScript syntax: convert double braces to single braces
+            radio_html = radio_html.replace("{{", "{")
+            radio_html = radio_html.replace("}}", "}")
+
             html_sections.append(radio_html)
 
         return "".join(html_sections)
