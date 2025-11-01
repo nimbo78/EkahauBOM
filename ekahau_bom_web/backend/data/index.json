@@ -1,0 +1,96 @@
+{
+  "projects": [
+    {
+      "project_id": "2b0d92a3-6ecd-45b7-8fa5-dc12a69b755d",
+      "filename": "maga.esx",
+      "upload_date": "2025-11-01T10:14:21.663340Z",
+      "file_size": 152635,
+      "processing_status": "completed",
+      "project_name": "maga",
+      "buildings_count": 1,
+      "floors_count": 1,
+      "aps_count": 10,
+      "processing_flags": {
+        "group_by": "model",
+        "output_formats": [
+          "pdf"
+        ],
+        "visualize_floor_plans": true,
+        "show_azimuth_arrows": true,
+        "ap_opacity": 0.6
+      },
+      "processing_started": "2025-11-01T10:41:13.592111Z",
+      "processing_completed": "2025-11-01T10:41:17.219012Z",
+      "processing_error": null,
+      "original_file": "projects\\2b0d92a3-6ecd-45b7-8fa5-dc12a69b755d\\original.esx",
+      "reports_dir": "2b0d92a3-6ecd-45b7-8fa5-dc12a69b755d\\reports",
+      "visualizations_dir": "2b0d92a3-6ecd-45b7-8fa5-dc12a69b755d\\reports\\visualizations",
+      "short_link": "kS2YxGip",
+      "short_link_expires": "2025-12-01T10:14:21.663258Z"
+    },
+    {
+      "project_id": "062910ce-6018-45ec-9510-1a1f278ebbdc",
+      "filename": "klingon_concrete_min.esx",
+      "upload_date": "2025-11-01T10:41:45.348862Z",
+      "file_size": 1884156,
+      "processing_status": "completed",
+      "project_name": "klingon_concrete_min",
+      "buildings_count": 1,
+      "floors_count": 2,
+      "aps_count": 27,
+      "processing_flags": {
+        "group_by": "floor",
+        "output_formats": [
+          "csv",
+          "excel",
+          "json",
+          "html",
+          "pdf"
+        ],
+        "visualize_floor_plans": true,
+        "show_azimuth_arrows": true,
+        "ap_opacity": 0.6
+      },
+      "processing_started": "2025-11-01T10:41:53.697865Z",
+      "processing_completed": "2025-11-01T10:41:56.685291Z",
+      "processing_error": null,
+      "original_file": "projects\\062910ce-6018-45ec-9510-1a1f278ebbdc\\original.esx",
+      "reports_dir": "062910ce-6018-45ec-9510-1a1f278ebbdc\\reports",
+      "visualizations_dir": "062910ce-6018-45ec-9510-1a1f278ebbdc\\reports\\visualizations",
+      "short_link": "fYnxj49k",
+      "short_link_expires": "2025-12-01T10:41:45.348801Z"
+    },
+    {
+      "project_id": "980813ae-a642-419e-a441-e7e3d2979dec",
+      "filename": "wine office.esx",
+      "upload_date": "2025-11-01T10:42:52.578141Z",
+      "file_size": 1588995,
+      "processing_status": "completed",
+      "project_name": "wine office",
+      "buildings_count": null,
+      "floors_count": 1,
+      "aps_count": 3,
+      "processing_flags": {
+        "group_by": "model",
+        "output_formats": [
+          "csv",
+          "excel",
+          "json",
+          "html",
+          "pdf"
+        ],
+        "visualize_floor_plans": true,
+        "show_azimuth_arrows": true,
+        "ap_opacity": 0.6
+      },
+      "processing_started": "2025-11-01T10:43:02.886570Z",
+      "processing_completed": "2025-11-01T10:43:05.140197Z",
+      "processing_error": null,
+      "original_file": "projects\\980813ae-a642-419e-a441-e7e3d2979dec\\original.esx",
+      "reports_dir": "980813ae-a642-419e-a441-e7e3d2979dec\\reports",
+      "visualizations_dir": "980813ae-a642-419e-a441-e7e3d2979dec\\reports\\visualizations",
+      "short_link": "RiFTxLS8",
+      "short_link_expires": "2025-12-01T10:42:52.578080Z"
+    }
+  ]
+}

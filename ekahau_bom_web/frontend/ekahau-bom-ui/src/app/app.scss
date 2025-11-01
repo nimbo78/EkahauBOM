@@ -1,0 +1,126 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--tui-base-01);
+}
+
+.app-header {
+  background: var(--tui-base-02);
+  border-bottom: 1px solid var(--tui-base-03);
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 24px;
+  color: var(--tui-primary);
+}
+
+.app-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--tui-text-01);
+}
+
+.nav-menu {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--tui-text-02);
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+
+  &:hover {
+    background: var(--tui-base-03);
+    color: var(--tui-text-01);
+  }
+
+  &.active {
+    background: var(--tui-primary-hover);
+    color: var(--tui-primary);
+  }
+
+  tui-icon {
+    font-size: 18px;
+  }
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0 16px;
+  }
+
+  .app-title {
+    font-size: 18px;
+  }
+
+  .nav-link {
+    padding: 8px 12px;
+    font-size: 13px;
+
+    tui-icon {
+      font-size: 16px;
+    }
+  }
+
+  .app-content {
+    padding: 16px;
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .app-header {
+    background: var(--tui-base-01);
+    border-bottom-color: var(--tui-base-04);
+  }
+
+  .nav-link {
+    &:hover {
+      background: var(--tui-base-04);
+    }
+
+    &.active {
+      background: rgba(var(--tui-primary-rgb), 0.1);
+    }
+  }
+}
