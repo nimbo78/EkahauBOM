@@ -72,3 +72,15 @@ output/test_*/
 # Ekahau project files (examples for development)
 projects/
 *.esx
+
+# Playwright MCP testing
+.playwright-mcp/
+
+# Web UI - Backend runtime data
+ekahau_bom_web/backend/data/
+ekahau_bom_web/backend/venv/
+
+# Web UI - Frontend build artifacts and dependencies
+ekahau_bom_web/frontend/ekahau-bom-ui/node_modules/
+ekahau_bom_web/frontend/ekahau-bom-ui/.angular/
+ekahau_bom_web/frontend/ekahau-bom-ui/dist/
