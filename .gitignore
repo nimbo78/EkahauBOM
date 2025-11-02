@@ -84,3 +84,4 @@ ekahau_bom_web/backend/venv/
 ekahau_bom_web/frontend/ekahau-bom-ui/node_modules/
 ekahau_bom_web/frontend/ekahau-bom-ui/.angular/
 ekahau_bom_web/frontend/ekahau-bom-ui/dist/
+*.env
