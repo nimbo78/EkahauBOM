@@ -2411,12 +2411,676 @@ export const PROJECTS_ROUTES: Routes = [
 
 ---
 
+## 🔐 Phase 3.8: Authentication & Authorization (2-3 дня)
+
+**Status:** 📋 Planned (Not Started)
+**Цель:** Разделение доступа на администраторов и пользователей с изоляцией short links
+
+### Архитектура и требования
+
+#### 1. Роли пользователей
+- **Administrator** - полный доступ ко всем функциям
+  - Загрузка и удаление проектов
+  - Настройка обработки
+  - Просмотр всех проектов
+  - Управление short links
+
+- **Short Link User** - ограниченный доступ только к одному проекту
+  - Доступ только по короткой ссылке `/s/{shortLink}`
+  - Просмотр одного конкретного проекта
+  - Скачивание отчётов
+  - **ЗАПРЕЩЕНО:**
+    - Переход на список всех проектов
+    - Просмотр других проектов
+    - Доступ к админ панели
+    - Навигация через меню
+
+#### 2. Изоляция Short Link режима
+
+**Требования:**
+- По короткой ссылке пользователь видит ТОЛЬКО один проект
+- Отсутствует навигация "Back to Projects"
+- Отключено главное меню навигации
+- Нельзя изменить URL и перейти на другой проект
+- При попытке доступа к `/projects` - редирект на 404 или login
+
+**Frontend изменения:**
+
+**src/app/core/guards/short-link.guard.ts** (новый файл):
+```typescript
+import { Injectable, inject } from '@angular/core';
+import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
+
+@Injectable({ providedIn: 'root' })
+export class ShortLinkGuard implements CanActivate {
+  private router = inject(Router);
+
+  canActivate(route: ActivatedRouteSnapshot): boolean {
+    // Check if we're in short link mode
+    const isShortLink = sessionStorage.getItem('short_link_mode') === 'true';
+
+    if (isShortLink) {
+      // If in short link mode, block access to other routes
+      const allowedPaths = ['s'];
+      const currentPath = route.url[0]?.path;
+
+      if (!allowedPaths.includes(currentPath)) {
+        this.router.navigate(['/forbidden']);
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
+```
+
+**src/app/features/projects/detail/project-detail.component.ts** (обновить):
+```typescript
+export class ProjectDetailComponent implements OnInit {
+  // ... existing code ...
+
+  // New: detect short link mode
+  isShortLinkMode = signal<boolean>(false);
+
+  ngOnInit(): void {
+    this.route.params.subscribe(params => {
+      if (params['shortLink']) {
+        // We're in short link mode
+        this.isShortLinkMode.set(true);
+        sessionStorage.setItem('short_link_mode', 'true');
+        this.loadProjectByShortLink(params['shortLink']);
+      } else if (params['id']) {
+        // Normal mode
+        this.isShortLinkMode.set(false);
+        sessionStorage.removeItem('short_link_mode');
+        this.projectId = params['id'];
+        this.loadProject();
+      }
+    });
+  }
+
+  // New: method to check if navigation should be shown
+  canNavigate(): boolean {
+    return !this.isShortLinkMode();
+  }
+}
+```
+
+**src/app/features/projects/detail/project-detail.component.html** (обновить):
+```html
+<!-- Header actions - только для обычного режима -->
+@if (!isShortLinkMode()) {
+  <div class="header-actions">
+    <button tuiButton appearance="ghost" size="s" routerLink="/projects">
+      <tui-icon icon="@tui.arrow-left"></tui-icon>
+      Back to Projects
+    </button>
+    <button tuiButton appearance="secondary" size="s" (click)="copyShortLink()">
+      <tui-icon icon="@tui.link"></tui-icon>
+      Copy Short Link
+    </button>
+  </div>
+}
+
+<!-- В short link режиме показываем только информацию о проекте -->
+@if (isShortLinkMode()) {
+  <div class="short-link-banner">
+    <tui-icon icon="@tui.info"></tui-icon>
+    <span>You are viewing this project via a shared link</span>
+  </div>
+}
+```
+
+**src/app/app.component.html** (обновить):
+```html
+<tui-root>
+  <header class="header">
+    <div class="header-content">
+      <h1>Ekahau BOM Registry</h1>
+
+      <!-- Навигационное меню - скрыть в short link режиме -->
+      @if (!isShortLinkMode()) {
+        <nav class="nav-menu">
+          <a tuiButton appearance="flat" routerLink="/projects" routerLinkActive="active">
+            <tui-icon icon="@tui.folder"></tui-icon>
+            Projects
+          </a>
+          <a tuiButton appearance="flat" routerLink="/admin/upload" routerLinkActive="active">
+            <tui-icon icon="@tui.upload"></tui-icon>
+            Upload
+          </a>
+          <a tuiButton appearance="flat" routerLink="/admin/processing" routerLinkActive="active">
+            <tui-icon icon="@tui.settings"></tui-icon>
+            Processing
+          </a>
+        </nav>
+      }
+    </div>
+  </header>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</tui-root>
+```
+
+**src/app/app.component.ts** (обновить):
+```typescript
+export class AppComponent {
+  // Check if we're in short link mode
+  isShortLinkMode = signal<boolean>(false);
+
+  constructor(private router: Router) {
+    // Watch for route changes
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        const shortLinkMode = sessionStorage.getItem('short_link_mode') === 'true';
+        this.isShortLinkMode.set(shortLinkMode);
+      }
+    });
+  }
+}
+```
+
+#### 3. Аутентификация для админ панели
+
+**Backend: app/auth.py** (новый файл):
+```python
+"""Simple authentication for admin panel."""
+from datetime import datetime, timedelta, UTC
+from typing import Optional
+from fastapi import HTTPException, Security, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import jwt
+import secrets
+
+# Security scheme
+security = HTTPBearer()
+
+# Configuration (в production читать из .env)
+SECRET_KEY = secrets.token_urlsafe(32)
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 hours
+
+# Simple admin credentials (в production хранить в БД с хешированием)
+ADMIN_CREDENTIALS = {
+    "admin": "change_me_in_production"  # username: password
+}
+
+def create_access_token(username: str) -> str:
+    """Create JWT access token."""
+    expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode = {"sub": username, "exp": expire}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
+    """Verify JWT token and return username."""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return username
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def verify_admin(username: str = Depends(verify_token)) -> str:
+    """Verify that user is an admin."""
+    if username not in ADMIN_CREDENTIALS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return username
+```
+
+**Backend: app/api/auth.py** (новый файл):
+```python
+"""Authentication endpoints."""
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from app.auth import create_access_token, ADMIN_CREDENTIALS
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+@router.post("/login", response_model=TokenResponse)
+async def login(request: LoginRequest):
+    """Admin login endpoint."""
+    # Verify credentials
+    if (request.username not in ADMIN_CREDENTIALS or
+        ADMIN_CREDENTIALS[request.username] != request.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    # Create access token
+    access_token = create_access_token(request.username)
+
+    return TokenResponse(access_token=access_token)
+
+@router.post("/logout")
+async def logout():
+    """Logout endpoint (client-side token removal)."""
+    return {"message": "Logged out successfully"}
+```
+
+**Backend: app/api/upload.py, projects.py** (обновить):
+```python
+from app.auth import verify_admin
+from fastapi import Depends
+
+# Добавить защиту к admin endpoints
+@router.post("/api/upload")
+async def upload_project(
+    file: UploadFile,
+    _admin: str = Depends(verify_admin)  # ← Требует авторизации
+):
+    # ... existing code ...
+
+@router.delete("/api/projects/{project_id}")
+async def delete_project(
+    project_id: UUID,
+    _admin: str = Depends(verify_admin)  # ← Требует авторизации
+):
+    # ... existing code ...
+```
+
+**Frontend: src/app/core/services/auth.service.ts** (новый файл):
+```typescript
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, tap } from 'rxjs';
+
+interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private http = inject(HttpClient);
+  private router = inject(Router);
+
+  isAuthenticated = signal<boolean>(false);
+
+  constructor() {
+    // Check if token exists on init
+    const token = localStorage.getItem('admin_token');
+    this.isAuthenticated.set(!!token);
+  }
+
+  login(username: string, password: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>('/api/auth/login', { username, password })
+      .pipe(
+        tap(response => {
+          localStorage.setItem('admin_token', response.access_token);
+          this.isAuthenticated.set(true);
+        })
+      );
+  }
+
+  logout(): void {
+    localStorage.removeItem('admin_token');
+    this.isAuthenticated.set(false);
+    this.router.navigate(['/login']);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('admin_token');
+  }
+}
+```
+
+**Frontend: src/app/core/interceptors/auth.interceptor.ts** (новый файл):
+```typescript
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { AuthService } from '../services/auth.service';
+
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const authService = inject(AuthService);
+  const token = authService.getToken();
+
+  // Add token to admin requests
+  if (token && (req.url.includes('/admin') || req.url.includes('/upload'))) {
+    const cloned = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return next(cloned);
+  }
+
+  return next(req);
+};
+```
+
+**Frontend: src/app/core/guards/admin.guard.ts** (новый файл):
+```typescript
+import { Injectable, inject } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+@Injectable({ providedIn: 'root' })
+export class AdminGuard implements CanActivate {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  canActivate(): boolean {
+    if (this.authService.isAuthenticated()) {
+      return true;
+    }
+
+    // Redirect to login
+    this.router.navigate(['/login']);
+    return false;
+  }
+}
+```
+
+**Frontend: src/app/features/auth/login/login.component.ts** (новый файл):
+```typescript
+import { Component, signal, inject } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TuiButton, TuiError } from '@taiga-ui/core';
+import { TuiFieldErrorPipe } from '@taiga-ui/kit';
+import { TuiInputModule, TuiInputPasswordModule } from '@taiga-ui/legacy';
+import { AuthService } from '../../../core/services/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    TuiButton,
+    TuiInputModule,
+    TuiInputPasswordModule,
+    TuiError,
+    TuiFieldErrorPipe
+  ],
+  template: `
+    <div class="login-container">
+      <div class="login-card">
+        <h2>Admin Login</h2>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <tui-input formControlName="username">
+            Username
+            <input tuiTextfield />
+          </tui-input>
+
+          <tui-input-password formControlName="password">
+            Password
+          </tui-input-password>
+
+          @if (error()) {
+            <div class="error-message">{{ error() }}</div>
+          }
+
+          <button
+            tuiButton
+            type="submit"
+            appearance="primary"
+            size="l"
+            [disabled]="loginForm.invalid || loading()"
+          >
+            {{ loading() ? 'Logging in...' : 'Login' }}
+          </button>
+        </form>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--tui-base-01);
+    }
+
+    .login-card {
+      width: 400px;
+      padding: 2rem;
+      background: var(--tui-base-02);
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .error-message {
+      color: var(--tui-error-fill);
+      font-size: 0.875rem;
+    }
+  `]
+})
+export class LoginComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  loading = signal(false);
+  error = signal<string | null>(null);
+
+  loginForm = new FormGroup({
+    username: new FormControl('', [Validators.required]),
+    password: new FormControl('', [Validators.required])
+  });
+
+  onSubmit(): void {
+    if (this.loginForm.invalid) return;
+
+    const { username, password } = this.loginForm.value;
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.authService.login(username!, password!).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.router.navigate(['/admin/upload']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set('Invalid username or password');
+        console.error('Login error:', err);
+      }
+    });
+  }
+}
+```
+
+**Frontend: src/app/app.routes.ts** (обновить):
+```typescript
+import { Routes } from '@angular/router';
+import { AdminGuard } from './core/guards/admin.guard';
+import { ShortLinkGuard } from './core/guards/short-link.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/projects',
+    pathMatch: 'full',
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
+  },
+  {
+    path: 'projects',
+    canActivate: [ShortLinkGuard],  // ← Блокирует доступ из short link режима
+    loadComponent: () =>
+      import('./features/projects/list/projects-list.component').then(
+        (m) => m.ProjectsListComponent
+      ),
+  },
+  {
+    path: 'projects/:id',
+    canActivate: [ShortLinkGuard],  // ← Блокирует доступ из short link режима
+    loadComponent: () =>
+      import('./features/projects/detail/project-detail.component').then(
+        (m) => m.ProjectDetailComponent
+      ),
+  },
+  {
+    path: 'admin',
+    canActivate: [AdminGuard],  // ← Требует авторизации
+    children: [
+      {
+        path: 'upload',
+        loadComponent: () =>
+          import('./features/admin/upload/upload.component').then(
+            (m) => m.UploadComponent
+          ),
+      },
+      {
+        path: 'processing',
+        loadComponent: () =>
+          import('./features/admin/processing/processing.component').then(
+            (m) => m.ProcessingComponent
+          ),
+      },
+      {
+        path: '',
+        redirectTo: 'upload',
+        pathMatch: 'full',
+      },
+    ],
+  },
+  {
+    path: 's/:shortLink',
+    loadComponent: () =>
+      import('./features/projects/detail/project-detail.component').then(
+        (m) => m.ProjectDetailComponent
+      ),
+  },
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./features/error/forbidden.component').then(
+        (m) => m.ForbiddenComponent
+      ),
+  },
+  {
+    path: '**',
+    redirectTo: '/projects',
+  },
+];
+```
+
+**Frontend: src/app/app.config.ts** (обновить):
+```typescript
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+
+import { routes } from './app.routes';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(
+      withInterceptors([authInterceptor])  // ← Добавить auth interceptor
+    ),
+    provideAnimations()
+  ]
+};
+```
+
+#### 4. Security considerations
+
+**Best practices:**
+1. **JWT токены:**
+   - Используйте короткий срок жизни (8 часов)
+   - Храните SECRET_KEY в переменных окружения
+   - В production используйте refresh tokens
+
+2. **Пароли:**
+   - В production хранить хеши паролей (bcrypt)
+   - Использовать БД для хранения пользователей
+   - Добавить rate limiting на /login endpoint
+
+3. **Short links:**
+   - Проверять expiry на каждый запрос
+   - Логировать доступы для аудита
+   - Возможность отозвать (revoke) ссылку
+
+4. **CORS:**
+   - Настроить allowed origins
+   - Не использовать `*` в production
+
+**Backend: app/config.py** (обновить):
+```python
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    # ... existing settings ...
+
+    # Authentication
+    jwt_secret_key: str = "CHANGE_ME_IN_PRODUCTION"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 480
+
+    # Admin credentials (в production использовать БД)
+    admin_username: str = "admin"
+    admin_password_hash: str = "hashed_password_here"
+
+    class Config:
+        env_file = ".env"
+```
+
+**Чек-лист Phase 3.8:**
+- [ ] Создан ShortLinkGuard для изоляции short link режима
+- [ ] Обновлён ProjectDetailComponent с определением режима
+- [ ] Скрыта навигация в short link режиме
+- [ ] Создан AuthService для работы с JWT
+- [ ] Создан AdminGuard для защиты админ роутов
+- [ ] Создан auth interceptor для добавления токенов
+- [ ] Создан LoginComponent
+- [ ] Backend: добавлен auth.py с JWT логикой
+- [ ] Backend: добавлены /api/auth/login и /logout endpoints
+- [ ] Backend: защищены admin endpoints (upload, delete)
+- [ ] Обновлены роуты с guards
+- [ ] Создан ForbiddenComponent для ошибок доступа
+- [ ] Добавлены переменные окружения для JWT
+
+---
+
 ## 🧪 Phase 4: Testing & Integration (2 дня)
 
 **Status:** ⏳ In Progress
 - ✅ Step 4.1: Backend тесты (69 tests passing)
 - ⏳ Step 4.2: Frontend тесты (pending)
 - ✅ Step 4.3: E2E тестирование (Playwright MCP, 5 screenshots)
+- ⏳ Step 4.4: Authentication & Authorization тесты (pending - after Phase 3.8)
 
 ---
 
@@ -2570,6 +3234,537 @@ describe('ApiService', () => {
 - 03-project-detail-reports.png - Reports tab (8 files)
 - 04-project-detail-visualizations.png - Visualizations tab
 - 05-lightbox-fullscreen.png - Lightbox modal with floor plan
+
+---
+
+### Step 4.4: Authentication & Authorization тесты
+**Время:** 3 часа
+**Prerequisite:** Phase 3.8 должен быть завершён
+
+#### Backend тесты (pytest)
+
+**tests/test_auth.py** (новый файл):
+```python
+"""Tests for authentication and authorization."""
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_login_success():
+    """Test successful admin login."""
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "change_me_in_production"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+def test_login_invalid_credentials():
+    """Test login with invalid credentials."""
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "wrong_password"}
+    )
+    assert response.status_code == 401
+    assert "Invalid credentials" in response.json()["detail"]
+
+def test_login_nonexistent_user():
+    """Test login with non-existent user."""
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "hacker", "password": "password"}
+    )
+    assert response.status_code == 401
+
+def test_protected_endpoint_without_token():
+    """Test accessing protected endpoint without token."""
+    response = client.post("/api/upload")
+    assert response.status_code == 403  # или 401, зависит от настройки
+
+def test_protected_endpoint_with_invalid_token():
+    """Test accessing protected endpoint with invalid token."""
+    headers = {"Authorization": "Bearer invalid_token"}
+    response = client.delete("/api/projects/some-uuid", headers=headers)
+    assert response.status_code == 401
+    assert "Invalid token" in response.json()["detail"]
+
+def test_protected_endpoint_with_valid_token():
+    """Test accessing protected endpoint with valid token."""
+    # First, login to get token
+    login_response = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "change_me_in_production"}
+    )
+    token = login_response.json()["access_token"]
+
+    # Try to access protected endpoint (use a safe one for testing)
+    headers = {"Authorization": f"Bearer {token}"}
+    response = client.get("/api/projects", headers=headers)
+    assert response.status_code == 200
+
+def test_token_expiry():
+    """Test that expired tokens are rejected."""
+    # This requires mocking time or creating an expired token
+    import jwt
+    from datetime import datetime, timedelta, UTC
+    from app.auth import SECRET_KEY, ALGORITHM
+
+    expired_token = jwt.encode(
+        {"sub": "admin", "exp": datetime.now(UTC) - timedelta(hours=1)},
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+    headers = {"Authorization": f"Bearer {expired_token}"}
+    response = client.delete("/api/projects/some-uuid", headers=headers)
+    assert response.status_code == 401
+    assert "expired" in response.json()["detail"].lower()
+
+def test_logout():
+    """Test logout endpoint."""
+    response = client.post("/api/auth/logout")
+    assert response.status_code == 200
+    assert response.json()["message"] == "Logged out successfully"
+```
+
+**tests/test_short_links.py** (обновить существующий):
+```python
+def test_short_link_expiry_check():
+    """Test that expired short links return 410 Gone."""
+    from app.services.short_links import ShortLinkManager
+    from datetime import datetime, timedelta, UTC
+
+    manager = ShortLinkManager()
+
+    # Create expired link
+    expired_date = datetime.now(UTC) - timedelta(days=1)
+    expired_link = "expired123"
+
+    # Simulate checking expired link
+    is_expired = manager.is_expired(expired_link, expired_date)
+    assert is_expired == True
+
+def test_short_link_not_expired():
+    """Test that non-expired short links work."""
+    from app.services.short_links import ShortLinkManager
+    from datetime import datetime, timedelta, UTC
+
+    manager = ShortLinkManager()
+
+    # Create future expiry
+    future_date = datetime.now(UTC) + timedelta(days=10)
+    link = "valid123"
+
+    is_expired = manager.is_expired(link, future_date)
+    assert is_expired == False
+```
+
+**tests/test_api.py** (добавить тесты):
+```python
+def test_get_project_by_short_link_expired():
+    """Test accessing project via expired short link."""
+    # Setup: Create project with expired link
+    # Mock the expiry date in metadata
+    response = client.get("/api/projects/short/expired_link_here")
+    assert response.status_code == 410  # Gone
+    assert "expired" in response.json()["detail"].lower()
+
+def test_get_project_by_short_link_valid():
+    """Test accessing project via valid short link."""
+    # Setup: Use existing test project with valid link
+    response = client.get("/api/projects/short/valid_test_link")
+    assert response.status_code == 200
+    data = response.json()
+    assert "project_id" in data
+    assert "short_link" in data
+```
+
+#### Frontend тесты (Jasmine/Karma)
+
+**src/app/core/services/auth.service.spec.ts**:
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { AuthService } from './auth.service';
+
+describe('AuthService', () => {
+  let service: AuthService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [AuthService]
+    });
+
+    service = TestBed.inject(AuthService);
+    httpMock = TestBed.inject(HttpTestingController);
+
+    // Clear localStorage
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+
+  it('should login successfully and store token', () => {
+    const mockResponse = {
+      access_token: 'test_token_123',
+      token_type: 'bearer'
+    };
+
+    service.login('admin', 'password').subscribe(response => {
+      expect(response.access_token).toBe('test_token_123');
+      expect(localStorage.getItem('admin_token')).toBe('test_token_123');
+      expect(service.isAuthenticated()).toBe(true);
+    });
+
+    const req = httpMock.expectOne('/api/auth/login');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ username: 'admin', password: 'password' });
+    req.flush(mockResponse);
+  });
+
+  it('should handle login error', () => {
+    service.login('admin', 'wrong').subscribe({
+      error: (error) => {
+        expect(error.status).toBe(401);
+        expect(localStorage.getItem('admin_token')).toBeNull();
+        expect(service.isAuthenticated()).toBe(false);
+      }
+    });
+
+    const req = httpMock.expectOne('/api/auth/login');
+    req.flush({ detail: 'Invalid credentials' }, { status: 401, statusText: 'Unauthorized' });
+  });
+
+  it('should logout and clear token', () => {
+    // Setup: store token first
+    localStorage.setItem('admin_token', 'test_token');
+    service.isAuthenticated.set(true);
+
+    // Logout
+    service.logout();
+
+    expect(localStorage.getItem('admin_token')).toBeNull();
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('should get stored token', () => {
+    localStorage.setItem('admin_token', 'stored_token');
+    expect(service.getToken()).toBe('stored_token');
+  });
+
+  it('should return null when no token stored', () => {
+    expect(service.getToken()).toBeNull();
+  });
+});
+```
+
+**src/app/core/guards/admin.guard.spec.ts**:
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { AdminGuard } from './admin.guard';
+import { AuthService } from '../services/auth.service';
+
+describe('AdminGuard', () => {
+  let guard: AdminGuard;
+  let authService: jasmine.SpyObj<AuthService>;
+  let router: jasmine.SpyObj<Router>;
+
+  beforeEach(() => {
+    const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+
+    TestBed.configureTestingModule({
+      providers: [
+        AdminGuard,
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: Router, useValue: routerSpy }
+      ]
+    });
+
+    guard = TestBed.inject(AdminGuard);
+    authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+  });
+
+  it('should be created', () => {
+    expect(guard).toBeTruthy();
+  });
+
+  it('should allow access when authenticated', () => {
+    authService.isAuthenticated.and.returnValue(true);
+
+    expect(guard.canActivate()).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should block access and redirect when not authenticated', () => {
+    authService.isAuthenticated.and.returnValue(false);
+
+    expect(guard.canActivate()).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/login']);
+  });
+});
+```
+
+**src/app/core/guards/short-link.guard.spec.ts**:
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { Router, ActivatedRouteSnapshot } from '@angular/router';
+import { ShortLinkGuard } from './short-link.guard';
+
+describe('ShortLinkGuard', () => {
+  let guard: ShortLinkGuard;
+  let router: jasmine.SpyObj<Router>;
+
+  beforeEach(() => {
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+
+    TestBed.configureTestingModule({
+      providers: [
+        ShortLinkGuard,
+        { provide: Router, useValue: routerSpy }
+      ]
+    });
+
+    guard = TestBed.inject(ShortLinkGuard);
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+
+    // Clear sessionStorage
+    sessionStorage.clear();
+  });
+
+  it('should be created', () => {
+    expect(guard).toBeTruthy();
+  });
+
+  it('should allow access when not in short link mode', () => {
+    const mockRoute = {
+      url: [{ path: 'projects' }]
+    } as any as ActivatedRouteSnapshot;
+
+    expect(guard.canActivate(mockRoute)).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('should block access to projects when in short link mode', () => {
+    sessionStorage.setItem('short_link_mode', 'true');
+
+    const mockRoute = {
+      url: [{ path: 'projects' }]
+    } as any as ActivatedRouteSnapshot;
+
+    expect(guard.canActivate(mockRoute)).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/forbidden']);
+  });
+
+  it('should allow access to /s/ when in short link mode', () => {
+    sessionStorage.setItem('short_link_mode', 'true');
+
+    const mockRoute = {
+      url: [{ path: 's' }]
+    } as any as ActivatedRouteSnapshot;
+
+    expect(guard.canActivate(mockRoute)).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+});
+```
+
+**src/app/core/interceptors/auth.interceptor.spec.ts**:
+```typescript
+import { TestBed } from '@angular/core/testing';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { authInterceptor } from './auth.interceptor';
+import { AuthService } from '../services/auth.service';
+
+describe('authInterceptor', () => {
+  let httpMock: HttpTestingController;
+  let httpClient: HttpClient;
+  let authService: AuthService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
+        provideHttpClientTesting(),
+        AuthService
+      ]
+    });
+
+    httpMock = TestBed.inject(HttpTestingController);
+    httpClient = TestBed.inject(HttpClient);
+    authService = TestBed.inject(AuthService);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('should add Authorization header to admin requests', () => {
+    spyOn(authService, 'getToken').and.returnValue('test_token_123');
+
+    httpClient.get('/api/admin/something').subscribe();
+
+    const req = httpMock.expectOne('/api/admin/something');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer test_token_123');
+    req.flush({});
+  });
+
+  it('should add Authorization header to upload requests', () => {
+    spyOn(authService, 'getToken').and.returnValue('test_token_456');
+
+    httpClient.post('/api/upload', {}).subscribe();
+
+    const req = httpMock.expectOne('/api/upload');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer test_token_456');
+    req.flush({});
+  });
+
+  it('should not add Authorization header to public requests', () => {
+    spyOn(authService, 'getToken').and.returnValue('test_token_789');
+
+    httpClient.get('/api/projects').subscribe();
+
+    const req = httpMock.expectOne('/api/projects');
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush({});
+  });
+
+  it('should not add Authorization header when no token', () => {
+    spyOn(authService, 'getToken').and.returnValue(null);
+
+    httpClient.post('/api/upload', {}).subscribe();
+
+    const req = httpMock.expectOne('/api/upload');
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush({});
+  });
+});
+```
+
+#### E2E тесты с Playwright
+
+**Сценарии для тестирования:**
+
+1. **Admin Login Flow**:
+   - Navigate to /admin/upload (should redirect to /login)
+   - Enter invalid credentials → error message shown
+   - Enter valid credentials → redirected to /admin/upload
+   - Verify token stored in localStorage
+
+2. **Protected Routes**:
+   - Try to access /admin/upload without login → redirect to /login
+   - Login as admin → access granted
+   - Logout → redirect to /login
+   - Try to access /admin again → redirect to /login
+
+3. **Short Link Isolation**:
+   - Navigate to /s/{valid_link}
+   - Verify: No navigation menu visible
+   - Verify: No "Back to Projects" button
+   - Verify: Banner "You are viewing this project via a shared link" shown
+   - Try to manually navigate to /projects → redirect to /forbidden
+   - Try to access another project by URL → redirect to /forbidden
+
+4. **Short Link Expiry**:
+   - Create project with short expiry (mock or wait)
+   - Access expired short link → 410 error shown
+   - Message: "This link has expired"
+
+**Playwright test example**:
+```typescript
+// tests/e2e/auth.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Authentication', () => {
+  test('should redirect to login when accessing admin without auth', async ({ page }) => {
+    await page.goto('http://localhost:4200/admin/upload');
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test('should login successfully with valid credentials', async ({ page }) => {
+    await page.goto('http://localhost:4200/login');
+    await page.fill('input[type="text"]', 'admin');
+    await page.fill('input[type="password"]', 'change_me_in_production');
+    await page.click('button[type="submit"]');
+
+    await expect(page).toHaveURL(/\/admin\/upload/);
+
+    // Verify token in localStorage
+    const token = await page.evaluate(() => localStorage.getItem('admin_token'));
+    expect(token).toBeTruthy();
+  });
+
+  test('should show error with invalid credentials', async ({ page }) => {
+    await page.goto('http://localhost:4200/login');
+    await page.fill('input[type="text"]', 'admin');
+    await page.fill('input[type="password"]', 'wrong_password');
+    await page.click('button[type="submit"]');
+
+    await expect(page.locator('.error-message')).toContainText('Invalid');
+  });
+});
+
+test.describe('Short Link Isolation', () => {
+  test('should hide navigation in short link mode', async ({ page }) => {
+    await page.goto('http://localhost:4200/s/test_short_link');
+
+    // Wait for page load
+    await page.waitForSelector('h1');
+
+    // Verify navigation menu is hidden
+    await expect(page.locator('.nav-menu')).not.toBeVisible();
+
+    // Verify "Back to Projects" button is hidden
+    await expect(page.locator('text=Back to Projects')).not.toBeVisible();
+
+    // Verify short link banner is shown
+    await expect(page.locator('.short-link-banner')).toContainText('shared link');
+  });
+
+  test('should block access to projects list from short link', async ({ page }) => {
+    // First, set short link mode
+    await page.goto('http://localhost:4200/s/test_short_link');
+
+    // Try to navigate to projects list
+    await page.goto('http://localhost:4200/projects');
+
+    // Should be redirected to forbidden
+    await expect(page).toHaveURL(/\/forbidden/);
+  });
+});
+```
+
+**Чек-лист Step 4.4:**
+- [ ] Backend: тесты для /login endpoint (success, failure)
+- [ ] Backend: тесты для protected endpoints (с/без токена)
+- [ ] Backend: тесты для token expiry
+- [ ] Backend: тесты для short link expiry
+- [ ] Frontend: AuthService unit tests
+- [ ] Frontend: AdminGuard unit tests
+- [ ] Frontend: ShortLinkGuard unit tests
+- [ ] Frontend: auth interceptor unit tests
+- [ ] E2E: Admin login flow
+- [ ] E2E: Protected routes access control
+- [ ] E2E: Short link isolation (no navigation)
+- [ ] E2E: Short link expiry handling
+- [ ] Все тесты проходят: `pytest tests/` (Backend)
+- [ ] Все тесты проходят: `ng test` (Frontend)
+- [ ] E2E тесты проходят с Playwright
 
 ---
 
