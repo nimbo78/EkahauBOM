@@ -2,7 +2,21 @@
 
 This directory contains example outputs from EkahauBOM to demonstrate the tool's capabilities.
 
-## Sample Output
+## 🌐 Web UI Visual Guide
+
+**NEW!** Check out the [Web UI Visual Guide](WEB_UI_GUIDE.md) ([Русская версия](WEB_UI_GUIDE.ru.md)) with screenshots showing:
+- Projects dashboard with statistics
+- Upload interface
+- Project details and metadata
+- Reports download
+- Interactive floor plan visualizations
+- Lightbox full-screen view
+
+**Less text, more pictures!** 📸 Perfect for understanding the Web interface capabilities.
+
+---
+
+## 📁 CLI Sample Output
 
 You can explore real example outputs in the [`sample_output/`](sample_output/) directory, generated from a test Ekahau project with 10 access points.
 
