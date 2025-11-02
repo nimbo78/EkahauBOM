@@ -361,8 +361,10 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       width: 100%;
 
       th {
+        padding: 1rem;
         font-weight: 600;
         background: var(--tui-base-02);
+        text-align: left;
       }
 
       td {

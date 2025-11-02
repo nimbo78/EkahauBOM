@@ -15,6 +15,19 @@ export interface ProjectMetadata {
   buildings_count?: number;
   floors_count?: number;
   aps_count?: number;
+
+  // Project details from .esx
+  customer?: string;
+  location?: string;
+  responsible_person?: string;
+
+  // Summary from JSON report
+  total_antennas?: number;
+  unique_vendors?: number;
+  unique_colors?: number;
+  vendors?: string[];
+  floors?: string[];
+
   processing_flags?: Record<string, any>;
   processing_started?: string;
   processing_completed?: string;

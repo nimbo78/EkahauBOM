@@ -32,6 +32,18 @@ class ProjectMetadata(BaseModel):
     floors_count: Optional[int] = None
     aps_count: Optional[int] = None
 
+    # Project details from .esx
+    customer: Optional[str] = None
+    location: Optional[str] = None
+    responsible_person: Optional[str] = None
+
+    # Summary from JSON report (after processing)
+    total_antennas: Optional[int] = None
+    unique_vendors: Optional[int] = None
+    unique_colors: Optional[int] = None
+    vendors: Optional[list[str]] = None
+    floors: Optional[list[str]] = None
+
     # Processing
     processing_flags: dict = {}
     processing_started: Optional[datetime] = None

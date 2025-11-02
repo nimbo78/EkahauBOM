@@ -123,6 +123,9 @@ class ProcessorService:
                     project_id, original_file, metadata
                 )
 
+                # Extract summary from JSON report if available
+                await self._extract_report_summary(project_id, reports_dir, metadata)
+
                 # Update metadata
                 metadata.processing_status = ProcessingStatus.COMPLETED
                 metadata.processing_completed = datetime.now(UTC)
@@ -220,6 +223,11 @@ class ProcessorService:
                         "name"
                     ) or project_info.get("title")
 
+                    # Extract project details
+                    metadata.customer = project_info.get("customer")
+                    metadata.location = project_info.get("location")
+                    metadata.responsible_person = project_info.get("responsiblePerson")
+
                 # Count access points
                 if "accessPoints.json" in zf.namelist():
                     aps_data = json.loads(zf.read("accessPoints.json"))
@@ -237,6 +245,52 @@ class ProcessorService:
 
         except Exception as e:
             logger.warning(f"Could not extract metadata for {project_id}: {e}")
+
+    async def _extract_report_summary(
+        self, project_id: UUID, reports_dir: Path, metadata: ProjectMetadata
+    ) -> None:
+        """Extract summary data from JSON report.
+
+        Reads the generated JSON report to extract:
+        - total_antennas
+        - unique_vendors
+        - unique_colors
+        - vendors list
+        - floors list
+        """
+        try:
+            import json
+
+            # Find JSON report file (should be {project_name}_data.json)
+            json_files = list(reports_dir.glob("*_data.json"))
+            if not json_files:
+                logger.debug(f"No JSON report found for {project_id}")
+                return
+
+            json_file = json_files[0]
+            with open(json_file, "r", encoding="utf-8") as f:
+                report_data = json.load(f)
+
+            # Extract summary data
+            summary = report_data.get("summary", {})
+            metadata.total_antennas = summary.get("total_antennas")
+            metadata.unique_vendors = summary.get("unique_vendors")
+            metadata.unique_colors = summary.get("unique_colors")
+
+            # Extract vendors from bill_of_materials
+            bom = report_data.get("access_points", {}).get("bill_of_materials", [])
+            vendors = sorted(set(item["vendor"] for item in bom if "vendor" in item))
+            metadata.vendors = vendors if vendors else None
+
+            # Extract floor names
+            floors_data = report_data.get("floors", [])
+            floors = [floor["name"] for floor in floors_data if "name" in floor]
+            metadata.floors = floors if floors else None
+
+            logger.debug(f"Extracted summary for {project_id}: {summary}")
+
+        except Exception as e:
+            logger.warning(f"Could not extract report summary for {project_id}: {e}")
 
     async def cancel_processing(self, project_id: UUID) -> None:
         """Cancel ongoing processing (if possible).

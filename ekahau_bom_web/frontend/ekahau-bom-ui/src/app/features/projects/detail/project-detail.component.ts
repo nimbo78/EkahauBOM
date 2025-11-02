@@ -170,6 +170,58 @@ import {
                   </div>
                 </div>
 
+                <div class="info-card">
+                  <h3>Project Details</h3>
+                  <div class="info-item" *ngIf="project()?.customer">
+                    <span class="label">Customer:</span>
+                    <span class="value">{{ project()?.customer }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.location">
+                    <span class="label">Location:</span>
+                    <span class="value">{{ project()?.location }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.responsible_person">
+                    <span class="label">Responsible:</span>
+                    <span class="value">{{ project()?.responsible_person }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="label">Access Points:</span>
+                    <span class="value">{{ project()?.aps_count || 0 }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.total_antennas">
+                    <span class="label">Antennas:</span>
+                    <span class="value">{{ project()?.total_antennas }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.unique_vendors">
+                    <span class="label">Vendors:</span>
+                    <span class="value">{{ project()?.unique_vendors }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.vendors && project()?.vendors.length">
+                    <span class="label"></span>
+                    <span class="value">
+                      <tui-badge *ngFor="let vendor of project()?.vendors" appearance="info" size="s" style="margin-right: 0.5rem;">
+                        {{ vendor }}
+                      </tui-badge>
+                    </span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.floors_count">
+                    <span class="label">Floors:</span>
+                    <span class="value">{{ project()?.floors_count }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.floors && project()?.floors.length && project()?.floors.length <= 5">
+                    <span class="label"></span>
+                    <span class="value">
+                      <span *ngFor="let floor of project()?.floors; let last = last">
+                        {{ floor }}<span *ngIf="!last">, </span>
+                      </span>
+                    </span>
+                  </div>
+                  <div class="info-item" *ngIf="project()?.unique_colors !== undefined && project()?.unique_colors !== null">
+                    <span class="label">Colors:</span>
+                    <span class="value">{{ project()?.unique_colors }}</span>
+                  </div>
+                </div>
+
                 <div class="info-card" *ngIf="project()?.processing_flags">
                   <h3>Processing Options</h3>
                   <div class="flags-list">
@@ -612,18 +664,25 @@ import {
 
     .lightbox-close {
       position: absolute;
-      top: -3rem;
-      right: 0;
-      background: transparent;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(0, 0, 0, 0.5);
       color: white;
       border: none;
+      border-radius: 50%;
       cursor: pointer;
       z-index: 10;
-      transition: transform 0.2s ease;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
     }
 
     .lightbox-close:hover {
-      transform: scale(1.1);
+      transform: scale(1.15);
+      background: rgba(0, 0, 0, 0.8);
     }
 
     .lightbox-image-container {
