@@ -101,8 +101,11 @@ def test_list_report_files(temp_storage, sample_metadata):
     files = temp_storage.list_report_files(sample_metadata.project_id)
 
     assert len(files) == 2
-    assert "report1.csv" in files
-    assert "report2.xlsx" in files
+    filenames = [f["filename"] for f in files]
+    assert "report1.csv" in filenames
+    assert "report2.xlsx" in filenames
+    # Check that each file has size info
+    assert all("size" in f for f in files)
 
 
 def test_list_visualization_files(temp_storage, sample_metadata):
@@ -119,9 +122,12 @@ def test_list_visualization_files(temp_storage, sample_metadata):
     files = temp_storage.list_visualization_files(sample_metadata.project_id)
 
     assert len(files) == 2
-    assert "floor1.png" in files
-    assert "floor2.png" in files
-    assert "readme.txt" not in files  # Only .png files
+    filenames = [f["filename"] for f in files]
+    assert "floor1.png" in filenames
+    assert "floor2.png" in filenames
+    assert "readme.txt" not in filenames  # Only .png files
+    # Check that each file has size info
+    assert all("size" in f for f in files)
 
 
 def test_delete_project(temp_storage, sample_metadata):

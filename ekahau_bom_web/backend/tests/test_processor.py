@@ -63,21 +63,23 @@ async def test_build_command(processor, sample_metadata, temp_storage):
     cmd = processor._build_command(
         original_file=original_file,
         output_dir=reports_dir,
-        group_aps=True,
-        output_formats=["csv", "xlsx", "html"],
+        group_by="model",
+        output_formats=["csv", "excel", "html"],
         visualize_floor_plans=True,
+        show_azimuth_arrows=False,
+        ap_opacity=0.6,
     )
 
-    assert "python" in cmd
+    assert "python" in str(cmd) or "-m" in cmd
     assert "-m" in cmd
     assert "ekahau_bom" in cmd
     assert str(original_file) in cmd
     assert "--output-dir" in cmd
     assert str(reports_dir) in cmd
-    assert "--group-aps" in cmd
-    assert "--csv" in cmd
-    assert "--excel" in cmd
-    assert "--html" in cmd
+    assert "--group-by" in cmd
+    assert "model" in cmd
+    assert "--format" in cmd
+    assert "csv,excel,html" in cmd
     assert "--visualize-floor-plans" in cmd
 
 
@@ -91,16 +93,19 @@ async def test_build_command_minimal(processor, sample_metadata, temp_storage):
     cmd = processor._build_command(
         original_file=original_file,
         output_dir=reports_dir,
-        group_aps=False,
+        group_by=None,
         output_formats=["csv"],
         visualize_floor_plans=False,
+        show_azimuth_arrows=False,
+        ap_opacity=0.6,
     )
 
-    assert "--group-aps" not in cmd
-    assert "--excel" not in cmd
-    assert "--html" not in cmd
+    assert "--group-by" not in cmd
+    assert "excel" not in ",".join(cmd).lower()
+    assert "html" not in ",".join(cmd).lower()
     assert "--visualize-floor-plans" not in cmd
-    assert "--csv" in cmd
+    assert "--format" in cmd
+    assert "csv" in cmd
 
 
 @pytest.mark.asyncio
@@ -110,31 +115,43 @@ async def test_process_project_success(
     """Test successful project processing."""
     project_id = sample_metadata.project_id
 
-    # Mock subprocess
-    mock_process = AsyncMock()
-    mock_process.returncode = 0
-    mock_process.communicate = AsyncMock(return_value=(b"Success", b""))
+    # Mock subprocess.run result
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = b"Success"
+    mock_result.stderr = b""
 
-    # Mock index_service
-    with patch(
-        "app.services.processor.asyncio.create_subprocess_exec",
-        return_value=mock_process,
-    ):
+    # Mock subprocess.run
+    with patch("app.services.processor.subprocess.run", return_value=mock_result):
         with patch("app.services.processor.index_service") as mock_index:
             mock_index.add = MagicMock()
             mock_index.save_to_disk = MagicMock()
 
-            # Create a dummy CSV file for metadata extraction
-            reports_dir = temp_storage.get_reports_dir(project_id)
-            reports_dir.mkdir(parents=True, exist_ok=True)
-            csv_file = reports_dir / "test_access_points.csv"
-            csv_file.write_text("header\nrow1\nrow2\nrow3\n")
+            # Create project with valid .esx structure for metadata extraction
+            import zipfile
+            import json
+
+            project_dir = temp_storage.get_project_dir(project_id)
+            original_file = project_dir / "original.esx"
+
+            # Create a valid .esx file for metadata extraction
+            with zipfile.ZipFile(original_file, "w") as zf:
+                zf.writestr(
+                    "project.json", json.dumps({"project": {"name": "Test Project"}})
+                )
+                zf.writestr(
+                    "accessPoints.json",
+                    json.dumps({"accessPoints": [{}, {}, {}]}),  # 3 APs
+                )
+                zf.writestr(
+                    "floorPlans.json", json.dumps({"floorPlans": [{}]})  # 1 floor
+                )
 
             # Process
             await processor.process_project(
                 project_id=project_id,
-                group_aps=True,
-                output_formats=["csv", "xlsx"],
+                group_by="model",
+                output_formats=["csv", "excel"],
                 visualize_floor_plans=True,
             )
 
@@ -145,7 +162,7 @@ async def test_process_project_success(
     assert metadata.processing_error is None
     assert metadata.reports_dir is not None
     assert metadata.visualizations_dir is not None
-    assert metadata.processing_flags["group_aps"] is True
+    assert metadata.processing_flags["group_by"] == "model"
     assert "csv" in metadata.processing_flags["output_formats"]
 
 
@@ -154,15 +171,13 @@ async def test_process_project_failure(processor, sample_metadata, temp_storage)
     """Test project processing failure."""
     project_id = sample_metadata.project_id
 
-    # Mock subprocess with error
-    mock_process = AsyncMock()
-    mock_process.returncode = 1
-    mock_process.communicate = AsyncMock(return_value=(b"", b"Error occurred"))
+    # Mock subprocess.run result with error
+    mock_result = MagicMock()
+    mock_result.returncode = 1
+    mock_result.stdout = b""
+    mock_result.stderr = b"Error occurred"
 
-    with patch(
-        "app.services.processor.asyncio.create_subprocess_exec",
-        return_value=mock_process,
-    ):
+    with patch("app.services.processor.subprocess.run", return_value=mock_result):
         with patch("app.services.processor.index_service") as mock_index:
             mock_index.add = MagicMock()
             mock_index.save_to_disk = MagicMock()
@@ -187,23 +202,26 @@ async def test_process_project_not_found(processor):
 @pytest.mark.asyncio
 async def test_extract_project_metadata(processor, sample_metadata, temp_storage):
     """Test extracting metadata from processed files."""
+    import zipfile
+    import json
+
     project_id = sample_metadata.project_id
     project_dir = temp_storage.get_project_dir(project_id)
     original_file = project_dir / "original.esx"
 
-    # Create test files
-    reports_dir = temp_storage.get_reports_dir(project_id)
-    reports_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create CSV with 5 APs (header + 5 rows)
-    csv_file = reports_dir / "test_access_points.csv"
-    csv_file.write_text("header\nap1\nap2\nap3\nap4\nap5\n")
-
-    # Create visualizations
-    viz_dir = temp_storage.get_visualizations_dir(project_id)
-    viz_dir.mkdir(parents=True, exist_ok=True)
-    (viz_dir / "floor1.png").write_text("test")
-    (viz_dir / "floor2.png").write_text("test")
+    # Create a valid .esx file (ZIP) with project metadata
+    with zipfile.ZipFile(original_file, "w") as zf:
+        # Project info
+        zf.writestr(
+            "project.json",
+            json.dumps({"project": {"name": "Test Project", "title": "Test"}}),
+        )
+        # 5 access points
+        zf.writestr(
+            "accessPoints.json", json.dumps({"accessPoints": [{}, {}, {}, {}, {}]})
+        )
+        # 2 floors
+        zf.writestr("floorPlans.json", json.dumps({"floorPlans": [{}, {}]}))
 
     # Extract metadata
     await processor._extract_project_metadata(
@@ -213,6 +231,7 @@ async def test_extract_project_metadata(processor, sample_metadata, temp_storage
     # Verify counts
     assert sample_metadata.aps_count == 5
     assert sample_metadata.floors_count == 2
+    assert sample_metadata.project_name == "Test Project"
 
 
 @pytest.mark.asyncio
@@ -261,17 +280,26 @@ async def test_processing_updates_status_to_processing(
     processor, sample_metadata, temp_storage
 ):
     """Test that processing updates status and index multiple times."""
+    import zipfile
+    import json
+
     project_id = sample_metadata.project_id
 
-    # Mock subprocess
-    mock_process = AsyncMock()
-    mock_process.returncode = 0
-    mock_process.communicate = AsyncMock(return_value=(b"", b""))
+    # Create a valid .esx file for metadata extraction
+    project_dir = temp_storage.get_project_dir(project_id)
+    original_file = project_dir / "original.esx"
 
-    with patch(
-        "app.services.processor.asyncio.create_subprocess_exec",
-        return_value=mock_process,
-    ):
+    with zipfile.ZipFile(original_file, "w") as zf:
+        zf.writestr("project.json", json.dumps({"project": {"name": "Test"}}))
+        zf.writestr("accessPoints.json", json.dumps({"accessPoints": [{}]}))
+
+    # Mock subprocess.run result
+    mock_result = MagicMock()
+    mock_result.returncode = 0
+    mock_result.stdout = b""
+    mock_result.stderr = b""
+
+    with patch("app.services.processor.subprocess.run", return_value=mock_result):
         with patch("app.services.processor.index_service") as mock_index:
             mock_index.add = MagicMock()
             mock_index.save_to_disk = MagicMock()
