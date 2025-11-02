@@ -69,8 +69,8 @@ output/test_*/
 # But keep the output directory
 !output/.gitkeep
 
-# Ekahau project files (examples for development)
-projects/
+# Ekahau project files (examples for development) - root directory only
+/projects/
 *.esx
 
 # Playwright MCP testing

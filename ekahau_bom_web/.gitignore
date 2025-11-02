@@ -27,6 +27,6 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Project specific
-projects/
-storage/
+# Project specific - exclude data directories only, not source code
+/projects/
+/storage/
