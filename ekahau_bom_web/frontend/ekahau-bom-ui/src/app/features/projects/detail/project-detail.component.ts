@@ -196,7 +196,7 @@ import {
                     <span class="label">Vendors:</span>
                     <span class="value">{{ project()?.unique_vendors }}</span>
                   </div>
-                  <div class="info-item" *ngIf="project()?.vendors && project()?.vendors.length">
+                  <div class="info-item" *ngIf="project()?.vendors?.length">
                     <span class="label"></span>
                     <span class="value">
                       <tui-badge *ngFor="let vendor of project()?.vendors" appearance="info" size="s" style="margin-right: 0.5rem;">
@@ -208,7 +208,7 @@ import {
                     <span class="label">Floors:</span>
                     <span class="value">{{ project()?.floors_count }}</span>
                   </div>
-                  <div class="info-item" *ngIf="project()?.floors && project()?.floors.length && project()?.floors.length <= 5">
+                  <div class="info-item" *ngIf="project()?.floors && (project()?.floors?.length ?? 0) > 0 && (project()?.floors?.length ?? 0) <= 5">
                     <span class="label"></span>
                     <span class="value">
                       <span *ngFor="let floor of project()?.floors; let last = last">
