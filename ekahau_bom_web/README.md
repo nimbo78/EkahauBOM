@@ -10,6 +10,54 @@ This is a web-based service for processing and viewing Ekahau .esx project files
 - **Short Links**: Share projects with expiring links
 - **REST API**: Programmatic access to all features
 
+## Current Status
+
+**Version**: 0.1.0 (Development)
+**Last Updated**: 2025-11-02
+
+### Implementation Progress
+
+- ✅ **Phase 1**: Environment Setup (Complete)
+- ✅ **Phase 2**: Backend Development (Complete)
+  - 13 REST API endpoints
+  - StorageService, IndexService, ProcessorService
+  - In-memory indexing with JSON persistence
+  - Short link generation
+- ✅ **Phase 3**: Frontend Development (Complete)
+  - 6 Angular components (Upload, Processing, Projects List, Project Detail)
+  - Taiga UI integration (25+ components used)
+  - Reactive state management with Angular signals
+  - Floor plan visualizations with Lightbox modal
+- ⏳ **Phase 4**: Testing & Integration (In Progress)
+  - ✅ Step 4.1: Backend Tests (69/69 passing)
+  - ⏳ Step 4.2: Frontend Unit Tests (pending)
+  - ✅ Step 4.3: E2E Testing (Playwright MCP - 5 scenarios)
+- 📋 **Phase 5**: Deployment Preparation (Planned)
+- 📋 **Phase 6**: Documentation (Planned)
+
+### Test Coverage
+
+**Backend**:
+- **Total Tests**: 69 (100% passing)
+- **Coverage**:
+  - Storage Service: 100%
+  - Index Service: 100%
+  - Processor Service: 100%
+  - API Endpoints: 100% (all 13 endpoints tested)
+
+**E2E Testing**:
+- Projects List page ✅
+- Project Detail page (3 tabs) ✅
+- Floor plan visualizations with Lightbox ✅
+- Report downloads ✅
+- Short links ✅
+
+### Known Limitations
+
+- Frontend unit tests not yet implemented (Phase 4.2)
+- No Docker setup yet (Phase 5)
+- Production configuration pending (Phase 5)
+
 ## Architecture
 
 ```
