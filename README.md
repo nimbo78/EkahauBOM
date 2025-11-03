@@ -277,7 +277,6 @@ pip install weasyprint
 ## 📚 Documentation
 
 - [**CLI Reference**](docs/CLI_REFERENCE.md) - Complete command-line options
-- [**Web UI Plan**](WEBUI_PLAN.md) - Web UI architecture and implementation
 - [**Developer Guide**](docs/DEVELOPER_GUIDE.md) - Contributing and development
 - [**Extending Guide**](docs/EXTENDING.md) - Add custom exporters/processors
 - [**Release Process**](RELEASE_PROCESS.md) - How to create releases
