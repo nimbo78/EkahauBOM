@@ -78,6 +78,8 @@ class UploadResponse(BaseModel):
     project_id: UUID
     message: str
     short_link: Optional[str]
+    exists: bool = False  # True if project with same name already exists
+    existing_project: Optional["ProjectListItem"] = None  # Details of existing project
 
 
 class ProcessingRequest(BaseModel):
