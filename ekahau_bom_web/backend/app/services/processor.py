@@ -219,9 +219,10 @@ class ProcessorService:
                     project_data = json.loads(zf.read("project.json"))
                     # Project data is nested under "project" key
                     project_info = project_data.get("project", {})
+                    # Try 'title' first (user-friendly name), then fall back to 'name'
                     metadata.project_name = project_info.get(
-                        "name"
-                    ) or project_info.get("title")
+                        "title"
+                    ) or project_info.get("name")
 
                     # Extract project details
                     metadata.customer = project_info.get("customer")
