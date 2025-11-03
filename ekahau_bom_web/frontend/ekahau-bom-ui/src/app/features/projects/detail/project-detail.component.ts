@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -38,13 +38,19 @@ import {
     <div class="project-detail-container">
       <!-- Header with back button -->
       <div class="page-header">
-        <button tuiButton appearance="ghost" size="s" routerLink="/projects">
+        <button
+          *ngIf="!isShortLinkMode()"
+          tuiButton
+          appearance="ghost"
+          size="s"
+          routerLink="/projects"
+        >
           <tui-icon icon="@tui.arrow-left"></tui-icon>
           Back to Projects
         </button>
         <div class="header-actions">
           <button
-            *ngIf="project()?.processing_status === ProcessingStatus.PENDING"
+            *ngIf="!isShortLinkMode() && project()?.processing_status === ProcessingStatus.PENDING"
             tuiButton
             appearance="primary"
             size="m"
@@ -55,7 +61,7 @@ import {
             Configure Processing
           </button>
           <button
-            *ngIf="project()?.short_link"
+            *ngIf="!isShortLinkMode() && project()?.short_link"
             tuiButton
             appearance="outline"
             size="m"
@@ -97,6 +103,7 @@ import {
             <span>
               <tui-badge
                 [appearance]="getStatusAppearance(project()!.processing_status)"
+                [class]="'status-badge-' + project()!.processing_status.toLowerCase()"
                 size="m"
               >
                 {{ project()?.processing_status }}
@@ -147,6 +154,7 @@ import {
                     <span class="value">
                       <tui-badge
                         [appearance]="getStatusAppearance(project()!.processing_status)"
+                        [class]="'status-badge-' + project()!.processing_status.toLowerCase()"
                       >
                         {{ project()?.processing_status }}
                       </tui-badge>
@@ -322,8 +330,8 @@ import {
               </div>
 
               <div *ngIf="!loadingVisualizations() && visualizations().length > 0" class="visualizations-grid">
-                <div *ngFor="let viz of visualizations()" class="visualization-item">
-                  <div class="viz-preview" (click)="openLightbox(viz.filename)">
+                <div *ngFor="let viz of visualizations(); let i = index" class="visualization-item">
+                  <div class="viz-preview" (click)="openLightbox(i)">
                     <img [src]="getVisualizationUrl(viz.filename)" [alt]="viz.filename" />
                     <div class="viz-overlay">
                       <tui-icon icon="@tui.eye"></tui-icon>
@@ -357,19 +365,111 @@ import {
       <!-- Lightbox for full-size visualization -->
       <div *ngIf="lightboxOpen()" class="lightbox" (click)="closeLightbox()">
         <div class="lightbox-content">
+          <!-- Close button -->
           <button class="lightbox-close" tuiButton appearance="icon" size="l">
             <tui-icon icon="@tui.x"></tui-icon>
           </button>
-          <div class="lightbox-image-container">
-            <img [src]="lightboxImageUrl()" [alt]="lightboxImageName()" (click)="$event.stopPropagation()" />
+
+          <!-- Navigation buttons (only if multiple images) -->
+          <button
+            *ngIf="visualizations().length > 1"
+            class="lightbox-nav lightbox-nav-prev"
+            tuiButton
+            appearance="icon"
+            size="l"
+            [disabled]="currentVisualizationIndex() === 0"
+            (click)="previousImage(); $event.stopPropagation()"
+            tuiHint="Previous (←)"
+          >
+            <tui-icon icon="@tui.chevron-left"></tui-icon>
+          </button>
+
+          <button
+            *ngIf="visualizations().length > 1"
+            class="lightbox-nav lightbox-nav-next"
+            tuiButton
+            appearance="icon"
+            size="l"
+            [disabled]="currentVisualizationIndex() === visualizations().length - 1"
+            (click)="nextImage(); $event.stopPropagation()"
+            tuiHint="Next (→)"
+          >
+            <tui-icon icon="@tui.chevron-right"></tui-icon>
+          </button>
+
+          <!-- Image container with zoom -->
+          <div
+            #imageContainer
+            class="lightbox-image-container"
+            [style.cursor]="zoomLevel() > 1 ? (isDragging() ? 'grabbing' : 'grab') : 'default'"
+            (mousedown)="onImageMouseDown($event, imageContainer)"
+            (mousemove)="onImageMouseMove($event, imageContainer)"
+            (mouseup)="onImageMouseUp()"
+            (mouseleave)="onImageMouseLeave()"
+            (wheel)="onImageMouseWheel($event, imageContainer)"
+            (click)="$event.stopPropagation()"
+          >
+            <img
+              [src]="lightboxImageUrl()"
+              [alt]="lightboxImageName()"
+              [style.transform]="'scale(' + zoomLevel() + ')'"
+              [style.user-select]="'none'"
+              [style.pointer-events]="'none'"
+            />
           </div>
+
+          <!-- Footer with controls -->
           <div class="lightbox-footer">
+            <!-- Zoom controls -->
+            <div class="zoom-controls">
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                (click)="zoomOut(); $event.stopPropagation()"
+                [disabled]="zoomLevel() <= 1.0"
+                tuiHint="Zoom Out (-)"
+              >
+                <tui-icon icon="@tui.minus"></tui-icon>
+              </button>
+              <span class="zoom-level">{{ (zoomLevel() * 100) | number:'1.0-0' }}%</span>
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                (click)="zoomIn(); $event.stopPropagation()"
+                [disabled]="zoomLevel() >= 3.0"
+                tuiHint="Zoom In (+)"
+              >
+                <tui-icon icon="@tui.plus"></tui-icon>
+              </button>
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                (click)="resetZoom(); $event.stopPropagation()"
+                [disabled]="zoomLevel() === 1.0"
+                tuiHint="Reset Zoom (0)"
+              >
+                Reset
+              </button>
+            </div>
+
+            <!-- Image counter (only if multiple images) -->
+            <div class="image-counter" *ngIf="visualizations().length > 1">
+              {{ currentVisualizationIndex() + 1 }} / {{ visualizations().length }}
+            </div>
+
+            <!-- Filename -->
             <span class="lightbox-filename">{{ lightboxImageName() }}</span>
+
+            <!-- Download button -->
             <button
               tuiButton
               appearance="primary"
               size="m"
               (click)="downloadVisualization(lightboxImageName()); $event.stopPropagation()"
+              tuiHint="Download"
             >
               <tui-icon icon="@tui.download"></tui-icon>
               Download
@@ -688,17 +788,22 @@ import {
     .lightbox-image-container {
       flex: 1;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      align-items: flex-start;
+      justify-content: flex-start;
+      overflow: auto;
+      position: relative;
     }
 
     .lightbox-image-container img {
       max-width: 100%;
       max-height: 100%;
+      min-width: 100%;
+      min-height: 100%;
       object-fit: contain;
       border-radius: 0.5rem;
       box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      transform-origin: top left;
+      margin: auto;
     }
 
     .lightbox-footer {
@@ -709,12 +814,103 @@ import {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 0.5rem;
       backdrop-filter: blur(10px);
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .lightbox-filename {
       color: white;
       font-size: 1rem;
       font-weight: 500;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .zoom-level {
+      min-width: 50px;
+      text-align: center;
+      color: white;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .image-counter {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+      color: white;
+      font-weight: 500;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10001;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: none;
+      color: white;
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lightbox-nav-prev {
+      left: 2rem;
+    }
+
+    .lightbox-nav-next {
+      right: 2rem;
+    }
+
+    .lightbox-nav:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .lightbox-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    // Color-coded status badges
+    tui-badge.status-badge-completed {
+      background-color: #D4EDDA !important;
+      color: #155724 !important;
+      border: 1px solid #C3E6CB !important;
+    }
+
+    tui-badge.status-badge-pending {
+      background-color: #FFF3CD !important;
+      color: #856404 !important;
+      border: 1px solid #FFEAA7 !important;
+    }
+
+    tui-badge.status-badge-processing {
+      background-color: #D1ECF1 !important;
+      color: #0C5460 !important;
+      border: 1px solid #BEE5EB !important;
+    }
+
+    tui-badge.status-badge-failed {
+      background-color: #F8D7DA !important;
+      color: #721C24 !important;
+      border: 1px solid #F5C6CB !important;
     }
   `]
 })
@@ -740,6 +936,22 @@ export class ProjectDetailComponent implements OnInit {
   lightboxOpen = signal(false);
   lightboxImageUrl = signal('');
   lightboxImageName = signal('');
+
+  // Lightbox zoom state
+  zoomLevel = signal(1.0);
+
+  // Drag-to-pan state
+  isDragging = signal(false);
+  dragStartX = signal(0);
+  dragStartY = signal(0);
+  scrollStartX = signal(0);
+  scrollStartY = signal(0);
+
+  // Gallery navigation state
+  currentVisualizationIndex = signal(0);
+
+  // Short link mode tracking
+  isShortLinkMode = signal(false);
 
   projectId: string | null = null;
 
@@ -787,6 +999,10 @@ export class ProjectDetailComponent implements OnInit {
   loadProjectByShortLink(shortLink: string): void {
     this.loading.set(true);
     this.error.set(null);
+
+    // Enable short link mode
+    this.isShortLinkMode.set(true);
+    sessionStorage.setItem('short_link_mode', 'true');
 
     this.apiService.getProjectByShortLink(shortLink).subscribe({
       next: (project) => {
@@ -928,15 +1144,160 @@ export class ProjectDetailComponent implements OnInit {
     }
   }
 
-  openLightbox(filename: string): void {
-    this.lightboxImageUrl.set(this.getVisualizationUrl(filename));
-    this.lightboxImageName.set(filename);
+  openLightbox(index: number): void {
+    const viz = this.visualizations()[index];
+    if (!viz) return;
+
+    this.currentVisualizationIndex.set(index);
+    this.lightboxImageUrl.set(this.getVisualizationUrl(viz.filename));
+    this.lightboxImageName.set(viz.filename);
     this.lightboxOpen.set(true);
+    this.resetZoom(); // Reset zoom when opening new image
   }
 
   closeLightbox(): void {
     this.lightboxOpen.set(false);
     this.lightboxImageUrl.set('');
     this.lightboxImageName.set('');
+    this.resetZoom();
+  }
+
+  // Zoom methods
+  zoomIn(): void {
+    const current = this.zoomLevel();
+    if (current < 3.0) {
+      this.zoomLevel.set(Math.min(current + 0.25, 3.0));
+    }
+  }
+
+  zoomOut(): void {
+    const current = this.zoomLevel();
+    if (current > 1.0) {
+      this.zoomLevel.set(Math.max(current - 0.25, 1.0));
+    }
+  }
+
+  resetZoom(): void {
+    this.zoomLevel.set(1.0);
+  }
+
+  // Drag-to-pan methods
+  onImageMouseDown(event: MouseEvent, container: HTMLElement): void {
+    // Only enable drag if zoomed in
+    if (this.zoomLevel() > 1.0) {
+      event.preventDefault(); // Prevent default image drag behavior
+      this.isDragging.set(true);
+      this.dragStartX.set(event.clientX);
+      this.dragStartY.set(event.clientY);
+      this.scrollStartX.set(container.scrollLeft);
+      this.scrollStartY.set(container.scrollTop);
+    }
+  }
+
+  onImageMouseMove(event: MouseEvent, container: HTMLElement): void {
+    if (this.isDragging() && this.zoomLevel() > 1.0) {
+      event.preventDefault();
+      const deltaX = event.clientX - this.dragStartX();
+      const deltaY = event.clientY - this.dragStartY();
+      container.scrollLeft = this.scrollStartX() - deltaX;
+      container.scrollTop = this.scrollStartY() - deltaY;
+    }
+  }
+
+  onImageMouseUp(): void {
+    this.isDragging.set(false);
+  }
+
+  onImageMouseLeave(): void {
+    this.isDragging.set(false);
+  }
+
+  // Gallery navigation methods
+  nextImage(): void {
+    const current = this.currentVisualizationIndex();
+    const total = this.visualizations().length;
+    if (current < total - 1) {
+      this.openLightbox(current + 1);
+    }
+  }
+
+  previousImage(): void {
+    const current = this.currentVisualizationIndex();
+    if (current > 0) {
+      this.openLightbox(current - 1);
+    }
+  }
+
+  // Keyboard shortcuts
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if (this.lightboxOpen()) {
+      switch(event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          this.previousImage();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          this.nextImage();
+          break;
+        case 'Escape':
+          event.preventDefault();
+          this.closeLightbox();
+          break;
+        case '+':
+        case '=':
+          event.preventDefault();
+          this.zoomIn();
+          break;
+        case '-':
+        case '_':
+          event.preventDefault();
+          this.zoomOut();
+          break;
+        case '0':
+          event.preventDefault();
+          this.resetZoom();
+          break;
+      }
+    }
+  }
+
+  // Mouse wheel zoom relative to cursor position
+  onImageMouseWheel(event: WheelEvent, container: HTMLElement): void {
+    event.preventDefault();
+
+    // Get container dimensions and mouse position
+    const rect = container.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Current zoom and scroll
+    const oldZoom = this.zoomLevel();
+    const scrollX = container.scrollLeft;
+    const scrollY = container.scrollTop;
+
+    // Calculate new zoom
+    let newZoom = oldZoom;
+    if (event.deltaY < 0) {
+      newZoom = Math.min(oldZoom + 0.25, 3.0);
+    } else {
+      newZoom = Math.max(oldZoom - 0.25, 1.0);
+    }
+
+    if (newZoom === oldZoom) return; // No zoom change
+
+    // Calculate zoom ratio
+    const zoomRatio = newZoom / oldZoom;
+
+    // Apply zoom
+    this.zoomLevel.set(newZoom);
+
+    // Adjust scroll to keep point under cursor in place
+    // Use requestAnimationFrame for smooth update
+    requestAnimationFrame(() => {
+      container.scrollLeft = (scrollX + mouseX) * zoomRatio - mouseX;
+      container.scrollTop = (scrollY + mouseY) * zoomRatio - mouseY;
+    });
   }
 }

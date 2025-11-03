@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/guards/admin.guard';
+import { shortLinkGuard } from './core/guards/short-link.guard';
+import { enableShortLinkModeGuard } from './core/guards/enable-short-link-mode.guard';
 
 export const routes: Routes = [
   {
@@ -7,7 +10,20 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./features/auth/forbidden/forbidden.component').then(
+        (m) => m.ForbiddenComponent
+      ),
+  },
+  {
     path: 'projects',
+    canActivate: [shortLinkGuard],
     loadComponent: () =>
       import('./features/projects/list/projects-list.component').then(
         (m) => m.ProjectsListComponent
@@ -22,6 +38,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
+    canActivate: [adminGuard, shortLinkGuard],
     children: [
       {
         path: 'upload',
@@ -46,6 +63,7 @@ export const routes: Routes = [
   },
   {
     path: 's/:shortLink',
+    canActivate: [enableShortLinkModeGuard],
     loadComponent: () =>
       import('./features/projects/detail/project-detail.component').then(
         (m) => m.ProjectDetailComponent

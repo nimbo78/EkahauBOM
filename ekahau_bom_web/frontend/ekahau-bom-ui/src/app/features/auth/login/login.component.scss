@@ -1,0 +1,65 @@
+.login-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f7fa;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 1.5rem;
+}
+
+.error-notification {
+  margin: 0;
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 0.75rem;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+// Header styling
+:host ::ng-deep {
+  .login-card header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+
+  .login-card header span[tuiSubtitle] {
+    font-size: 15px;
+    color: #6b7280;
+    font-weight: 400;
+  }
+
+  // Fix floating label position - move it higher above the input when focused or filled
+  tui-textfield:has(input:focus) [tuiLabel],
+  tui-textfield:has(input:not(:placeholder-shown)) [tuiLabel] {
+    transform: translateY(-1.2rem) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+}

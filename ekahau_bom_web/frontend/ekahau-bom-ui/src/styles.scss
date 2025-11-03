@@ -8,3 +8,9 @@ html, body {
 }
 
 /* Taiga UI styles will be configured when we add components */
+
+/* Add padding to all input fields for better text visibility */
+input[tuiTextfield] {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}

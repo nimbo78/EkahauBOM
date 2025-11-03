@@ -1,0 +1,42 @@
+```mermaid
+flowchart TD
+    Start([Пользователь открывает приложение]) --> CheckAuth{Токен<br/>авторизации<br/>существует?}
+
+    CheckAuth -->|Нет| LoginForm[Показать форму входа]
+    CheckAuth -->|Да| ValidateToken{Токен<br/>валиден?}
+
+    LoginForm --> EnterCreds[Ввести логин и пароль]
+    EnterCreds --> SubmitLogin[Отправить данные на сервер]
+
+    SubmitLogin --> ServerCheck{Сервер:<br/>Проверка<br/>учетных данных}
+
+    ServerCheck -->|Неверные данные| ShowError[Показать ошибку]
+    ShowError --> LoginForm
+
+    ServerCheck -->|Верные данные| GenerateToken[Сервер генерирует JWT токен]
+    GenerateToken --> SaveToken[Сохранить токен локально]
+    SaveToken --> LoadApp[Загрузить приложение]
+
+    ValidateToken -->|Токен истек| RefreshToken{Refresh token<br/>доступен?}
+    ValidateToken -->|Токен валиден| LoadApp
+
+    RefreshToken -->|Да| RequestNewToken[Запросить новый токен]
+    RefreshToken -->|Нет| LoginForm
+
+    RequestNewToken --> ServerRefresh{Сервер:<br/>Обновить токен}
+    ServerRefresh -->|Успешно| SaveNewToken[Сохранить новый токен]
+    ServerRefresh -->|Ошибка| LoginForm
+
+    SaveNewToken --> LoadApp
+
+    LoadApp --> Dashboard([Главная страница приложения])
+
+    style Start fill:#90EE90
+    style Dashboard fill:#87CEEB
+    style ShowError fill:#FFB6C1
+    style CheckAuth fill:#FFE4B5
+    style ValidateToken fill:#FFE4B5
+    style ServerCheck fill:#FFE4B5
+    style RefreshToken fill:#FFE4B5
+    style ServerRefresh fill:#FFE4B5
+```

@@ -1,0 +1,62 @@
+<div class="login-container">
+  <div tuiCardLarge tuiAppearance="floating" class="login-card">
+    <header tuiHeader>
+      <h1 tuiTitle>
+        Admin Login
+        <span tuiSubtitle>Sign in to access the admin panel</span>
+      </h1>
+    </header>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Username Field -->
+      <tui-textfield>
+        <label tuiLabel>Username</label>
+        <input
+          tuiTextfield
+          type="text"
+          formControlName="username"
+          placeholder="Enter username"
+          [invalid]="!!(loginForm.get('username')?.invalid && loginForm.get('username')?.touched)"
+        />
+        <tui-icon icon="@tui.user" />
+      </tui-textfield>
+
+      <!-- Password Field -->
+      <tui-textfield>
+        <label tuiLabel>Password</label>
+        <input
+          tuiTextfield
+          type="password"
+          formControlName="password"
+          placeholder="Enter password"
+          [invalid]="!!(loginForm.get('password')?.invalid && loginForm.get('password')?.touched)"
+        />
+        <tui-icon tuiPassword />
+      </tui-textfield>
+
+      <!-- Error Notification -->
+      <tui-notification
+        *ngIf="error()"
+        appearance="negative"
+        size="m"
+        class="error-notification"
+      >
+        {{ error() }}
+      </tui-notification>
+
+      <!-- Submit Button with Loader -->
+      <tui-loader [showLoader]="loading()" [inheritColor]="false" [overlay]="false">
+        <button
+          tuiButton
+          type="submit"
+          appearance="primary"
+          size="l"
+          [disabled]="loginForm.invalid || loading()"
+          class="login-button"
+        >
+          {{ loading() ? 'Signing in...' : 'Sign In' }}
+        </button>
+      </tui-loader>
+    </form>
+  </div>
+</div>

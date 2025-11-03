@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, signal, OnInit } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
 import { TuiRoot, TuiIcon } from '@taiga-ui/core';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +17,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <tui-root>
       <div class="app-container">
-        <header class="app-header">
+        <header *ngIf="shouldShowHeader()" class="app-header">
           <div class="header-content">
             <div class="logo-section">
               <tui-icon icon="@tui.database" class="logo-icon"></tui-icon>
@@ -58,6 +59,40 @@ import { CommonModule } from '@angular/common';
   `,
   styleUrl: './app.scss'
 })
-export class App {
+export class App implements OnInit {
   title = 'Ekahau BOM Registry';
+  isShortLinkMode = signal(false);
+
+  constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    // Check short link mode on init
+    this.checkShortLinkMode();
+
+    // Check on every navigation
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.checkShortLinkMode();
+      });
+  }
+
+  private checkShortLinkMode(): void {
+    const isShortLink = sessionStorage.getItem('short_link_mode') === 'true';
+    this.isShortLinkMode.set(isShortLink);
+  }
+
+  shouldShowHeader(): boolean {
+    // Don't show header in short link mode
+    if (this.isShortLinkMode()) {
+      return false;
+    }
+
+    // Don't show header on login page
+    if (this.router.url === '/login') {
+      return false;
+    }
+
+    return true;
+  }
 }

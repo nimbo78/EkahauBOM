@@ -1,0 +1,42 @@
+```mermaid
+flowchart TD
+    Start([Старт]) --> CheckAuth{Токен<br/>есть?}
+
+    CheckAuth -->|Нет| Login[Форма входа]
+    CheckAuth -->|Да| Validate{Валиден?}
+
+    Login --> Enter[Ввод данных]
+    Enter --> Submit[Отправка]
+
+    Submit --> Check{Проверка}
+
+    Check -->|Ошибка| Error[Ошибка входа]
+    Error --> Login
+
+    Check -->|OK| GenToken[Генерация JWT]
+    GenToken --> Save[Сохранение]
+    Save --> Load[Загрузка]
+
+    Validate -->|Истек| Refresh{Refresh?}
+    Validate -->|OK| Load
+
+    Refresh -->|Да| NewToken[Обновление]
+    Refresh -->|Нет| Login
+
+    NewToken --> CheckRefresh{Проверка}
+    CheckRefresh -->|OK| SaveNew[Сохранение]
+    CheckRefresh -->|Ошибка| Login
+
+    SaveNew --> Load
+
+    Load --> End([Приложение])
+
+    style Start fill:#90EE90,stroke:#333,stroke-width:2px
+    style End fill:#87CEEB,stroke:#333,stroke-width:2px
+    style Error fill:#FFB6C1,stroke:#333,stroke-width:2px
+    style CheckAuth fill:#FFE4B5,stroke:#333,stroke-width:2px
+    style Validate fill:#FFE4B5,stroke:#333,stroke-width:2px
+    style Check fill:#FFE4B5,stroke:#333,stroke-width:2px
+    style Refresh fill:#FFE4B5,stroke:#333,stroke-width:2px
+    style CheckRefresh fill:#FFE4B5,stroke:#333,stroke-width:2px
+```

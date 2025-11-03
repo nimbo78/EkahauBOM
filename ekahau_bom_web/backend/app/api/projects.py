@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.auth import verify_admin
 from app.models import ProcessingStatus, ProjectListItem, ProjectMetadata
 from app.services.index import index_service
 from app.services.storage import StorageService
@@ -85,8 +86,10 @@ async def get_project_by_short_link(short_link: str) -> ProjectMetadata:
 
 
 @router.delete("/{project_id}")
-async def delete_project(project_id: UUID) -> dict:
+async def delete_project(project_id: UUID, _admin: str = Depends(verify_admin)) -> dict:
     """Delete project.
+
+    Requires admin authentication.
 
     Args:
         project_id: Project UUID

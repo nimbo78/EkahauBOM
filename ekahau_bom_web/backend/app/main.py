@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import projects, reports, upload
+from app.api import auth, projects, reports, upload
 from app.config import settings
 from app.services.index import index_service
 
@@ -44,6 +44,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth.router)  # Auth already has /api/auth prefix
 app.include_router(upload.router, prefix=settings.api_prefix)
 app.include_router(projects.router, prefix=settings.api_prefix)
 app.include_router(reports.router, prefix=settings.api_prefix)

@@ -41,6 +41,17 @@ def temp_storage(tmp_path, monkeypatch):
 
 
 @pytest.fixture
+def admin_headers():
+    """Get admin authentication headers."""
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "change_me_in_production"},
+    )
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
 def sample_project(temp_storage):
     """Create a sample project in storage and index."""
     project_id = uuid4()
@@ -157,7 +168,7 @@ def test_get_project_stats(temp_storage, sample_project):
     assert data["failed"] == 0
 
 
-def test_upload_project(temp_storage):
+def test_upload_project(temp_storage, admin_headers):
     """Test uploading a .esx file."""
     # Create a minimal .esx file (ZIP)
     esx_content = io.BytesIO()
@@ -168,6 +179,7 @@ def test_upload_project(temp_storage):
     response = client.post(
         "/api/upload",
         files={"file": ("test.esx", esx_content, "application/octet-stream")},
+        headers=admin_headers,
     )
 
     assert response.status_code == 200
@@ -178,11 +190,12 @@ def test_upload_project(temp_storage):
     assert "test.esx" in data["message"]
 
 
-def test_upload_invalid_file(temp_storage):
+def test_upload_invalid_file(temp_storage, admin_headers):
     """Test uploading non-.esx file."""
     response = client.post(
         "/api/upload",
         files={"file": ("test.txt", io.BytesIO(b"not an esx file"), "text/plain")},
+        headers=admin_headers,
     )
 
     assert response.status_code == 400
@@ -190,7 +203,7 @@ def test_upload_invalid_file(temp_storage):
     assert "detail" in data
 
 
-def test_upload_large_file(temp_storage):
+def test_upload_large_file(temp_storage, admin_headers):
     """Test uploading file exceeding size limit."""
     # Create file larger than 500MB (simulate by setting large size)
     large_file = io.BytesIO(b"x" * 1000)  # Small file for testing
@@ -198,13 +211,14 @@ def test_upload_large_file(temp_storage):
     response = client.post(
         "/api/upload",
         files={"file": ("large.esx", large_file, "application/octet-stream")},
+        headers=admin_headers,
     )
 
     # Should succeed for small file (real large file test would need actual large content)
     assert response.status_code in [200, 400]
 
 
-def test_delete_project(temp_storage, sample_project):
+def test_delete_project(temp_storage, sample_project, admin_headers):
     """Test deleting a project."""
     project_id = sample_project.project_id
 
@@ -213,7 +227,7 @@ def test_delete_project(temp_storage, sample_project):
     assert response.status_code == 200
 
     # Delete project
-    response = client.delete(f"/api/projects/{project_id}")
+    response = client.delete(f"/api/projects/{project_id}", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "Project deleted successfully"
@@ -223,9 +237,9 @@ def test_delete_project(temp_storage, sample_project):
     assert response.status_code == 404
 
 
-def test_delete_project_not_found():
+def test_delete_project_not_found(admin_headers):
     """Test deleting non-existent project."""
-    response = client.delete(f"/api/projects/{uuid4()}")
+    response = client.delete(f"/api/projects/{uuid4()}", headers=admin_headers)
     assert response.status_code == 404
 
 

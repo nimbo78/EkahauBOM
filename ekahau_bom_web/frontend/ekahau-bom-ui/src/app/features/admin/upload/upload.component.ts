@@ -6,6 +6,7 @@ import { TuiButton, TuiIcon, TuiLink, TuiNotification, TuiLoader } from '@taiga-
 import { TuiFiles, type TuiFileLike } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { finalize, Subscription } from 'rxjs';
+import { UploadResponse } from '../../../core/models/project.model';
 
 @Component({
   selector: 'app-upload',
@@ -56,6 +57,46 @@ import { finalize, Subscription } from 'rxjs';
         <div *ngIf="uploading()" class="upload-progress">
           <tui-loader size="l"></tui-loader>
           <p>Uploading file...</p>
+        </div>
+
+        <!-- Duplicate project confirmation -->
+        <div *ngIf="showDuplicateConfirm()" class="duplicate-confirm">
+          <tui-notification status="warning" class="notification">
+            <div class="duplicate-content">
+              <h3>Duplicate Project Detected</h3>
+              <p>
+                Project "{{ duplicateResponse()?.existing_project?.project_name || duplicateResponse()?.existing_project?.filename }}" already exists.
+              </p>
+              <p>What would you like to do?</p>
+            </div>
+          </tui-notification>
+
+          <div class="action-buttons">
+            <button
+              tuiButton
+              appearance="primary"
+              size="l"
+              (click)="handleUpdateProject()"
+            >
+              Update Existing Project
+            </button>
+            <button
+              tuiButton
+              appearance="secondary"
+              size="l"
+              (click)="handleCreateNew()"
+            >
+              Create New Project
+            </button>
+            <button
+              tuiButton
+              appearance="flat"
+              size="l"
+              (click)="cancelDuplicate()"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
 
         <!-- Success state -->
@@ -196,6 +237,23 @@ import { finalize, Subscription } from 'rxjs';
         color: var(--tui-text-02);
       }
 
+      .duplicate-confirm {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .duplicate-content {
+        h3 {
+          margin-bottom: 8px;
+          font-weight: 600;
+        }
+
+        p {
+          margin: 8px 0;
+        }
+      }
+
       .upload-success {
         display: flex;
         flex-direction: column;
@@ -250,9 +308,14 @@ export class UploadComponent implements OnInit, OnDestroy {
 
   // Signals for reactive state
   uploadedFile = signal<TuiFileLike | null>(null);
-  uploadResponse = signal<any>(null);
+  uploadResponse = signal<UploadResponse | null>(null);
   uploading = signal(false);
   error = signal<string | null>(null);
+
+  // Duplicate project handling
+  showDuplicateConfirm = signal(false);
+  duplicateResponse = signal<UploadResponse | null>(null);
+  pendingFile = signal<File | null>(null);
 
   ngOnInit(): void {
     console.log('UploadComponent initialized');
@@ -312,8 +375,17 @@ export class UploadComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           console.log('Upload success:', response);
-          this.uploadedFile.set(file);
-          this.uploadResponse.set(response);
+
+          // Check if project with same name already exists
+          if (response.exists && response.existing_project) {
+            console.log('Project already exists:', response.existing_project);
+            this.pendingFile.set(file);
+            this.showDuplicateDialog(response);
+          } else {
+            // New project created successfully
+            this.uploadedFile.set(file);
+            this.uploadResponse.set(response);
+          }
         },
         error: (err) => {
           console.error('Upload error:', err);
@@ -340,6 +412,70 @@ export class UploadComponent implements OnInit, OnDestroy {
     this.uploadedFile.set(null);
     this.uploadResponse.set(null);
     this.error.set(null);
+    this.pendingFile.set(null);
+    this.showDuplicateConfirm.set(false);
+    this.duplicateResponse.set(null);
+  }
+
+  private showDuplicateDialog(response: UploadResponse): void {
+    // Show confirmation UI with signals instead of dialog service
+    this.duplicateResponse.set(response);
+    this.showDuplicateConfirm.set(true);
+  }
+
+  handleUpdateProject(): void {
+    const duplicate = this.duplicateResponse();
+    const file = this.pendingFile();
+    if (!file || !duplicate?.existing_project) {
+      this.error.set('File not found for update');
+      return;
+    }
+
+    console.log('Updating existing project:', duplicate.existing_project.project_id);
+    this.uploading.set(true);
+    this.error.set(null);
+    this.showDuplicateConfirm.set(false);
+
+    this.apiService
+      .updateProject(duplicate.existing_project.project_id, file)
+      .pipe(
+        finalize(() => {
+          this.uploading.set(false);
+          this.pendingFile.set(null);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Project updated successfully:', response);
+          this.uploadedFile.set(file);
+          this.uploadResponse.set(response);
+        },
+        error: (err) => {
+          console.error('Update error:', err);
+          this.error.set(
+            err.error?.detail || 'Failed to update project. Please try again.'
+          );
+          this.fileControl.reset();
+        },
+      });
+  }
+
+  handleCreateNew(): void {
+    // For now, just show an error message
+    // TODO: Implement force_new parameter in backend
+    this.showDuplicateConfirm.set(false);
+    this.error.set(
+      'Creating new project with duplicate name is not yet implemented. Please rename your project in Ekahau or update the existing project.'
+    );
+    this.fileControl.reset();
+    this.pendingFile.set(null);
+  }
+
+  cancelDuplicate(): void {
+    this.showDuplicateConfirm.set(false);
+    this.duplicateResponse.set(null);
+    this.pendingFile.set(null);
+    this.fileControl.reset();
   }
 
   getShortLinkUrl(): string {

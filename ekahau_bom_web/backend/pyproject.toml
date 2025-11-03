@@ -10,6 +10,7 @@ dependencies = [
     "aiofiles>=23.2.0",          # async file operations
     "pydantic>=2.5.0",
     "pydantic-settings>=2.0.0",  # for Settings
+    "pyjwt>=2.8.0",              # JWT authentication
     "ekahau-bom>=2.8.0",         # основной пакет
 ]
 

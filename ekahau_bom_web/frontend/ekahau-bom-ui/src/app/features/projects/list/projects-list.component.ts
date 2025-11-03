@@ -17,6 +17,7 @@ import {
 } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   ProjectListItem,
   ProjectStats,
@@ -45,7 +46,13 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
     <div class="projects-container">
       <div class="page-header">
         <h1 class="page-title">Projects</h1>
-        <button tuiButton appearance="primary" size="l" routerLink="/admin/upload">
+        <button
+          *ngIf="isAuthenticated()"
+          tuiButton
+          appearance="primary"
+          size="l"
+          routerLink="/admin/upload"
+        >
           <tui-icon icon="@tui.plus"></tui-icon>
           Upload New Project
         </button>
@@ -53,30 +60,51 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
       <!-- Statistics cards -->
       <div class="stats-cards" *ngIf="stats()">
-        <div class="stat-card">
+        <div
+          class="stat-card"
+          [class.active]="statusFilter() === null"
+          (click)="setStatusFilter(null)"
+        >
           <div class="stat-value">{{ stats()?.total || 0 }}</div>
           <div class="stat-label">Total Projects</div>
         </div>
-        <div class="stat-card pending">
+        <div
+          class="stat-card pending"
+          [class.active]="statusFilter() === ProcessingStatus.PENDING"
+          (click)="setStatusFilter(ProcessingStatus.PENDING)"
+        >
           <div class="stat-value">{{ stats()?.pending || 0 }}</div>
           <div class="stat-label">Pending</div>
         </div>
-        <div class="stat-card processing">
+        <div
+          class="stat-card processing"
+          [class.active]="statusFilter() === ProcessingStatus.PROCESSING"
+          (click)="setStatusFilter(ProcessingStatus.PROCESSING)"
+        >
           <div class="stat-value">{{ stats()?.processing || 0 }}</div>
           <div class="stat-label">Processing</div>
         </div>
-        <div class="stat-card completed">
+        <div
+          class="stat-card completed"
+          [class.active]="statusFilter() === ProcessingStatus.COMPLETED"
+          (click)="setStatusFilter(ProcessingStatus.COMPLETED)"
+        >
           <div class="stat-value">{{ stats()?.completed || 0 }}</div>
           <div class="stat-label">Completed</div>
         </div>
-        <div class="stat-card failed" *ngIf="(stats()?.failed || 0) > 0">
+        <div
+          class="stat-card failed"
+          *ngIf="(stats()?.failed || 0) > 0"
+          [class.active]="statusFilter() === ProcessingStatus.FAILED"
+          (click)="setStatusFilter(ProcessingStatus.FAILED)"
+        >
           <div class="stat-value">{{ stats()?.failed || 0 }}</div>
           <div class="stat-label">Failed</div>
         </div>
       </div>
 
-      <!-- Search and filters -->
-      <div class="filters-row">
+      <!-- Search -->
+      <div class="search-row">
         <div class="search-input">
           <tui-textfield>
             <input
@@ -86,41 +114,6 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
               type="text"
             />
           </tui-textfield>
-        </div>
-
-        <div class="status-filters">
-          <button
-            tuiButton
-            [appearance]="statusFilter() === null ? 'primary' : 'secondary'"
-            size="m"
-            (click)="setStatusFilter(null)"
-          >
-            All
-          </button>
-          <button
-            tuiButton
-            [appearance]="statusFilter() === ProcessingStatus.PENDING ? 'primary' : 'secondary'"
-            size="m"
-            (click)="setStatusFilter(ProcessingStatus.PENDING)"
-          >
-            Pending
-          </button>
-          <button
-            tuiButton
-            [appearance]="statusFilter() === ProcessingStatus.PROCESSING ? 'primary' : 'secondary'"
-            size="m"
-            (click)="setStatusFilter(ProcessingStatus.PROCESSING)"
-          >
-            Processing
-          </button>
-          <button
-            tuiButton
-            [appearance]="statusFilter() === ProcessingStatus.COMPLETED ? 'primary' : 'secondary'"
-            size="m"
-            (click)="setStatusFilter(ProcessingStatus.COMPLETED)"
-          >
-            Completed
-          </button>
         </div>
       </div>
 
@@ -166,6 +159,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
               <td>
                 <tui-badge
                   [appearance]="getStatusAppearance(project.processing_status)"
+                  [class]="'status-badge-' + project.processing_status.toLowerCase()"
                   size="s"
                 >
                   {{ project.processing_status }}
@@ -195,9 +189,10 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                     <tui-icon icon="@tui.eye"></tui-icon>
                   </button>
                   <button
-                    *ngIf="project.processing_status === ProcessingStatus.PENDING ||
-                           project.processing_status === ProcessingStatus.COMPLETED ||
-                           project.processing_status === ProcessingStatus.FAILED"
+                    *ngIf="isAuthenticated() &&
+                           (project.processing_status === ProcessingStatus.PENDING ||
+                            project.processing_status === ProcessingStatus.COMPLETED ||
+                            project.processing_status === ProcessingStatus.FAILED)"
                     tuiButton
                     appearance="flat"
                     size="s"
@@ -209,6 +204,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                     <tui-icon icon="@tui.settings"></tui-icon>
                   </button>
                   <button
+                    *ngIf="isAuthenticated()"
                     tuiButton
                     appearance="flat"
                     size="s"
@@ -234,7 +230,13 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
           <p *ngIf="!searchControl.value && !statusFilter()">
             Upload your first project to get started
           </p>
-          <button tuiButton appearance="primary" size="m" routerLink="/admin/upload">
+          <button
+            *ngIf="isAuthenticated()"
+            tuiButton
+            appearance="primary"
+            size="m"
+            routerLink="/admin/upload"
+          >
             <tui-icon icon="@tui.plus"></tui-icon>
             Upload Project
           </button>
@@ -276,26 +278,58 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       text-align: center;
       border: 2px solid transparent;
       transition: all 0.3s;
+      cursor: pointer;
+      user-select: none;
 
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
 
+      &.active {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+      }
+
       &.pending {
         border-color: var(--tui-warning);
+
+        &.active {
+          background: rgba(255, 193, 7, 0.1);
+          border-color: var(--tui-warning);
+        }
       }
 
       &.processing {
         border-color: var(--tui-info);
+
+        &.active {
+          background: rgba(13, 110, 253, 0.1);
+          border-color: var(--tui-info);
+        }
       }
 
       &.completed {
         border-color: var(--tui-success);
+
+        &.active {
+          background: rgba(25, 135, 84, 0.1);
+          border-color: var(--tui-success);
+        }
       }
 
       &.failed {
         border-color: var(--tui-error);
+
+        &.active {
+          background: rgba(220, 53, 69, 0.1);
+          border-color: var(--tui-error);
+        }
+      }
+
+      &:not(.pending):not(.processing):not(.completed):not(.failed).active {
+        background: rgba(82, 110, 211, 0.1);
+        border-color: var(--tui-primary);
       }
     }
 
@@ -311,21 +345,12 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       color: var(--tui-text-02);
     }
 
-    .filters-row {
-      display: flex;
-      gap: 2rem;
-      align-items: center;
+    .search-row {
       margin-bottom: 2rem;
     }
 
     .search-input {
-      flex: 1;
       max-width: 400px;
-    }
-
-    .status-filters {
-      display: flex;
-      gap: 0.5rem;
     }
 
     .loading-state {
@@ -381,6 +406,31 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       gap: 0.25rem;
     }
 
+    // Color-coded status badges
+    tui-badge.status-badge-completed {
+      background-color: #D4EDDA !important;
+      color: #155724 !important;
+      border: 1px solid #C3E6CB !important;
+    }
+
+    tui-badge.status-badge-pending {
+      background-color: #FFF3CD !important;
+      color: #856404 !important;
+      border: 1px solid #FFEAA7 !important;
+    }
+
+    tui-badge.status-badge-processing {
+      background-color: #D1ECF1 !important;
+      color: #0C5460 !important;
+      border: 1px solid #BEE5EB !important;
+    }
+
+    tui-badge.status-badge-failed {
+      background-color: #F8D7DA !important;
+      color: #721C24 !important;
+      border: 1px solid #F5C6CB !important;
+    }
+
     .empty-state {
       padding: 4rem 2rem;
       text-align: center;
@@ -410,6 +460,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 export class ProjectsListComponent implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
   private projectService = inject(ProjectService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   // Signals for component state
@@ -419,6 +470,7 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   filteredProjects = signal<ProjectListItem[]>([]);
   stats = signal<ProjectStats | null>(null);
   statusFilter = signal<ProcessingStatus | null>(null);
+  isAuthenticated = signal<boolean>(false);
 
   // Form controls
   searchControl = new FormControl('');
@@ -430,6 +482,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
   ProcessingStatus = ProcessingStatus;
 
   ngOnInit(): void {
+    // Check if user is authenticated
+    this.isAuthenticated.set(this.authService.isAuthenticated());
+
     this.loadProjects();
     this.loadStats();
     this.setupSearch();

@@ -114,6 +114,11 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -e ".[dev]"
+
+# Configure environment (see Configuration section below)
+cp .env.example .env
+# Edit .env with your settings
+
 uvicorn app.main:app --reload
 ```
 
@@ -125,6 +130,58 @@ npm start
 ```
 
 Access the application at http://localhost:4200
+
+## Configuration
+
+### ⚠️ Important: Default Credentials
+
+The application uses a `.env` file for configuration. **You must configure admin credentials before first use.**
+
+**Default credentials:**
+- Username: `admin`
+- Password: `EkahauAdmin`
+
+**To change credentials:**
+
+1. Copy the example configuration:
+   ```bash
+   cd backend
+   cp .env.example .env
+   ```
+
+2. Edit `backend/.env` file:
+   ```env
+   # Authentication & Security
+   ADMIN_USERNAME=your_username
+   ADMIN_PASSWORD=your_secure_password
+
+   # JWT Secret (generate with: python -c "import secrets; print(secrets.token_urlsafe(32))")
+   JWT_SECRET_KEY=your_generated_secret_key
+   ```
+
+3. Restart the backend server to apply changes
+
+### Configuration Options
+
+The `.env` file supports the following settings:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `ADMIN_USERNAME` | Admin panel login username | `admin` |
+| `ADMIN_PASSWORD` | Admin panel login password | `EkahauAdmin` |
+| `JWT_SECRET_KEY` | Secret key for JWT tokens | (must change in production) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration time | `480` (8 hours) |
+| `CORS_ORIGINS` | Allowed frontend origins | `["http://localhost:4200"]` |
+| `MAX_UPLOAD_SIZE` | Max file upload size (bytes) | `524288000` (500MB) |
+
+See [.env.example](backend/.env.example) for complete configuration reference.
+
+### 🔒 Security Notes
+
+- **Never commit `.env` file to git** - it's already in `.gitignore`
+- Change default credentials in production
+- Use strong, randomly generated JWT secret key
+- In production, consider using a proper database with password hashing
 
 ## Features
 

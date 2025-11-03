@@ -53,6 +53,8 @@ export interface UploadResponse {
   project_id: string;
   message: string;
   short_link?: string;
+  exists?: boolean; // True if project with same name already exists
+  existing_project?: ProjectListItem; // Details of existing project
 }
 
 export interface ProcessingRequest {

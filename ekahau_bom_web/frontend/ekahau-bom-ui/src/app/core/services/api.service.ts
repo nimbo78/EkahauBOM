@@ -28,6 +28,12 @@ export class ApiService {
     return this.http.post<UploadResponse>(`${this.apiUrl}/upload`, formData);
   }
 
+  updateProject(projectId: string, file: File): Observable<UploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.put<UploadResponse>(`${this.apiUrl}/upload/${projectId}/update`, formData);
+  }
+
   startProcessing(
     projectId: string,
     request: ProcessingRequest
