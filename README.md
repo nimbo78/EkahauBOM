@@ -1,1063 +1,351 @@
 # EkahauBOM
 
-> **Professional Bill of Materials (BOM) generator for Ekahau AI project files**
+> **Professional BOM generator + Web UI for Ekahau Wi-Fi projects**
 
-EkahauBOM extracts equipment data from Ekahau .esx project files and generates comprehensive, professional reports for Wi-Fi engineers, procurement teams, and installation crews.
+Generate comprehensive equipment reports from Ekahau .esx files via **CLI** or **Web Interface**. Built for Wi-Fi engineers, procurement teams, and installation crews.
 
-[![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/tests.yml)
-[![Code Quality](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml/badge.svg)](https://github.com/nimbo78/EkahauBOM/actions/workflows/code-quality.yml)
-[![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)
-[![GitHub Release](https://img.shields.io/github/v/release/nimbo78/EkahauBOM)](https://github.com/nimbo78/EkahauBOM/releases)
+[![Coverage: 86%](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](tests/)
+[![Release](https://img.shields.io/github/v/release/nimbo78/EkahauBOM)](https://github.com/nimbo78/EkahauBOM/releases)
 
 **English** | [Русский](README.ru.md)
 
 ---
 
-## 🌟 Key Features
+## 🌟 What's New in v3.0.0
 
-### 📊 **Multi-Format Export**
-- **CSV**: Simple, universally compatible format with aggregated and detailed views
-- **Excel**: Professional reports with multiple sheets, charts, formulas, and formatting
-- **HTML**: Interactive web reports with Chart.js visualizations and responsive design
-- **JSON**: Machine-readable format with complete metadata for API integrations
-- **PDF**: Print-ready professional reports with tables and statistics (requires WeasyPrint)
+### 🎉 Web UI - Centralized Project Registry
 
-### 📡 **Advanced Radio Analytics**
-- **Frequency band distribution** (2.4 GHz / 5 GHz / 6 GHz)
-- **Channel allocation** analysis with usage patterns
-- **Wi-Fi standards** detection (802.11a/b/g/n/ac/ax/be)
-- **TX power distribution** and recommendations
-- **Channel width** analysis (20/40/80/160 MHz)
+Upload, process, and share Ekahau projects via web browser:
 
-### 🔧 **Installation Parameters Export**
-- **Mounting height** for each access point
-- **Azimuth** (horizontal direction) for directional APs
-- **Tilt** (vertical angle) for optimal coverage
-- **Location coordinates** (X, Y) on floor plans
-- **Installation summary** with height recommendations
+- **Drag-and-drop upload** with real-time processing
+- **Project dashboard** with search and filters
+- **Floor plan visualizations** with zoom/pan
+- **Download reports** (CSV, Excel, HTML, PDF, JSON)
+- **Short link sharing** for easy collaboration
+- **No database required** - JSON-based storage
 
-### 💰 **Cost Calculation & Pricing**
-- Equipment pricing database (YAML configuration)
-- **Volume discounts** (5%-25% based on quantity)
-- Cost breakdown by:
-  - Vendor (Cisco, Aruba, etc.)
-  - Equipment type (APs, antennas)
-  - Floor/building
-- Custom discount support
-- Professional cost summary reports
-
-### 📄 **Project Metadata** _(New in v2.5.0)_
-- **Project information** extraction (name, customer, location, responsible person)
-- **Schema version** tracking
-- Metadata displayed in all export formats:
-  - CSV: Header comments with project info
-  - Excel: Dedicated "Project Information" section
-  - HTML: Formatted metadata card
-  - PDF: Professional cover page section
-  - JSON: Structured metadata object
-
-### 📝 **Map Notes Support** _(New in v2.6.0)_
-- **Text Notes** - annotations on floor plans with creation history
-  - Extract note text, author, and timestamp
-  - Link to image attachments
-- **Cable Notes** - cable routing paths
-  - Coordinate points defining cable routes
-  - Floor associations and color coding
-  - Link to descriptive text notes
-- **Picture Notes** - image markers on floor plans
-  - Location coordinates (x, y) on floor plans
-  - Link to associated text descriptions
-- **JSON Export** includes complete notes section:
-  - Full text notes with metadata (author, timestamp)
-  - Cable paths with all coordinate points
-  - Picture markers with floor locations
-  - Notes summary (totals by type)
-
-### 🔌 **Cable Infrastructure Analytics** _(New in v2.6.0)_
-- **Cable length calculation** - Euclidean distance from coordinate points
-  - Total cable length in project units and meters (with scale factor)
-  - Average, minimum, and maximum cable lengths
-  - Cable routes grouped by floor
-- **Cable Bill of Materials (BOM)**
-  - Cat6A UTP cable quantities (meters, rounded up)
-  - RJ45 connector counts (cables × 2)
-  - Cable route/run counts
-  - Customizable cable and connector types
-- **Cost estimation**
-  - Material costs with overage factor (default 20%)
-  - Installation labor costs
-  - Breakdown: cable_material, installation, total
-  - Customizable pricing per meter
-- **JSON Export** includes cable_infrastructure section:
-  - Complete metrics (total_cables, lengths, by floor)
-  - Bill of materials with all items
-- **CLI Analytics** - "Cable Infrastructure Analytics" display
-
-### 🗺️ **Floor Plan Visualization** _(New in v2.6.0, Enhanced in v2.7.0/2.8.0)_
-- **Visual floor plans** with AP placement overlay
-  - Extract floor plan background images from .esx files
-  - **Different shapes for mounting types** _(v2.7.0)_:
-    - 🔵 Ceiling-mounted APs: circles (traditional)
-    - ▭ Wall-mounted APs: rectangles oriented by azimuth direction
-    - ▪ Floor-mounted APs: squares
-  - AP markers match Ekahau color assignments
-  - **Automatic color legend** with AP count per color
-- **Azimuth Direction Arrows** _(New in v2.8.0!)_
-  - Optional arrows showing antenna direction
-  - Smart color selection for optimal contrast
-  - Particularly useful for wall-mounted and directional APs
-  - Enable with `--show-azimuth-arrows` flag
-- **True transparency support** _(v2.7.0)_
-  - APs without assigned colors: pale blue with 50% opacity
-  - Floor plan details show through transparent markers
-  - Alpha compositing for proper RGBA rendering
-- **Enhanced color support** _(v2.7.0)_
-  - Standard color names (Red, Blue, Green, Yellow, Orange, etc.)
-  - Automatic typo correction for duplicate characters
-  - Case-insensitive color matching
-- **Customizable visualization**
-  - Adjustable AP circle radius (default: 15px)
-  - Optional AP name labels
-  - Black borders for better visibility
-  - Auto-positioning for text labels
-- **CLI Integration**
-  - `--visualize-floor-plans` flag to enable
-  - `--ap-circle-radius N` to customize marker size
-  - `--no-ap-names` to hide AP labels
-  - `--show-azimuth-arrows` to display directional arrows _(New!)_
-  - `--ap-opacity 0.75` to set marker transparency (0.0-1.0, default: 1.0) _(New!)_
-- **Multi-floor support**
-  - Automatically processes all floors with APs
-  - Saved to `output/visualizations/` directory
-  - PNG format with high-quality output
-- **Requirements**
-  - Requires Pillow library: `pip install Pillow`
-  - Graceful degradation if not installed
-
-### 📶 **Network Settings & SSID Configuration** _(New in v2.7.0)_
-- **Network capacity settings** extraction from Ekahau projects
-  - SSID count per frequency band (2.4 GHz, 5 GHz, 6 GHz)
-  - Maximum associated clients per band
-  - RTS/CTS configuration status
-- **802.11 Data Rate Configuration**
-  - Data rate settings (R1, R2, R5.5, R6, R9, R11, R12, R18, R24, R36, R48, R54)
-  - Rate states: Mandatory, Supported, Disabled
-  - Summary by frequency band
-- **CLI Analytics** - "Network Configuration" section
-  - SSID configuration display per band
-  - Max clients per band
-  - Channel distribution (top 10 most used channels)
-- **JSON Export** includes network_settings section:
-  - SSID configuration summary
-  - Data rates summary per band
-  - Detailed band configuration with all data rates
-
-### 🏷️ **Tag Support & Filtering**
-- Full support for **Ekahau v10.2+ tags**
-- Filter by tags (Location, Zone, Building, etc.)
-- Group and analyze by tag values
-- Tag-based multi-dimensional grouping
-
-### 📈 **Coverage & Mounting Analytics**
-- **AP density** calculations (APs per 1000 m²)
-- **Mounting height statistics** (avg, min, max, variance)
-- **Height distribution** by ranges (< 2.5m, 2.5-3.5m, etc.)
-- **Azimuth & tilt** statistics for directional antennas
-- **Coverage area** estimations per AP
-
-### 🎯 **Flexible Filtering**
-Filter access points by:
-- Floor names
-- Colors (Ekahau color coding)
-- Vendors (Cisco, Aruba, Ruckus, etc.)
-- Models (specific AP models)
-- Tags (custom metadata)
-- Combinations with AND/OR logic
-
-### 📋 **Grouping & Statistics**
-- Group by floor, color, vendor, model, or tag
-- **Multi-dimensional grouping** (e.g., floor + color)
-- Percentage distributions
-- Count summaries
-- Pivot table-style reports in Excel
+[See Web UI Guide](#-web-ui-new-in-v300) →
 
 ---
 
-## 📦 Installation
+## Key Features
 
-### From Source
+### 📊 Reports & Analytics
 
-```bash
-# Clone the repository
-git clone https://github.com/htechno/EkahauBOM.git
-cd EkahauBOM
+- **5 export formats**: CSV, Excel, HTML, JSON, PDF
+- **Radio analytics**: Frequency bands, channels, TX power, Wi-Fi standards
+- **Cost calculation**: Equipment pricing with volume discounts
+- **Installation params**: Mounting height, azimuth, tilt, coordinates
+- **Cable infrastructure**: Length calculations, BOM, cost estimation
+- **Map notes**: Text notes, cable paths, picture markers
 
-# Install dependencies
-pip install -r requirements.txt
+### 🗺️ Floor Plan Visualizations
 
-# Optional: Install as package
-pip install -e .
-```
-
-### As Package
-
-```bash
-pip install -e .
-```
-
-After installation, use the `ekahau-bom` command globally:
-
-```bash
-ekahau-bom project.esx
-```
-
-### Optional: PDF Export Support
-
-PDF export requires WeasyPrint library and GTK3 system libraries.
-
-#### Linux (Ubuntu/Debian)
-```bash
-# Install system dependencies
-sudo apt-get install python3-pip python3-cffi python3-brotli libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfribidi0
-
-# Install WeasyPrint
-pip install weasyprint
-```
-
-#### macOS
-```bash
-# Install system dependencies via Homebrew
-brew install python3 cairo pango gdk-pixbuf libffi
-
-# Install WeasyPrint
-pip install weasyprint
-```
-
-#### Windows
-```bash
-# Step 1: Install WeasyPrint
-pip install weasyprint
-
-# Step 2: Download and install GTK3 Runtime
-# Download from: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
-# Run the installer and follow the installation wizard
-#
-# Step 3: Restart your terminal/command prompt
-```
-
-**Note:** Without GTK3 libraries, CSV, JSON, Excel, and HTML exports will work normally. PDF export will show a clear error message with installation instructions if GTK3 is not available.
+- **AP placement overlay** with Ekahau colors
+- **Azimuth arrows** for directional antennas
+- **Adjustable opacity** (10-100%)
+- **High-res PNG export** for documentation
 
 ---
 
 ## 🚀 Quick Start
 
-### Basic Usage
+### Option 1: Web UI (Recommended)
 
 ```bash
-# Generate BOM in CSV format (default)
-python EkahauBOM.py project.esx
+# Clone repository
+git clone https://github.com/nimbo78/EkahauBOM.git
+cd EkahauBOM
 
-# Or using installed command
+# Setup backend
+cd ekahau_bom_web/backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Setup frontend
+cd ../frontend/ekahau-bom-ui
+npm install
+
+# Run servers (2 terminals)
+# Terminal 1 - Backend
+cd ekahau_bom_web/backend
+uvicorn app.main:app --port 8001
+
+# Terminal 2 - Frontend
+cd ekahau_bom_web/frontend/ekahau-bom-ui
+npm start
+
+# Open http://localhost:4200
+```
+
+### Option 2: CLI Only
+
+```bash
+pip install ekahau-bom
+
+ekahau-bom myproject.esx \
+  --format csv,excel,html \
+  --visualize-floor-plans \
+  --show-azimuth-arrows
+```
+
+---
+
+## 🖥️ Web UI _(New in v3.0.0)_
+
+### Upload & Process
+
+![Upload Interface](docs/images/webui-upload.png)
+
+Drag-and-drop .esx files with instant upload and processing queue.
+
+### Project Dashboard
+
+![Projects List](docs/images/webui-projects.png)
+
+Search, filter, and manage all uploaded projects. Real-time status tracking.
+
+### Floor Plan Visualizations
+
+![Floor Plans](docs/images/webui-visualizations.png)
+
+Interactive floor plans with zoom/pan and lightbox modal for full-screen viewing.
+
+### Reports Download
+
+![Reports Tab](docs/images/webui-reports.png)
+
+Download reports in all formats directly from browser.
+
+### Configuration
+
+![Processing Config](docs/images/webui-processing.png)
+
+Configure all processing options via web interface:
+- Grouping (by model, floor, vendor, color, tag)
+- Output formats (CSV, Excel, HTML, PDF, JSON)
+- Visualizations with azimuth arrows and custom opacity
+- Real-time progress tracking
+
+---
+
+## 📖 CLI Usage
+
+### Basic Export
+
+```bash
+# Simple CSV export
 ekahau-bom project.esx
+
+# Multiple formats
+ekahau-bom project.esx --format csv,excel,html,pdf
+
+# Custom output directory
+ekahau-bom project.esx --output-dir ./reports
 ```
 
-Output (with Rich library installed):
-```
-╭─────────────────────────────────────────╮
-│ EkahauBOM - Bill of Materials Generator │
-│ Version 2.4.0                           │
-╰─────────────────────────────────────────╯
-
-Processing project: project.esx ✓
-
-✓ Processing completed successfully!
-
-Project Summary
-┌────────────────┬───────┐
-│ Metric         │ Count │
-├────────────────┼───────┤
-│ Access Points  │   45  │
-│ Antennas       │   90  │
-│ Radios         │   90  │
-│ Floors         │    3  │
-│ Unique Vendors │    2  │
-└────────────────┴───────┘
-
-✓ Reports saved to: output/
-```
-
-### Multi-Format Export
+### Grouping & Analytics
 
 ```bash
-# Export to Excel (recommended for full features)
-ekahau-bom project.esx --format excel
+# Group by AP model
+ekahau-bom project.esx --group-by model
 
-# Export to HTML (interactive web report)
-ekahau-bom project.esx --format html
+# Group by floor
+ekahau-bom project.esx --group-by floor
 
-# Export to PDF (print-ready report)
-ekahau-bom project.esx --format pdf
-
-# Export to all formats at once
-ekahau-bom project.esx --format csv,excel,html,json,pdf
+# Group by vendor
+ekahau-bom project.esx --group-by vendor
 ```
 
-### With Options
+### Floor Plan Visualizations
 
 ```bash
-# Specify output directory
-ekahau-bom project.esx --output-dir reports/
+# Generate floor plans with APs
+ekahau-bom project.esx --visualize-floor-plans
+
+# With azimuth arrows
+ekahau-bom project.esx \
+  --visualize-floor-plans \
+  --show-azimuth-arrows
+
+# Custom opacity (0.0-1.0)
+ekahau-bom project.esx \
+  --visualize-floor-plans \
+  --ap-opacity 0.4
+
+# Hide AP names on visualizations
+ekahau-bom project.esx \
+  --visualize-floor-plans \
+  --no-ap-names
+```
+
+### Advanced Options
+
+```bash
+# Custom project name (for reports)
+ekahau-bom project.esx --project-name "Office Building 2024"
+
+# Custom AP circle radius (for visualizations)
+ekahau-bom project.esx \
+  --visualize-floor-plans \
+  --ap-circle-radius 20
 
 # Enable verbose logging
 ekahau-bom project.esx --verbose
-
-# Save logs to file
-ekahau-bom project.esx --log-file processing.log
-
-# Use custom colors configuration
-ekahau-bom project.esx --colors-config my_colors.yaml
-
-# Generate floor plan visualizations
-ekahau-bom project.esx --visualize-floor-plans
-
-# Visualize with azimuth arrows for directional APs
-ekahau-bom project.esx --visualize-floor-plans --show-azimuth-arrows
-
-# Visualize with 75% transparent AP markers for better floor plan visibility
-ekahau-bom project.esx --visualize-floor-plans --ap-opacity 0.75 --show-azimuth-arrows
 ```
 
 ---
 
-## 📖 Usage Examples
+## 📁 Output Structure
 
-### 1. Filter by Floor
-
-Generate BOM only for specific floors:
-
-```bash
-ekahau-bom project.esx --filter-floor "Floor 1,Floor 2"
 ```
-
-### 2. Filter by Vendor
-
-Extract only Cisco equipment:
-
-```bash
-ekahau-bom project.esx --filter-vendor "Cisco"
-```
-
-### 3. Filter by Tags
-
-Filter by custom tags (Ekahau v10.2+):
-
-```bash
-ekahau-bom project.esx --filter-tag "Location:Building A"
-```
-
-### 4. Combine Filters
-
-Use multiple filters together:
-
-```bash
-ekahau-bom project.esx \
-  --filter-floor "Floor 1,Floor 2" \
-  --filter-vendor "Cisco,Aruba" \
-  --filter-color "Yellow"
-```
-
-### 5. Exclude Specific Items
-
-Exclude certain floors or colors:
-
-```bash
-ekahau-bom project.esx \
-  --exclude-floor "Basement" \
-  --exclude-color "Gray"
-```
-
-### 6. Grouping & Analytics
-
-Group access points and display statistics:
-
-```bash
-# Group by vendor
-ekahau-bom project.esx --group-by vendor
-
-# Group by floor with chart in Excel
-ekahau-bom project.esx --group-by floor --format excel
-
-# Group by custom tag
-ekahau-bom project.esx --group-by tag --tag-key "Location"
-```
-
-### 7. Cost Calculation
-
-Generate cost estimates with pricing:
-
-```bash
-# Use default pricing database
-ekahau-bom project.esx --calculate-cost
-
-# Apply custom discount
-ekahau-bom project.esx --calculate-cost --discount 15
-
-# Disable volume discounts
-ekahau-bom project.esx --calculate-cost --no-volume-discounts
-```
-
-### 8. Batch Processing
-
-Process multiple .esx files at once:
-
-```bash
-# Process all .esx files in a directory
-ekahau-bom --batch /path/to/projects/
-
-# Process recursively (including subdirectories)
-ekahau-bom --batch /path/to/projects/ --recursive
-
-# Batch processing with export format
-ekahau-bom --batch ./projects/ --format excel,pdf
-
-# Batch processing with filters
-ekahau-bom --batch ./projects/ \
-  --filter-vendor "Cisco" \
-  --format csv,excel
-```
-
-**Note:** When using batch mode, each project will be processed independently and outputs will be saved in the same directory structure or the specified `--output-dir`.
-
----
-
-## 📁 Output Files
-
-### CSV Export
-
-Creates multiple CSV files:
-
-1. **`project_access_points.csv`**
-   - Aggregated view: vendor, model, floor, color, tags, quantity
-
-2. **`project_access_points_detailed.csv`**
-   - Individual AP list with installation parameters:
-     - AP name
-     - Location (X, Y coordinates)
-     - Mounting height (m)
-     - Azimuth (degrees)
-     - Tilt (degrees)
-     - Enabled status
-
-3. **`project_antennas.csv`**
-   - Antenna models and quantities
-
-4. **`project_analytics.csv`** (if data available)
-   - Mounting metrics (avg/min/max height, azimuth, tilt)
-   - Height distribution by ranges
-   - Radio configuration analytics
-   - TX power distribution
-   - Installation summary
-
-### Excel Export
-
-Single workbook with multiple sheets:
-
-| Sheet | Content |
-|-------|---------|
-| **Summary** | Project overview, totals by vendor/floor |
-| **Access Points** | Aggregated AP list with tags |
-| **AP Installation Details** | Individual AP installation parameters |
-| **Antennas** | Antenna list with quantities |
-| **By Floor** | Floor distribution with pie chart |
-| **By Color** | Color distribution with bar chart |
-| **By Vendor** | Vendor distribution with pie chart |
-| **By Model** | Model distribution with chart |
-| **Radio Analytics** | Radio configuration charts (bands, standards, channels) |
-| **Mounting Analytics** | Height distribution and mounting statistics |
-| **Cost Breakdown** | Cost by vendor, equipment type, floor (if --calculate-cost) |
-
-**Features:**
-- Professional formatting with borders and colors
-- Auto-sized columns and frozen headers
-- Auto-filters on all tables
-- Charts and visualizations (pie, bar, column)
-- Number formatting (2 decimals for heights, 1 for angles)
-
-### HTML Export
-
-Single standalone HTML file with:
-
-- **Responsive design** (works on desktop, tablet, mobile)
-- **Interactive tables** (sortable, filterable)
-- **Chart.js visualizations** (pie, bar, line charts)
-- **Modern styling** (gradients, shadows, professional look)
-- **No external dependencies** (fully self-contained)
-- **Print-friendly** CSS
-
-Perfect for:
-- Presentations to clients
-- Email sharing
-- Web publishing
-- Project documentation
-
-### JSON Export
-
-Structured JSON with:
-
-```json
-{
-  "metadata": {
-    "project_name": "Office Building WiFi",
-    "generated_at": "2025-10-24T12:34:56",
-    "total_aps": 45,
-    "total_antennas": 90
-  },
-  "summary": {
-    "by_vendor": {...},
-    "by_floor": {...},
-    "by_color": {...}
-  },
-  "access_points": {
-    "aggregated": [...],
-    "details": [
-      {
-        "name": "AP-01",
-        "vendor": "Cisco",
-        "model": "C9120AXI",
-        "floor": "Floor 1",
-        "location": {"x": 10.5, "y": 20.3},
-        "installation": {
-          "mounting_height": 3.2,
-          "azimuth": 45.0,
-          "tilt": 10.0
-        },
-        "tags": [...]
-      }
-    ]
-  },
-  "radio_analytics": {...},
-  "mounting_analytics": {...},
-  "cost_breakdown": {...}
-}
-```
-
-Ideal for:
-- API integrations
-- Database imports
-- Automated workflows
-- Custom reporting tools
-
-### PDF Export
-
-Professional print-ready PDF document with:
-
-- **Print-optimized layout** (A4 page size with proper margins)
-- **Professional styling** with tables and statistics
-- **Summary statistics** (totals, distributions)
-- **Grouping tables** (by vendor, floor, color, model)
-- **Analytics sections** (mounting, radio configuration)
-- **Access points tables** (aggregated and detailed installation params)
-- **Page breaks** optimized for printing
-- **No external dependencies** (fully self-contained)
-
-Perfect for:
-- Client presentations and deliverables
-- Project documentation archives
-- Printed reports for field teams
-- Professional proposals
-- Stakeholder reviews
-
-**Note**: Requires WeasyPrint library (`pip install WeasyPrint>=60.0`)
-
----
-
-## ⚙️ Configuration
-
-### Configuration File
-
-EkahauBOM supports a central configuration file (`config/config.yaml`) to set default values for all options:
-
-```yaml
-# Export settings
-export:
-  output_dir: reports
-  formats:
-    - excel
-    - html
-
-# Pricing configuration
-pricing:
-  enabled: true
-  default_discount: 10.0
-
-# Filters (optional defaults)
-filters:
-  exclude_colors:
-    - Gray
-
-# Logging
-logging:
-  level: INFO
-  file: logs/ekahau_bom.log
-```
-
-Use custom configuration:
-
-```bash
-# Use specific config file
-ekahau-bom project.esx --config my_config.yaml
-
-# Use default config (config/config.yaml)
-ekahau-bom project.esx
-```
-
-**Note:** CLI arguments always override configuration file values.
-
-### Custom Colors
-
-Create a YAML file to map Ekahau hex colors to names:
-
-```yaml
-# my_colors.yaml
-"#FFE600": "Yellow"
-"#FF8500": "Orange"
-"#FF0000": "Red"
-"#00FF00": "Green"
-"#0000FF": "Blue"
-"#CUSTOM": "My Custom Color"
-```
-
-Usage:
-
-```bash
-ekahau-bom project.esx --colors-config my_colors.yaml
-```
-
-Default colors are in `config/colors.yaml`.
-
-### Pricing Configuration
-
-Edit `config/pricing.yaml` to customize equipment prices:
-
-```yaml
-access_points:
-  Cisco:
-    C9120AXI: 850.00
-    C9130AXI: 1200.00
-  Aruba:
-    AP-515: 750.00
-    AP-635: 1100.00
-
-antennas:
-  ANT-2513P4M-N-R: 125.00
-  ANT-20: 85.00
-
-# Volume discount tiers
-volume_discounts:
-  - min_quantity: 10
-    discount_percent: 5.0
-  - min_quantity: 50
-    discount_percent: 10.0
-  - min_quantity: 100
-    discount_percent: 15.0
-  - min_quantity: 250
-    discount_percent: 20.0
-  - min_quantity: 500
-    discount_percent: 25.0
+output/
+├── Project_Name_access_points.csv          # Main BOM
+├── Project_Name_access_points_detailed.csv # Full AP details
+├── Project_Name_antennas.csv               # Antenna inventory
+├── Project_Name_analytics.csv              # Radio analytics
+├── Project_Name_report.xlsx                # Excel workbook
+├── Project_Name_report.html                # Interactive HTML
+├── Project_Name_report.pdf                 # Print-ready PDF
+├── Project_Name_data.json                  # Complete JSON
+└── visualizations/                         # Floor plans
+    ├── Floor_1_visualization.png
+    └── Floor_2_visualization.png
 ```
 
 ---
 
-## 🏗️ Project Structure
+## 🛠️ Installation
 
-```
-EkahauBOM/
-├── ekahau_bom/              # Main package
-│   ├── cli.py               # Command-line interface
-│   ├── parser.py            # .esx file parser (ZIP + JSON)
-│   ├── models.py            # Data models (AccessPoint, Radio, Tag, etc.)
-│   ├── constants.py         # Constants and defaults
-│   ├── utils.py             # Utility functions
-│   ├── filters.py           # Filtering logic
-│   ├── analytics.py         # Analytics & grouping
-│   ├── pricing.py           # Cost calculation
-│   ├── processors/          # Data processors
-│   │   ├── access_points.py # AP processor
-│   │   ├── antennas.py      # Antenna processor
-│   │   ├── radios.py        # Radio processor
-│   │   └── tags.py          # Tag processor (v10.2+)
-│   └── exporters/           # Export formats
-│       ├── base.py          # Base exporter class
-│       ├── csv_exporter.py  # CSV export
-│       ├── excel_exporter.py # Excel export (openpyxl)
-│       ├── html_exporter.py # HTML export (Chart.js)
-│       └── json_exporter.py # JSON export
-├── config/                  # Configuration files
-│   ├── colors.yaml          # Color database
-│   └── pricing.yaml         # Equipment pricing
-├── tests/                   # Test suite (545 tests, 86% coverage)
-│   ├── test_analytics.py
-│   ├── test_csv_exporter.py
-│   ├── test_excel_exporter.py
-│   ├── test_filters.py
-│   ├── test_models.py
-│   ├── test_parser.py
-│   ├── test_pricing.py
-│   ├── test_processors.py
-│   ├── test_tags.py
-│   └── test_utils.py
-├── docs/                    # Documentation
-│   ├── USER_GUIDE.md
-│   ├── DEVELOPER_GUIDE.md
-│   └── examples/
-├── output/                  # Default output directory
-├── EkahauBOM.py            # Main entry point
-├── setup.py                # Package setup
-├── requirements.txt        # Dependencies
-├── requirements-dev.txt    # Development dependencies
-├── README.md               # This file
-├── CHANGELOG.md            # Version history
-└── LICENSE                 # MIT License
-```
+### Prerequisites
 
----
+- **Python 3.7+** (for CLI and backend)
+- **Node.js 18+** (for Web UI frontend only)
+- **Git** (to clone repository)
 
-## 🧪 Testing
-
-### Run Tests
+### Full Installation (Web UI + CLI)
 
 ```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
+git clone https://github.com/nimbo78/EkahauBOM.git
+cd EkahauBOM
 
-# Run all tests
-pytest
+# Backend
+cd ekahau_bom_web/backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-# Run with coverage
-pytest --cov=ekahau_bom
-
-# Run specific test file
-pytest tests/test_analytics.py -v
-
-# Run with verbose output
-pytest -v --tb=short
+# Frontend
+cd ../frontend/ekahau-bom-ui
+npm install
 ```
 
-### Coverage Report
-
-Current test coverage: **86%** (Goal: 80% ✅ Achieved!)
-
-```
-Module                          Coverage
-----------------------------------------
-All Processors:                  100%
-All Exporters:                   99-100%
-  - CSV, Excel, HTML, JSON:      100%
-  - PDF:                         99%
-Parser:                          100%
-Models:                          100%
-Analytics:                       100%
-Cable Analytics:                 100%
-Config:                          100%
-Filters:                         100%
-Pricing:                         100%
-Utils:                           100%
-Visualizers:                     99%
-Entry Point (__main__):          100%
-----------------------------------------
-Total: 545 tests passing (including 25 integration tests)
-Real business logic coverage: 99-100%
-Integration tests: E2E validation for all export formats
-```
-
----
-
-## 🛠️ Development
-
-### Code Quality
-
-#### Pre-commit Hooks (Recommended)
-
-Автоматические проверки перед каждым commit:
+### CLI Only
 
 ```bash
-# Install pre-commit hooks
-pip install pre-commit
-pre-commit install
-
-# Run on all files manually
-pre-commit run --all-files
-
-# Hooks will run automatically on git commit
+pip install ekahau-bom
 ```
 
-Pre-commit hooks automatically check:
-- ✅ Black code formatting
-- ✅ Trailing whitespace
-- ✅ End-of-file fixer
-- ✅ Large files check
-- ✅ Merge conflicts
-- ✅ Debug statements
-- ✅ Line endings (LF)
+### Optional: PDF Export Support
 
-#### Manual Code Quality Checks
+PDF export requires WeasyPrint + GTK libraries:
 
+**Linux (Ubuntu/Debian)**:
 ```bash
-# Format code with black
-black ekahau_bom/
-
-# Lint with flake8
-flake8 ekahau_bom/
-
-# Lint with pylint
-pylint ekahau_bom/
-
-# Type checking with mypy
-mypy ekahau_bom/
+sudo apt install libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf2.0-0 libffi-dev
+pip install weasyprint
 ```
 
-### Contributing
+**macOS**:
+```bash
+brew install pango gdk-pixbuf libffi
+pip install weasyprint
+```
 
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Write tests for your changes
-4. Ensure tests pass (`pytest`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution guidelines.
-
----
-
-## 📋 Requirements
-
-### Runtime
-- **Python** 3.7+
-- **PyYAML** >= 6.0
-- **openpyxl** >= 3.0.0 (for Excel export)
-- **WeasyPrint** >= 60.0 (for PDF export, optional)
-- **rich** >= 13.0.0 (for enhanced terminal output, optional)
-
-### Development
-- **pytest** >= 7.0.0
-- **pytest-cov** >= 4.0.0
-- **pytest-mock** >= 3.10.0
-- **black** >= 22.0.0 (code formatting)
-- **flake8** >= 5.0.0 (linting)
-- **pylint** >= 2.15.0 (linting)
-- **mypy** >= 0.990 (type checking)
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Pavel Semenischev @htechno**
-
-- GitHub: [@htechno](https://github.com/htechno)
-- Telegram: [@htechno](https://t.me/htechno)
-
----
-
-## 🙏 Acknowledgments
-
-- Ekahau for creating amazing Wi-Fi design software
-- The Wi-Fi engineering community for feedback and feature requests
-- Contributors and users who help improve this tool
-
----
-
-## 📸 Example Outputs
-
-Explore real example outputs in the **[docs/examples/](docs/examples/)** directory.
-
-### Floor Plan Visualization
-
-![Floor Plan Visualization Example](docs/examples/sample_output/visualizations/maga-flat_visualization.png)
-
-**Features shown in sample:**
-- 10 Access Points with different colors (Blue, Green, Red, Orange, etc.)
-- 7 Azimuth direction arrows showing antenna orientation
-- AP names and locations
-- Professional floor plan overlay
-- Color legend with AP counts
-
-### Report Samples
-
-- **[CSV Reports](docs/examples/sample_output/)** - Access points, antennas, analytics
-- **[JSON Export](docs/examples/sample_output/maga_data.json)** - Complete structured data
-- **[HTML Report](docs/examples/sample_output/maga_report.html)** - Interactive web report
-
-See the **[Examples README](docs/examples/README.md)** for detailed information about all output formats.
+**Windows**:
+```bash
+pip install weasyprint
+# Download GTK3 Runtime: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
+```
 
 ---
 
 ## 📚 Documentation
 
-**For Users:**
-- **[Examples](docs/examples/)** - Sample outputs and visualizations
-- **[User Guide](docs/USER_GUIDE.md)** - Detailed usage examples and scenarios ([Русский](docs/USER_GUIDE.ru.md))
-- **[CLI Reference](docs/CLI_REFERENCE.md)** - Complete command-line reference
-- **[Configuration Examples](docs/examples/config-examples.md)** - Configuration file examples
-- **[Changelog](CHANGELOG.md)** - Version history and release notes
-- **[FAQ](#-faq)** - Frequently asked questions
-
-**For Developers:**
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Contributing and architecture ([Русский](docs/DEVELOPER_GUIDE.ru.md))
-- **[Extending Guide](docs/EXTENDING.md)** - Adding exporters, processors, and features
-- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
-- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+- [**CLI Reference**](docs/CLI_REFERENCE.md) - Complete command-line options
+- [**Web UI Plan**](WEBUI_PLAN.md) - Web UI architecture and implementation
+- [**Developer Guide**](docs/DEVELOPER_GUIDE.md) - Contributing and development
+- [**Extending Guide**](docs/EXTENDING.md) - Add custom exporters/processors
+- [**Release Process**](RELEASE_PROCESS.md) - How to create releases
 
 ---
 
-## 🔗 Related Tools
-
-- [Ekahau AI Pro](https://www.ekahau.com/) - Professional Wi-Fi design platform
-- [Ekahau Connect](https://www.ekahau.com/products/ekahau-connect/) - Free Wi-Fi survey tool
-
----
-
-## 💡 Use Cases
+## 🎯 Use Cases
 
 ### For Wi-Fi Engineers
-- Generate accurate equipment lists for RFPs
-- Analyze AP placement and mounting requirements
-- Review radio configuration (channels, power, standards)
-- Create professional project documentation
+- Generate professional BOMs from Ekahau designs
+- Share projects via Web UI with stakeholders
+- Visualize AP placements on floor plans
+- Export installation parameters (height, azimuth, tilt)
 
 ### For Procurement Teams
-- Calculate project costs with volume discounts
-- Generate purchase orders by vendor
-- Track equipment quantities across floors/buildings
-- Compare pricing scenarios
+- Equipment lists with quantities and models
+- Cost calculations with volume discounts
+- Vendor breakdown for multi-vendor deployments
+- Cable infrastructure BOM and costs
 
-### For Installation Teams
-- Get detailed mounting instructions (height, azimuth, tilt)
-- Export location coordinates for each AP
-- Review floor-by-floor installation requirements
-- Generate work orders with equipment lists
+### For Installation Crews
+- Detailed AP locations with coordinates
+- Mounting instructions (height, azimuth, tilt)
+- Floor-by-floor installation guides
+- Visual floor plans for reference
 
 ### For Project Managers
-- Track project scope and equipment counts
-- Generate client-ready reports (HTML/Excel)
-- Monitor costs and budget adherence
-- Create documentation for handoff
+- Centralized project repository (Web UI)
+- Share reports via short links
+- Track processing status
+- Quick project statistics
 
 ---
 
-## ❓ FAQ
+## 🧪 Testing
 
-### General Questions
-
-**Q: What Ekahau versions are supported?**
-A: All .esx format versions. Tag support requires Ekahau v10.2+. The tool has been tested with Ekahau AI Pro versions 10.x and 11.x.
-
-**Q: Can I process multiple projects at once?**
-A: Yes! Use the `--batch` option to process multiple .esx files in a directory. See the [Batch Processing example](#8-batch-processing).
-
-**Q: Does this work with large projects (500+ APs)?**
-A: Yes! Tested with projects containing 1000+ APs. Performance is optimized with efficient data processing. Large projects may take 10-30 seconds to process.
-
-**Q: Can I use this on Windows/macOS/Linux?**
-A: Yes! EkahauBOM is cross-platform and works on all major operating systems. Tested on Windows 10/11, macOS 11+, and Ubuntu 20.04+.
-
-### Export & Formats
-
-**Q: How do I customize the output format?**
-A: Use the `--csv`, `--excel`, `--html`, `--json`, or `--pdf` options. Multiple formats can be generated simultaneously:
 ```bash
-ekahau-bom project.esx --csv --excel --html
+# Run all tests
+pytest tests/ -v
+
+# With coverage report
+pytest tests/ --cov=ekahau_bom --cov-report=html
+
+# Backend API tests only
+pytest ekahau_bom_web/backend/tests/ -v
 ```
 
-**Q: Can I generate floor plan visualizations?**
-A: Yes! Use `--visualize-floor-plans` to overlay AP positions on floor plans. Add `--show-azimuth-arrows` to display antenna directions. See [Floor Plan Visualization](#-floor-plan-visualization-new-in-v27) section.
-
-**Q: Why doesn't PDF export work?**
-A: PDF export requires WeasyPrint and GTK3 libraries. See the [PDF Export Support](#optional-pdf-export-support) section for installation instructions for your platform.
-
-### Configuration & Customization
-
-**Q: Can I add custom equipment prices?**
-A: Yes! Edit `config/pricing.yaml` with your pricing data. The file uses YAML format with vendor/model hierarchy:
-```yaml
-vendors:
-  Cisco:
-    "AIR-AP3802I-B-K9": 850.00
-    "AIR-AP4800-B-K9": 1200.00
-```
-
-**Q: How do I use custom color schemes?**
-A: Edit `config/colors.yaml` to map color names to RGB values. You can define custom colors for AP markers in floor plan visualizations.
-
-**Q: Can I create custom configuration profiles?**
-A: Yes! Create a custom YAML file and specify it with `-c/--config` option:
-```bash
-ekahau-bom project.esx -c my-config.yaml
-```
-
-### Integration & Automation
-
-**Q: Can I integrate this into my workflow/pipeline?**
-A: Yes! Use JSON export format for API integrations and automation. The tool can be scripted and returns proper exit codes for CI/CD integration.
-
-**Q: How do I use the JSON API programmatically?**
-A: Generate JSON export and parse it in your application:
-```python
-import json
-with open("output/project.json", "r") as f:
-    data = json.load(f)
-    aps = data["access_points"]
-```
-
-**Q: Can I run this in a Docker container?**
-A: Yes! The tool works well in containerized environments. For PDF support in Docker, install GTK3 system packages in your Dockerfile.
-
-### Troubleshooting
-
-**Q: I get "File not found" error. Why?**
-A: Ensure the .esx file path is correct. Use quotes around paths with spaces:
-```bash
-ekahau-bom "C:\Projects\My Project.esx"
-```
-
-**Q: The tool is slow with my project. How can I speed it up?**
-A: For large projects, disable unnecessary exports. Use only required formats (`--csv` instead of all formats). Floor plan visualization may add processing time.
-
-**Q: Some APs are missing from the output. Why?**
-A: Check if you have active filters (`--filter-floor`, `--filter-vendor`, etc.). Use `--no-filter` to see all APs. Also check for `--exclude-*` options.
-
-**Q: Why are mounting heights empty in CSV export?**
-A: This was a bug in v2.6.0 and earlier. Update to v2.7.0+ for proper mounting height extraction.
-
-### Examples & Documentation
-
-**Q: Where can I find example outputs?**
-A: See the [`docs/examples/`](docs/examples/) directory for sample outputs and the [Examples README](docs/examples/README.md) for more information.
-
-**Q: Is there more detailed documentation?**
-A: Yes! See:
-- [User Guide](docs/USER_GUIDE.md) - Comprehensive usage guide
-- [Developer Guide](docs/DEVELOPER_GUIDE.md) - For contributors and developers
-- [Release Process](docs/RELEASE_PROCESS.md) - For maintainers
+**Current stats**: 545 tests passing | 86% coverage
 
 ---
 
-## 📞 Support
+## 📝 License
 
-- **Issues**: [GitHub Issues](https://github.com/htechno/EkahauBOM/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/htechno/EkahauBOM/discussions)
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Made with ❤️ for the Wi-Fi community**
+## 🤝 Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
+
+## 📧 Contact
+
+- **Issues**: [GitHub Issues](https://github.com/nimbo78/EkahauBOM/issues)
+- **Author**: Igor Singosin
+
+---
+
+**Built with ❤️ for the Wi-Fi engineering community**
