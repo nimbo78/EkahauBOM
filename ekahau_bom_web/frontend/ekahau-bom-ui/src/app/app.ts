@@ -40,14 +40,6 @@ import { filter } from 'rxjs/operators';
                 <tui-icon icon="@tui.upload"></tui-icon>
                 Upload
               </a>
-              <a
-                routerLink="/admin/processing"
-                routerLinkActive="active"
-                class="nav-link"
-              >
-                <tui-icon icon="@tui.settings"></tui-icon>
-                Processing
-              </a>
             </nav>
           </div>
         </header>

@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2025-11-03
+
+### Summary
+Major release introducing **Web UI** for centralized Ekahau BOM registry. Complete web-based interface with FastAPI backend and Angular + Taiga UI frontend. Supports project upload, processing configuration, report viewing, floor plan visualizations, and short link sharing.
+
+### Added
+
+- **Web UI - Complete Implementation** (Phase 11.1)
+  - **Backend (FastAPI)**:
+    - 13 REST API endpoints (upload, projects, reports, stats)
+    - JSON-based storage with in-memory indexing (no database)
+    - Short link generation for easy project sharing
+    - Project lifecycle: PENDING → PROCESSING → COMPLETED/FAILED
+    - Integration with EkahauBOM CLI for processing
+    - 46 backend tests passing (100% API coverage)
+
+  - **Frontend (Angular 20.3 + Taiga UI 4.60)**:
+    - Projects List with search and filtering
+    - Upload component with drag-and-drop
+    - Processing configuration with all CLI options
+    - Project details with tabs: Overview, Reports, Visualizations
+    - Reports download (CSV, Excel, HTML, PDF, JSON)
+    - Floor plan visualizations with lightbox modal
+    - Short link access for public sharing
+    - Responsive design with dark/light theme support
+    - Custom tooltips with 80% opacity for better UX
+
+  - **Features**:
+    - Upload .esx files via web interface
+    - Configure processing options (grouping, formats, visualizations)
+    - Real-time processing status tracking with polling
+    - Download reports directly from browser
+    - View floor plan visualizations with zoom/pan
+    - Generate and share short links
+    - Project statistics dashboard
+
+### Changed
+
+- **Web UI Tooltips**: Improved transparency to 80% opacity (was 95%) for better visual appearance
+
+### Technical Details
+
+- **Architecture**: FastAPI + Angular standalone components with signals
+- **Storage**: JSON metadata + in-memory index (file-based, no database)
+- **Processing**: Async integration with EkahauBOM CLI via subprocess
+- **Visualizations**: Lightbox modal with zoom/pan support
+- **State Management**: Angular signals throughout
+- **Styling**: Taiga UI components with custom SCSS
+
 ## [2.8.0] - 2025-10-30
 
 ### Summary

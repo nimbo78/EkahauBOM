@@ -10,7 +10,7 @@ import {
   TuiTextfield,
   TuiLabel
 } from '@taiga-ui/core';
-import { TuiCheckbox } from '@taiga-ui/kit';
+import { TuiCheckbox, TuiBadge } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ProjectService } from '../../../core/services/project.service';
 import {
@@ -34,7 +34,8 @@ import { Subscription, interval } from 'rxjs';
     TuiLoader,
     TuiCheckbox,
     TuiTextfield,
-    TuiLabel
+    TuiLabel,
+    TuiBadge
   ],
   template: `
     <div class="processing-container">
@@ -70,7 +71,14 @@ import { Subscription, interval } from 'rxjs';
             <span>•</span>
             <span>Uploaded: {{ formatDate(project()?.upload_date) }}</span>
             <span>•</span>
-            <span>Status: {{ project()?.processing_status }}</span>
+            <span>Status:
+              <tui-badge
+                [appearance]="getStatusAppearance(project()!.processing_status)"
+                [class]="'status-badge-' + project()!.processing_status.toLowerCase()"
+              >
+                {{ project()?.processing_status }}
+              </tui-badge>
+            </span>
           </p>
         </div>
 
@@ -423,6 +431,31 @@ import { Subscription, interval } from 'rxjs';
       color: var(--tui-text-02);
       font-size: 0.9rem;
     }
+
+    // Color-coded status badges
+    tui-badge.status-badge-completed {
+      background-color: #D4EDDA !important;
+      color: #155724 !important;
+      border: 1px solid #C3E6CB !important;
+    }
+
+    tui-badge.status-badge-pending {
+      background-color: #FFF3CD !important;
+      color: #856404 !important;
+      border: 1px solid #FFEAA7 !important;
+    }
+
+    tui-badge.status-badge-processing {
+      background-color: #D1ECF1 !important;
+      color: #0C5460 !important;
+      border: 1px solid #BEE5EB !important;
+    }
+
+    tui-badge.status-badge-failed {
+      background-color: #F8D7DA !important;
+      color: #721C24 !important;
+      border: 1px solid #F5C6CB !important;
+    }
   `]
 })
 export class ProcessingComponent implements OnInit, OnDestroy {
@@ -612,6 +645,21 @@ export class ProcessingComponent implements OnInit, OnDestroy {
     });
 
     this.subscriptions.push(pollSub);
+  }
+
+  getStatusAppearance(status: ProcessingStatus): string {
+    switch (status) {
+      case ProcessingStatus.PENDING:
+        return 'warning';
+      case ProcessingStatus.PROCESSING:
+        return 'info';
+      case ProcessingStatus.COMPLETED:
+        return 'success';
+      case ProcessingStatus.FAILED:
+        return 'error';
+      default:
+        return 'neutral';
+    }
   }
 
   formatDate(dateString: string | null | undefined): string {

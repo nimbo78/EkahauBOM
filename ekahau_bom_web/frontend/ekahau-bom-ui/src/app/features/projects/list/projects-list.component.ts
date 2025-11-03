@@ -46,16 +46,6 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
     <div class="projects-container">
       <div class="page-header">
         <h1 class="page-title">Projects</h1>
-        <button
-          *ngIf="isAuthenticated()"
-          tuiButton
-          appearance="primary"
-          size="l"
-          routerLink="/admin/upload"
-        >
-          <tui-icon icon="@tui.plus"></tui-icon>
-          Upload New Project
-        </button>
       </div>
 
       <!-- Statistics cards -->
@@ -160,7 +150,6 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                 <tui-badge
                   [appearance]="getStatusAppearance(project.processing_status)"
                   [class]="'status-badge-' + project.processing_status.toLowerCase()"
-                  size="s"
                 >
                   {{ project.processing_status }}
                 </tui-badge>
@@ -183,7 +172,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                     appearance="flat"
                     size="s"
                     [routerLink]="['/projects', project.project_id]"
-                    tuiHint="View Details"
+                    [tuiHint]="viewHint"
                     style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
                   >
                     <tui-icon icon="@tui.eye"></tui-icon>
@@ -198,7 +187,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                     size="s"
                     [routerLink]="['/admin/processing']"
                     [queryParams]="{projectId: project.project_id}"
-                    [tuiHint]="project.processing_status === ProcessingStatus.PENDING ? 'Configure Processing' : 'Reprocess Project'"
+                    [tuiHint]="project.processing_status === ProcessingStatus.PENDING ? configureHint : reprocessHint"
                     style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
                   >
                     <tui-icon icon="@tui.settings"></tui-icon>
@@ -209,7 +198,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                     appearance="flat"
                     size="s"
                     (click)="confirmDelete(project)"
-                    tuiHint="Delete Project"
+                    [tuiHint]="deleteHint"
                     style="background-color: #fce8e6; color: #e01f19; min-width: 36px; padding: 8px; border: 1px solid #e01f19; border-radius: 4px;"
                   >
                     <tui-icon icon="@tui.trash-2"></tui-icon>
@@ -228,20 +217,39 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
             Try adjusting your search or filter criteria
           </p>
           <p *ngIf="!searchControl.value && !statusFilter()">
-            Upload your first project to get started
+            Use the Upload button in the navigation menu to get started
           </p>
-          <button
-            *ngIf="isAuthenticated()"
-            tuiButton
-            appearance="primary"
-            size="m"
-            routerLink="/admin/upload"
-          >
-            <tui-icon icon="@tui.plus"></tui-icon>
-            Upload Project
-          </button>
         </div>
       </div>
+
+      <!-- Hint templates with icons -->
+      <ng-template #viewHint>
+        <div class="custom-hint">
+          <tui-icon icon="@tui.eye" class="hint-icon"></tui-icon>
+          <span class="hint-text">View Details</span>
+        </div>
+      </ng-template>
+
+      <ng-template #configureHint>
+        <div class="custom-hint">
+          <tui-icon icon="@tui.settings" class="hint-icon"></tui-icon>
+          <span class="hint-text">Configure Processing</span>
+        </div>
+      </ng-template>
+
+      <ng-template #reprocessHint>
+        <div class="custom-hint">
+          <tui-icon icon="@tui.refresh-cw" class="hint-icon"></tui-icon>
+          <span class="hint-text">Reprocess Project</span>
+        </div>
+      </ng-template>
+
+      <ng-template #deleteHint>
+        <div class="custom-hint custom-hint-danger">
+          <tui-icon icon="@tui.trash-2" class="hint-icon"></tui-icon>
+          <span class="hint-text">Delete Project</span>
+        </div>
+      </ng-template>
     </div>
   `,
   styles: [`
@@ -328,8 +336,8 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       }
 
       &:not(.pending):not(.processing):not(.completed):not(.failed).active {
-        background: rgba(82, 110, 211, 0.1);
-        border-color: var(--tui-primary);
+        background: rgba(140, 140, 140, 0.08);
+        border-color: rgba(140, 140, 140, 0.4);
       }
     }
 
@@ -454,6 +462,40 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
     .columns {
       display: none;
+    }
+
+    // Custom hint styles
+    .custom-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      background: rgba(45, 45, 45, 0.80);
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      color: #ffffff;
+
+      .hint-icon {
+        font-size: 1rem;
+        flex-shrink: 0;
+        color: #ffffff;
+      }
+
+      .hint-text {
+        color: #ffffff;
+      }
+    }
+
+    .custom-hint-danger {
+      background: rgba(224, 31, 25, 0.80);
+
+      .hint-icon,
+      .hint-text {
+        color: #ffffff;
+      }
     }
   `]
 })

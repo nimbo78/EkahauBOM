@@ -104,7 +104,6 @@ import {
               <tui-badge
                 [appearance]="getStatusAppearance(project()!.processing_status)"
                 [class]="'status-badge-' + project()!.processing_status.toLowerCase()"
-                size="m"
               >
                 {{ project()?.processing_status }}
               </tui-badge>
@@ -115,32 +114,32 @@ import {
         <!-- Tabs for different sections -->
         <div class="tabs-section">
           <div class="tab-buttons">
-            <button
-              tuiButton
-              [appearance]="activeTab() === 'overview' ? 'primary' : 'outline'"
-              size="m"
+            <div
+              class="tab-card"
+              [class.active]="activeTab() === 'overview'"
               (click)="setActiveTab('overview')"
             >
-              Overview
-            </button>
-            <button
-              tuiButton
-              [appearance]="activeTab() === 'reports' ? 'primary' : 'outline'"
-              size="m"
-              (click)="setActiveTab('reports')"
-              [disabled]="project()?.processing_status !== ProcessingStatus.COMPLETED"
+              <tui-icon icon="@tui.info" class="tab-icon"></tui-icon>
+              <span class="tab-label">Overview</span>
+            </div>
+            <div
+              class="tab-card"
+              [class.active]="activeTab() === 'reports'"
+              [class.disabled]="project()?.processing_status !== ProcessingStatus.COMPLETED"
+              (click)="project()?.processing_status === ProcessingStatus.COMPLETED && setActiveTab('reports')"
             >
-              Reports
-            </button>
-            <button
-              tuiButton
-              [appearance]="activeTab() === 'visualizations' ? 'primary' : 'outline'"
-              size="m"
-              (click)="setActiveTab('visualizations')"
-              [disabled]="project()?.processing_status !== ProcessingStatus.COMPLETED"
+              <tui-icon icon="@tui.file-text" class="tab-icon"></tui-icon>
+              <span class="tab-label">Reports</span>
+            </div>
+            <div
+              class="tab-card"
+              [class.active]="activeTab() === 'visualizations'"
+              [class.disabled]="project()?.processing_status !== ProcessingStatus.COMPLETED"
+              (click)="project()?.processing_status === ProcessingStatus.COMPLETED && setActiveTab('visualizations')"
             >
-              Visualizations
-            </button>
+              <tui-icon icon="@tui.image" class="tab-icon"></tui-icon>
+              <span class="tab-label">Visualizations</span>
+            </div>
           </div>
 
           <div class="tab-content">
@@ -200,16 +199,14 @@ import {
                     <span class="label">Antennas:</span>
                     <span class="value">{{ project()?.total_antennas }}</span>
                   </div>
-                  <div class="info-item" *ngIf="project()?.unique_vendors">
-                    <span class="label">Vendors:</span>
-                    <span class="value">{{ project()?.unique_vendors }}</span>
-                  </div>
                   <div class="info-item" *ngIf="project()?.vendors?.length">
-                    <span class="label"></span>
+                    <span class="label">Vendors:</span>
                     <span class="value">
-                      <tui-badge *ngFor="let vendor of project()?.vendors" appearance="info" size="s" style="margin-right: 0.5rem;">
-                        {{ vendor }}
-                      </tui-badge>
+                      <span class="badges-container">
+                        <tui-badge *ngFor="let vendor of project()?.vendors" appearance="info">
+                          {{ vendor }}
+                        </tui-badge>
+                      </span>
                     </span>
                   </div>
                   <div class="info-item" *ngIf="project()?.floors_count">
@@ -496,6 +493,20 @@ import {
     .header-actions {
       display: flex;
       gap: 1rem;
+      align-items: center;
+
+      button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+
+        tui-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
     }
 
     .loading-state {
@@ -546,25 +557,86 @@ import {
     }
 
     .tabs-section {
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
 
     .tab-buttons {
-      display: flex;
-      gap: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
       margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--tui-base-03);
+    }
+
+    .tab-card {
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+
+      &:hover:not(.disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: var(--tui-primary);
+      }
+
+      &.active {
+        background: rgba(140, 140, 140, 0.08);
+        border-color: rgba(140, 140, 140, 0.4);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+      }
+
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .tab-icon {
+      font-size: 1.75rem;
+      color: var(--tui-text-01);
+      transition: color 0.3s ease;
+
+      .tab-card.active & {
+        color: var(--tui-primary);
+      }
+
+      .tab-card.disabled & {
+        color: var(--tui-text-03);
+      }
+    }
+
+    .tab-label {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--tui-text-01);
+
+      .tab-card.active & {
+        color: var(--tui-primary);
+        font-weight: 600;
+      }
+
+      .tab-card.disabled & {
+        color: var(--tui-text-03);
+      }
     }
 
     .tab-content {
-      min-height: 400px;
+      // Removed min-height to avoid unnecessary scrolling
     }
 
     .info-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
+      gap: 1rem;
     }
 
     .info-card {
@@ -597,6 +669,13 @@ import {
 
     .info-item .value {
       font-weight: 500;
+    }
+
+    .badges-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-end;
     }
 
     .flags-list {

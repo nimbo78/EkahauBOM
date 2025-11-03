@@ -18,6 +18,7 @@ TEST.md
 
 # Planning and development process (local only, not for git)
 planning/
+NOTES_PLAN.md
 
 # Python
 __pycache__/
