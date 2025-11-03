@@ -88,6 +88,7 @@ class ProcessorService:
                     visualize_floor_plans=visualize_floor_plans,
                     show_azimuth_arrows=show_azimuth_arrows,
                     ap_opacity=ap_opacity,
+                    project_name=metadata.project_name,
                 )
 
                 logger.info(f"Processing project {project_id}: {' '.join(cmd)}")
@@ -172,12 +173,17 @@ class ProcessorService:
         visualize_floor_plans: bool,
         show_azimuth_arrows: bool,
         ap_opacity: float,
+        project_name: str | None = None,
     ) -> list[str]:
         """Build EkahauBOM CLI command."""
         cmd = [sys.executable, "-m", "ekahau_bom", str(original_file)]
 
         # Output directory
         cmd.extend(["--output-dir", str(output_dir)])
+
+        # Project name (use extracted title from .esx instead of filename)
+        if project_name:
+            cmd.extend(["--project-name", project_name])
 
         # Group APs by specified dimension
         if group_by:

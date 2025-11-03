@@ -38,7 +38,9 @@ def load_color_database(config_file: Optional[Path] = None) -> dict[str, str]:
         with open(config_file, "r", encoding="utf-8") as f:
             colors = yaml.safe_load(f)
             if not isinstance(colors, dict):
-                logger.warning(f"Invalid color config format in {config_file}, using defaults")
+                logger.warning(
+                    f"Invalid color config format in {config_file}, using defaults"
+                )
                 return DEFAULT_COLORS.copy()
             logger.info(f"Loaded {len(colors)} colors from {config_file}")
             return colors
@@ -95,3 +97,43 @@ def setup_logging(verbose: bool = False, log_file: Optional[Path] = None) -> Non
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=handlers,
     )
+
+
+def sanitize_filename(name: str) -> str:
+    """Sanitize project name for safe use in filenames.
+
+    Replaces special characters that are invalid in filenames
+    while preserving Unicode characters (like Cyrillic, Chinese, etc.).
+
+    Args:
+        name: Project name to sanitize
+
+    Returns:
+        Sanitized filename-safe string
+
+    Examples:
+        >>> sanitize_filename('Project "Test"')
+        'Project _Test_'
+        >>> sanitize_filename('Maga хата')
+        'Maga хата'
+        >>> sanitize_filename('Test: Project/Plan')
+        'Test_ Project_Plan'
+    """
+    import re
+
+    # Replace invalid filename characters (Windows + Unix)
+    # Invalid: < > : " / \ | ? *
+    invalid_chars = r'[<>:"/\\|?*]'
+    sanitized = re.sub(invalid_chars, "_", name)
+
+    # Remove leading/trailing spaces and dots (Windows restriction)
+    sanitized = sanitized.strip(". ")
+
+    # Replace multiple consecutive underscores with single one
+    sanitized = re.sub(r"_+", "_", sanitized)
+
+    # If empty after sanitization, use default name
+    if not sanitized:
+        return "unnamed_project"
+
+    return sanitized
