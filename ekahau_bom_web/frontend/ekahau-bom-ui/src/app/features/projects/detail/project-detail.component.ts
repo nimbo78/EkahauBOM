@@ -376,31 +376,37 @@ import { NotesData } from '../../../core/models/notes.model';
               <div *ngIf="!loadingNotes() && notes()">
                 <!-- Summary Cards -->
                 <div class="notes-summary">
-                  <div class="summary-card">
+                  <div class="summary-card"
+                       [class.active]="notesFilter() === 'text'"
+                       (click)="toggleNotesFilter('text')">
                     <tui-icon icon="@tui.file-text" class="summary-icon"></tui-icon>
                     <div class="summary-info">
-                      <span class="summary-count">{{ notes()?.summary?.total_text_notes || 0 }}</span>
+                      <span class="summary-count">{{ (notes()?.summary?.total_text_notes ?? 0) }}</span>
                       <span class="summary-label">Text Notes</span>
                     </div>
                   </div>
-                  <div class="summary-card">
+                  <div class="summary-card"
+                       [class.active]="notesFilter() === 'picture'"
+                       (click)="toggleNotesFilter('picture')">
                     <tui-icon icon="@tui.image" class="summary-icon"></tui-icon>
                     <div class="summary-info">
-                      <span class="summary-count">{{ notes()?.summary?.total_picture_notes || 0 }}</span>
+                      <span class="summary-count">{{ (notes()?.summary?.total_picture_notes ?? 0) }}</span>
                       <span class="summary-label">Picture Notes</span>
                     </div>
                   </div>
-                  <div class="summary-card">
+                  <div class="summary-card"
+                       [class.active]="notesFilter() === 'cable'"
+                       (click)="toggleNotesFilter('cable')">
                     <tui-icon icon="@tui.trending-up" class="summary-icon"></tui-icon>
                     <div class="summary-info">
-                      <span class="summary-count">{{ notes()?.summary?.total_cable_notes || 0 }}</span>
+                      <span class="summary-count">{{ (notes()?.summary?.total_cable_notes ?? 0) }}</span>
                       <span class="summary-label">Cable Notes</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Text Notes Section -->
-                <div *ngIf="notes()?.text_notes && notes()!.text_notes.length > 0" class="notes-section">
+                <div *ngIf="(notesFilter() === 'all' || notesFilter() === 'text') && notes()?.text_notes && notes()!.text_notes.length > 0" class="notes-section">
                   <h3><tui-icon icon="@tui.file-text"></tui-icon> Text Notes</h3>
                   <div class="notes-list">
                     <div *ngFor="let note of notes()!.text_notes" class="note-item">
@@ -425,7 +431,7 @@ import { NotesData } from '../../../core/models/notes.model';
                 </div>
 
                 <!-- Picture Notes Section -->
-                <div *ngIf="notes()?.picture_notes && notes()!.picture_notes.length > 0" class="notes-section">
+                <div *ngIf="(notesFilter() === 'all' || notesFilter() === 'picture') && notes()?.picture_notes && notes()!.picture_notes.length > 0" class="notes-section">
                   <h3><tui-icon icon="@tui.image"></tui-icon> Picture Notes</h3>
                   <div class="notes-list">
                     <div *ngFor="let note of notes()!.picture_notes" class="note-item">
@@ -456,7 +462,7 @@ import { NotesData } from '../../../core/models/notes.model';
                 </div>
 
                 <!-- Cable Notes Section -->
-                <div *ngIf="notes()?.cable_notes && notes()!.cable_notes.length > 0" class="notes-section">
+                <div *ngIf="(notesFilter() === 'all' || notesFilter() === 'cable') && notes()?.cable_notes && notes()!.cable_notes.length > 0" class="notes-section">
                   <h3><tui-icon icon="@tui.trending-up"></tui-icon> Cable Notes</h3>
                   <div class="notes-list">
                     <div *ngFor="let note of notes()!.cable_notes" class="note-item">
@@ -966,12 +972,26 @@ import { NotesData } from '../../../core/models/notes.model';
       gap: 1rem;
       border: 2px solid transparent;
       transition: all 0.3s ease;
+      cursor: pointer;
+      user-select: none;
     }
 
     .summary-card:hover {
       border-color: var(--tui-primary);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card.active {
+      border-color: var(--tui-primary);
+      background: rgba(140, 140, 140, 0.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .summary-card.active .summary-icon {
+      color: var(--tui-primary);
+      filter: brightness(1.2);
     }
 
     .summary-icon {
@@ -1307,6 +1327,7 @@ export class ProjectDetailComponent implements OnInit {
 
   loadingNotes = signal(false);
   notes = signal<NotesData | null>(null);
+  notesFilter = signal<'all' | 'text' | 'picture' | 'cable'>('all');
 
   // Lightbox state
   lightboxOpen = signal(false);
@@ -1456,8 +1477,19 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
+  toggleNotesFilter(type: 'text' | 'picture' | 'cable'): void {
+    const currentFilter = this.notesFilter();
+    // Toggle: if same type clicked, reset to 'all', otherwise set to type
+    this.notesFilter.set(currentFilter === type ? 'all' : type);
+  }
+
   setActiveTab(tab: 'overview' | 'reports' | 'visualizations' | 'notes'): void {
     this.activeTab.set(tab);
+
+    // Reset notes filter when leaving notes tab
+    if (this.activeTab() !== 'notes') {
+      this.notesFilter.set('all');
+    }
 
     // Load data when switching to specific tabs
     if (tab === 'notes' && !this.notes() && this.project()?.processing_status === ProcessingStatus.COMPLETED) {
