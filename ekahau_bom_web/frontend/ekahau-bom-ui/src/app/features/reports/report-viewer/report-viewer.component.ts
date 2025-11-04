@@ -6,6 +6,7 @@ import { HtmlViewerComponent } from '../viewers/html-viewer.component';
 import { CsvViewerComponent } from '../viewers/csv-viewer.component';
 import { ExcelViewerComponent } from '../viewers/excel-viewer.component';
 import { PdfViewerComponent } from '../viewers/pdf-viewer.component';
+import { JsonViewerComponent } from '../viewers/json-viewer.component';
 import { ReportFile } from '../../../core/models/project.model';
 
 @Component({
@@ -19,6 +20,7 @@ import { ReportFile } from '../../../core/models/project.model';
     CsvViewerComponent,
     ExcelViewerComponent,
     PdfViewerComponent,
+    JsonViewerComponent,
   ],
   templateUrl: './report-viewer.component.html',
   styleUrl: './report-viewer.component.scss',
@@ -39,6 +41,7 @@ export class ReportViewerComponent {
     this.report().filename.toLowerCase().endsWith('.xls')
   );
   isPdf = computed(() => this.report().filename.toLowerCase().endsWith('.pdf'));
+  isJson = computed(() => this.report().filename.toLowerCase().endsWith('.json'));
 
   close(): void {
     this.closeDialog.emit();

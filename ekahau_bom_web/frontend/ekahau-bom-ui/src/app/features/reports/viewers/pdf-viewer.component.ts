@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TuiLoader } from '@taiga-ui/core';
@@ -16,12 +16,11 @@ import { TuiLoader } from '@taiga-ui/core';
         </div>
       }
       @if (!loading() && !error()) {
-        <embed
+        <iframe
           [src]="safeUrl()"
-          type="application/pdf"
-          class="pdf-embed"
-          (load)="onPdfLoad()"
-        />
+          class="pdf-iframe"
+          title="PDF Viewer"
+        ></iframe>
       }
       @if (error()) {
         <div class="error-state">
@@ -52,9 +51,10 @@ import { TuiLoader } from '@taiga-ui/core';
         }
       }
 
-      .pdf-embed {
+      .pdf-iframe {
         width: 100%;
         height: 100%;
+        min-height: 800px;
         border: none;
         border-radius: 0.5rem;
       }
@@ -97,7 +97,22 @@ export class PdfViewerComponent {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   });
 
-  onPdfLoad(): void {
-    this.loading.set(false);
+  constructor() {
+    effect(() => {
+      // When inputs change, reset state and start loading
+      const projectId = this.projectId();
+      const filename = this.filename();
+
+      if (projectId && filename) {
+        this.loading.set(true);
+        this.error.set(null);
+
+        // Set a timeout to hide loading spinner after 1 second
+        // PDF embed doesn't always trigger load events reliably
+        setTimeout(() => {
+          this.loading.set(false);
+        }, 1000);
+      }
+    });
   }
 }

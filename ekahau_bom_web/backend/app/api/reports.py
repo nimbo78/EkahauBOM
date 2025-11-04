@@ -80,9 +80,9 @@ async def download_report(project_id: UUID, filename: str) -> FileResponse:
     }
     media_type = media_types.get(file_path.suffix.lower(), "application/octet-stream")
 
-    # For HTML files, explicitly set inline disposition to display in browser
+    # For HTML and PDF files, explicitly set inline disposition to display in browser
     # For other files, use attachment (default)
-    if file_path.suffix.lower() == ".html":
+    if file_path.suffix.lower() in [".html", ".pdf"]:
         return FileResponse(
             path=file_path,
             media_type=media_type,

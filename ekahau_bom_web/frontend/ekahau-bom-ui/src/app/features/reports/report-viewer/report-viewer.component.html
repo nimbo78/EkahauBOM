@@ -40,6 +40,11 @@
         [projectId]="projectId()"
         [filename]="report().filename"
       ></app-pdf-viewer>
+    } @else if (isJson()) {
+      <app-json-viewer
+        [projectId]="projectId()"
+        [filename]="report().filename"
+      ></app-json-viewer>
     } @else {
       <div class="unsupported-format">
         <tui-icon icon="@tui.alert-circle" class="warning-icon"></tui-icon>
