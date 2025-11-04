@@ -32,6 +32,9 @@ class ProcessorService:
         visualize_floor_plans: bool = True,
         show_azimuth_arrows: bool = False,
         ap_opacity: float = 0.6,
+        include_text_notes: bool = False,
+        include_picture_notes: bool = False,
+        include_cable_notes: bool = False,
     ) -> None:
         """Process .esx file using EkahauBOM CLI.
 
@@ -42,6 +45,9 @@ class ProcessorService:
             visualize_floor_plans: Generate floor plan visualizations
             show_azimuth_arrows: Show azimuth direction arrows on AP markers
             ap_opacity: Opacity for AP markers (0.0-1.0, default 0.6)
+            include_text_notes: Include text notes on floor plan visualizations
+            include_picture_notes: Include picture note markers on floor plan visualizations
+            include_cable_notes: Include cable routing paths on floor plan visualizations
         """
         if output_formats is None:
             output_formats = ["csv", "excel", "html"]
@@ -88,6 +94,9 @@ class ProcessorService:
                     visualize_floor_plans=visualize_floor_plans,
                     show_azimuth_arrows=show_azimuth_arrows,
                     ap_opacity=ap_opacity,
+                    include_text_notes=include_text_notes,
+                    include_picture_notes=include_picture_notes,
+                    include_cable_notes=include_cable_notes,
                     project_name=metadata.project_name,
                 )
 
@@ -143,6 +152,9 @@ class ProcessorService:
                     "visualize_floor_plans": visualize_floor_plans,
                     "show_azimuth_arrows": show_azimuth_arrows,
                     "ap_opacity": ap_opacity,
+                    "include_text_notes": include_text_notes,
+                    "include_picture_notes": include_picture_notes,
+                    "include_cable_notes": include_cable_notes,
                 }
 
                 logger.info(f"Processing completed for {project_id}")
@@ -173,6 +185,9 @@ class ProcessorService:
         visualize_floor_plans: bool,
         show_azimuth_arrows: bool,
         ap_opacity: float,
+        include_text_notes: bool,
+        include_picture_notes: bool,
+        include_cable_notes: bool,
         project_name: str | None = None,
     ) -> list[str]:
         """Build EkahauBOM CLI command."""
@@ -205,6 +220,16 @@ class ProcessorService:
             # AP opacity (only if visualizations enabled)
             if ap_opacity != 0.6:  # Only add if not default
                 cmd.extend(["--ap-opacity", str(ap_opacity)])
+
+            # Notes on floor plans (only if visualizations enabled)
+            if include_text_notes:
+                cmd.append("--include-text-notes")
+
+            if include_picture_notes:
+                cmd.append("--include-picture-notes")
+
+            if include_cable_notes:
+                cmd.append("--include-cable-notes")
 
         return cmd
 

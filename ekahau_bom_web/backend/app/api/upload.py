@@ -285,6 +285,9 @@ async def process_project(
         request.visualize_floor_plans,
         request.show_azimuth_arrows,
         request.ap_opacity,
+        request.include_text_notes,
+        request.include_picture_notes,
+        request.include_cable_notes,
     )
 
     return {
@@ -296,5 +299,8 @@ async def process_project(
             "visualize_floor_plans": request.visualize_floor_plans,
             "show_azimuth_arrows": request.show_azimuth_arrows,
             "ap_opacity": request.ap_opacity,
+            "include_text_notes": request.include_text_notes,
+            "include_picture_notes": request.include_picture_notes,
+            "include_cable_notes": request.include_cable_notes,
         },
     }

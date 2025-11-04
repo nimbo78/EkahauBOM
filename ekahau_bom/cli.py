@@ -248,6 +248,24 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="Opacity for AP markers (0.0-1.0, default: 0.6 = 60%% for better floor plan visibility)",
     )
 
+    viz_group.add_argument(
+        "--include-text-notes",
+        action="store_true",
+        help="Include text notes on floor plan visualizations (requires --visualize-floor-plans)",
+    )
+
+    viz_group.add_argument(
+        "--include-picture-notes",
+        action="store_true",
+        help="Include picture note markers on floor plan visualizations (requires --visualize-floor-plans)",
+    )
+
+    viz_group.add_argument(
+        "--include-cable-notes",
+        action="store_true",
+        help="Include cable note paths on floor plan visualizations (requires --visualize-floor-plans)",
+    )
+
     # Project naming options
     naming_group = parser.add_argument_group("project naming options")
 
@@ -470,6 +488,9 @@ def process_project(
     show_ap_names: bool = True,
     show_azimuth_arrows: bool = False,
     ap_opacity: float = 0.6,
+    include_text_notes: bool = False,
+    include_picture_notes: bool = False,
+    include_cable_notes: bool = False,
     project_name: str | None = None,
 ) -> int:
     """Process Ekahau project and generate BOM.
@@ -498,6 +519,9 @@ def process_project(
         show_ap_names: Whether to show AP names on visualizations
         show_azimuth_arrows: Whether to show azimuth direction arrows on AP markers
         ap_opacity: Opacity for AP markers (0.0-1.0, 0.6 = 60%)
+        include_text_notes: Include text notes on floor plan visualizations
+        include_picture_notes: Include picture note markers on floor plan visualizations
+        include_cable_notes: Include cable routing paths on floor plan visualizations
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -932,6 +956,12 @@ def process_project(
                         show_ap_names=show_ap_names,
                         show_azimuth_arrows=show_azimuth_arrows,
                         ap_opacity=ap_opacity,
+                        include_text_notes=include_text_notes,
+                        include_picture_notes=include_picture_notes,
+                        include_cable_notes=include_cable_notes,
+                        text_notes=notes,
+                        picture_notes=picture_notes,
+                        cable_notes=cable_notes,
                     ) as visualizer:
                         visualization_files = visualizer.visualize_all_floors(
                             floors=floors, access_points=access_points, radios=radios
@@ -1176,6 +1206,9 @@ def main(args: list[str] | None = None) -> int:
                 show_ap_names=not merged_config.get("no_ap_names", False),
                 show_azimuth_arrows=merged_config.get("show_azimuth_arrows", False),
                 ap_opacity=merged_config.get("ap_opacity", 0.6),
+                include_text_notes=merged_config.get("include_text_notes", False),
+                include_picture_notes=merged_config.get("include_picture_notes", False),
+                include_cable_notes=merged_config.get("include_cable_notes", False),
                 project_name=merged_config.get("project_name"),
             )
 

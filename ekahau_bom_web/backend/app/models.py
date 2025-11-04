@@ -96,3 +96,6 @@ class ProcessingRequest(BaseModel):
     visualize_floor_plans: bool = True
     show_azimuth_arrows: bool = False
     ap_opacity: float = 0.6  # 0.0-1.0, default 0.6
+    include_text_notes: bool = False
+    include_picture_notes: bool = False
+    include_cable_notes: bool = False

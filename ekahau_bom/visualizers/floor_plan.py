@@ -41,6 +41,12 @@ class FloorPlanVisualizer:
         font_size: int = 12,
         show_azimuth_arrows: bool = False,
         ap_opacity: float = 0.6,
+        include_text_notes: bool = False,
+        include_picture_notes: bool = False,
+        include_cable_notes: bool = False,
+        text_notes: list = None,
+        picture_notes: list = None,
+        cable_notes: list = None,
     ):
         """Initialize floor plan visualizer.
 
@@ -53,6 +59,12 @@ class FloorPlanVisualizer:
             font_size: Font size for AP names (default: 12)
             show_azimuth_arrows: Whether to show azimuth direction arrows on AP markers (default: False)
             ap_opacity: Opacity for AP markers (0.0-1.0, default: 0.6 = 60%)
+            include_text_notes: Whether to display text notes on floor plans (default: False)
+            include_picture_notes: Whether to display picture note markers on floor plans (default: False)
+            include_cable_notes: Whether to display cable routing paths on floor plans (default: False)
+            text_notes: List of Note objects with text content
+            picture_notes: List of PictureNote objects with location markers
+            cable_notes: List of CableNote objects with routing paths
         """
         if not PIL_AVAILABLE:
             raise ImportError(
@@ -68,6 +80,14 @@ class FloorPlanVisualizer:
         self.font_size = font_size
         self.show_azimuth_arrows = show_azimuth_arrows
         self.ap_opacity = max(0.0, min(1.0, ap_opacity))  # Clamp between 0.0 and 1.0
+
+        # Notes visualization options
+        self.include_text_notes = include_text_notes
+        self.include_picture_notes = include_picture_notes
+        self.include_cable_notes = include_cable_notes
+        self.text_notes = text_notes or []
+        self.picture_notes = picture_notes or []
+        self.cable_notes = cable_notes or []
 
         # Ensure output directory exists
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -208,7 +228,9 @@ class FloorPlanVisualizer:
         # First, try exact match with normalized name
         if hex_color_normalized in color_names:
             hex_color = color_names[hex_color_normalized]
-            logger.debug(f"Converted color name '{original_color}' to hex: #{hex_color}")
+            logger.debug(
+                f"Converted color name '{original_color}' to hex: #{hex_color}"
+            )
         # If not found, try fixing common typos (RReedd -> red, BBllue -> blue, etc.)
         else:
             import re
@@ -264,7 +286,9 @@ class FloorPlanVisualizer:
         if mounting_type == "CEILING":
             self._draw_circle(draw, x, y, fill_color, adaptive_sizes)
         elif mounting_type == "WALL":
-            self._draw_oriented_rectangle(draw, x, y, fill_color, azimuth, adaptive_sizes)
+            self._draw_oriented_rectangle(
+                draw, x, y, fill_color, azimuth, adaptive_sizes
+            )
         elif mounting_type == "FLOOR":
             self._draw_square(draw, x, y, fill_color, adaptive_sizes)
         else:
@@ -292,7 +316,9 @@ class FloorPlanVisualizer:
         """
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
 
         # Outer circle (border) - always fully opaque for clear visibility
         border_color = (0, 0, 0, 255)  # Black border, fully opaque
@@ -334,7 +360,9 @@ class FloorPlanVisualizer:
 
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
 
         # Rectangle dimensions (2:1 ratio)
         width = radius * 2  # Long dimension
@@ -406,7 +434,9 @@ class FloorPlanVisualizer:
         """
         # Use adaptive sizes if provided, otherwise use defaults
         radius = adaptive_sizes["radius"] if adaptive_sizes else self.ap_circle_radius
-        border_width = adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        border_width = (
+            adaptive_sizes["border_width"] if adaptive_sizes else self.ap_border_width
+        )
 
         # Use circle radius as half-side length
         half_side = radius
@@ -619,7 +649,246 @@ class FloorPlanVisualizer:
         # Return the new image with legend
         return image
 
-    def _get_floor_plan_image(self, floor: Floor) -> Optional[tuple[Image.Image, float, float]]:
+    def _draw_picture_notes(
+        self,
+        draw: ImageDraw.ImageDraw,
+        floor_id: str,
+        scale_x: float,
+        scale_y: float,
+        adaptive_sizes: dict = None,
+    ) -> None:
+        """Draw picture note markers on floor plan.
+
+        Picture notes are visual markers (pins) placed on the floor plan at specific coordinates.
+
+        Args:
+            draw: ImageDraw context
+            floor_id: Floor ID to filter notes
+            scale_x: X-coordinate scale factor
+            scale_y: Y-coordinate scale factor
+            adaptive_sizes: dict with adaptive sizes (for marker radius)
+        """
+        if not self.include_picture_notes or not self.picture_notes:
+            return
+
+        # Filter picture notes for this floor
+        floor_picture_notes = [
+            note
+            for note in self.picture_notes
+            if note.location and note.location.floor_plan_id == floor_id
+        ]
+
+        if not floor_picture_notes:
+            return
+
+        # Smaller marker - half the size (0.3x instead of 0.6x)
+        marker_radius = (
+            adaptive_sizes["radius"] * 0.3
+            if adaptive_sizes
+            else self.ap_circle_radius * 0.3
+        )
+        marker_radius = int(marker_radius)
+
+        logger.info(
+            f"Drawing {len(floor_picture_notes)} picture notes on floor {floor_id}"
+        )
+
+        for note in floor_picture_notes:
+            if not note.location or note.location.x is None or note.location.y is None:
+                continue
+
+            # Scale coordinates
+            x = note.location.x * scale_x
+            y = note.location.y * scale_y
+
+            # Draw simple red circle (no border)
+            pin_color = (255, 107, 107, 255)  # Red (FF6B6B)
+
+            # Single circle - just the red pin
+            draw.ellipse(
+                [
+                    x - marker_radius,
+                    y - marker_radius,
+                    x + marker_radius,
+                    y + marker_radius,
+                ],
+                fill=pin_color,
+                outline=pin_color,
+            )
+
+    def _draw_cable_notes(
+        self,
+        draw: ImageDraw.ImageDraw,
+        floor_id: str,
+        scale_x: float,
+        scale_y: float,
+        adaptive_sizes: dict = None,
+    ) -> None:
+        """Draw cable routing paths on floor plan.
+
+        Cable notes show polyline paths representing cable routes through the building.
+
+        Args:
+            draw: ImageDraw context
+            floor_id: Floor ID to filter notes
+            scale_x: X-coordinate scale factor
+            scale_y: Y-coordinate scale factor
+            adaptive_sizes: dict with adaptive sizes (for line width)
+        """
+        if not self.include_cable_notes or not self.cable_notes:
+            return
+
+        # Filter cable notes for this floor
+        floor_cable_notes = [
+            note for note in self.cable_notes if note.floor_plan_id == floor_id
+        ]
+
+        if not floor_cable_notes:
+            return
+
+        # Line width scales with image size
+        line_width = max(2, adaptive_sizes["border_width"]) if adaptive_sizes else 3
+
+        logger.info(f"Drawing {len(floor_cable_notes)} cable notes on floor {floor_id}")
+
+        for note in floor_cable_notes:
+            if not note.points or len(note.points) < 2:
+                continue
+
+            # Scale all points
+            scaled_points = []
+            for point in note.points:
+                x = (point.x if hasattr(point, "x") else point.get("x", 0)) * scale_x
+                y = (point.y if hasattr(point, "y") else point.get("y", 0)) * scale_y
+                scaled_points.append((x, y))
+
+            # Determine line color
+            if note.color and note.color != "#000000":
+                # Use note's color if specified and not black
+                rgb = self._hex_to_rgb(note.color)
+                line_color = (*rgb, 255)
+            else:
+                # Default cable color: dark gray
+                line_color = (64, 64, 64, 255)
+
+            # Draw polyline
+            draw.line(scaled_points, fill=line_color, width=line_width)
+
+    def _draw_text_notes(
+        self,
+        draw: ImageDraw.ImageDraw,
+        floor_id: str,
+        scale_x: float,
+        scale_y: float,
+        font: ImageFont.FreeTypeFont = None,
+        adaptive_sizes: dict = None,
+    ) -> None:
+        """Draw text notes on floor plan.
+
+        Text notes are displayed as labels with text content, similar to AP names.
+        Currently, text notes don't have explicit floor_id or coordinates in the model,
+        so they are linked via picture_notes. This method draws text for picture notes
+        that have associated text note IDs.
+
+        Args:
+            draw: ImageDraw context
+            floor_id: Floor ID to filter notes
+            scale_x: X-coordinate scale factor
+            scale_y: Y-coordinate scale factor
+            font: Font to use for text rendering
+            adaptive_sizes: dict with adaptive sizes (for font size)
+        """
+        if not self.include_text_notes or not self.text_notes:
+            return
+
+        # Create text note lookup by ID
+        text_notes_by_id = {note.id: note for note in self.text_notes}
+
+        # Find picture notes on this floor that have linked text notes
+        floor_picture_notes = [
+            note
+            for note in self.picture_notes
+            if note.location
+            and note.location.floor_plan_id == floor_id
+            and note.note_ids
+        ]
+
+        if not floor_picture_notes:
+            return
+
+        # Use same marker radius as picture notes (0.3x)
+        marker_radius = (
+            adaptive_sizes["radius"] * 0.3
+            if adaptive_sizes
+            else self.ap_circle_radius * 0.3
+        )
+
+        logger.info(
+            f"Drawing text notes for {len(floor_picture_notes)} picture notes on floor {floor_id}"
+        )
+
+        for picture_note in floor_picture_notes:
+            if (
+                not picture_note.location
+                or picture_note.location.x is None
+                or picture_note.location.y is None
+            ):
+                continue
+
+            # Get text from linked notes
+            texts = []
+            for note_id in picture_note.note_ids:
+                if note_id in text_notes_by_id:
+                    text_note = text_notes_by_id[note_id]
+                    if text_note.text:
+                        texts.append(text_note.text)
+
+            if not texts:
+                continue
+
+            # Combine multiple texts with line breaks
+            combined_text = "\n".join(texts)
+
+            # Limit text length to avoid cluttering the visualization
+            if len(combined_text) > 100:
+                combined_text = combined_text[:97] + "..."
+
+            # Scale coordinates
+            x = picture_note.location.x * scale_x
+            y = picture_note.location.y * scale_y
+
+            # Calculate text width for centering
+            bbox = draw.textbbox((0, 0), combined_text, font=font)
+            text_width = bbox[2] - bbox[0]
+
+            # Position text below the picture note marker, centered
+            text_x = x - (text_width / 2)  # Center horizontally
+            text_y = y + marker_radius + 5
+
+            # Draw text with white outline for visibility (similar to AP names)
+            outline_color = (255, 255, 255)  # White outline
+            text_color = (0, 0, 0)  # Black text
+
+            outline_width = 1
+
+            # Draw outline
+            for dx in [-outline_width, 0, outline_width]:
+                for dy in [-outline_width, 0, outline_width]:
+                    if dx == 0 and dy == 0:
+                        continue
+                    draw.text(
+                        (text_x + dx, text_y + dy),
+                        combined_text,
+                        font=font,
+                        fill=outline_color,
+                    )
+
+            # Main text on top
+            draw.text((text_x, text_y), combined_text, font=font, fill=text_color)
+
+    def _get_floor_plan_image(
+        self, floor: Floor
+    ) -> Optional[tuple[Image.Image, float, float]]:
         """Extract floor plan image from .esx archive with coordinate scale factors.
 
         Ekahau stores coordinates relative to the floor plan dimensions in floorPlans.json.
@@ -674,7 +943,8 @@ class FloorPlanVisualizer:
                     logger.warning(f"No image ID for floor: {floor.name}")
                     return None
                 logger.debug(
-                    f"Using imageId for floor {floor.name} " f"(no bitmapImageId, may fail for SVG)"
+                    f"Using imageId for floor {floor.name} "
+                    f"(no bitmapImageId, may fail for SVG)"
                 )
 
             # Read image file from archive
@@ -742,7 +1012,9 @@ class FloorPlanVisualizer:
             ]
             for font_name in font_names:
                 try:
-                    adaptive_font = ImageFont.truetype(font_name, adaptive_sizes["font_size"])
+                    adaptive_font = ImageFont.truetype(
+                        font_name, adaptive_sizes["font_size"]
+                    )
                     break
                 except (OSError, IOError):
                     continue
@@ -831,7 +1103,9 @@ class FloorPlanVisualizer:
                         "ap_model": ap.model,
                         "ap_vendor": ap.vendor,
                         "mounting_type": mounting_type,
-                        "adaptive_radius": adaptive_sizes["radius"],  # For arrow scaling
+                        "adaptive_radius": adaptive_sizes[
+                            "radius"
+                        ],  # For arrow scaling
                     }
                 )
 
@@ -912,7 +1186,17 @@ class FloorPlanVisualizer:
                 f"Drawing arrow at ({x}, {y}) with azimuth={azimuth}°, standard={wifi_standard}, "
                 f"arrow_length={arrow_length:.1f}px (adaptive_radius={adaptive_radius}px)"
             )
-            self._draw_azimuth_arrow(draw, x, y, azimuth, arrow_color, arrow_length=arrow_length)
+            self._draw_azimuth_arrow(
+                draw, x, y, azimuth, arrow_color, arrow_length=arrow_length
+            )
+
+        # Draw notes on the floor plan (after arrows, before AP names)
+        # Order: cable notes (polylines) → picture notes (markers) → text notes (labels)
+        self._draw_cable_notes(draw, floor.id, scale_x, scale_y, adaptive_sizes)
+        self._draw_picture_notes(draw, floor.id, scale_x, scale_y, adaptive_sizes)
+        self._draw_text_notes(
+            draw, floor.id, scale_x, scale_y, adaptive_font, adaptive_sizes
+        )
 
         # Draw AP names on top of the composited image
         for ap in floor_aps:
@@ -949,7 +1233,9 @@ class FloorPlanVisualizer:
                         )
 
                 # Main text on top
-                draw.text((text_x, text_y), ap.name, font=adaptive_font, fill=text_color)
+                draw.text(
+                    (text_x, text_y), ap.name, font=adaptive_font, fill=text_color
+                )
 
         # Draw legend (returns new image with legend)
         # TEMPORARILY DISABLED FOR DEBUGGING

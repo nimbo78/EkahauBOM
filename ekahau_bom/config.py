@@ -323,6 +323,11 @@ class Config:
         merged["show_azimuth_arrows"] = getattr(args, "show_azimuth_arrows", False)
         merged["ap_opacity"] = getattr(args, "ap_opacity", 1.0)
 
+        # Notes visualization
+        merged["include_text_notes"] = getattr(args, "include_text_notes", False)
+        merged["include_picture_notes"] = getattr(args, "include_picture_notes", False)
+        merged["include_cable_notes"] = getattr(args, "include_cable_notes", False)
+
         # Project naming
         merged["project_name"] = getattr(args, "project_name", None)
 

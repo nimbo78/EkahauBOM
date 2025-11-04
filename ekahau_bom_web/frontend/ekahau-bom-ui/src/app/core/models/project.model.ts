@@ -63,6 +63,9 @@ export interface ProcessingRequest {
   visualize_floor_plans: boolean;
   show_azimuth_arrows: boolean;
   ap_opacity: number; // 0.0-1.0, default 0.6
+  include_text_notes: boolean;
+  include_picture_notes: boolean;
+  include_cable_notes: boolean;
 }
 
 export interface ProjectStats {
@@ -95,6 +98,9 @@ export interface ProcessingFlags {
   visualize_floor_plans: boolean;
   show_azimuth_arrows: boolean;
   ap_opacity: number; // 0.0-1.0
+  include_text_notes: boolean;
+  include_picture_notes: boolean;
+  include_cable_notes: boolean;
 }
 
 export interface ProjectDetails extends ProjectMetadata {

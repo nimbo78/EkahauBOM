@@ -173,6 +173,33 @@ import { Subscription, interval } from 'rxjs';
                 />
                 Show Azimuth Direction Arrows
               </label>
+
+              <label tuiLabel class="checkbox-label">
+                <input
+                  tuiCheckbox
+                  type="checkbox"
+                  formControlName="include_text_notes"
+                />
+                Include Text Notes on Floor Plans
+              </label>
+
+              <label tuiLabel class="checkbox-label">
+                <input
+                  tuiCheckbox
+                  type="checkbox"
+                  formControlName="include_picture_notes"
+                />
+                Include Picture Note Markers on Floor Plans
+              </label>
+
+              <label tuiLabel class="checkbox-label">
+                <input
+                  tuiCheckbox
+                  type="checkbox"
+                  formControlName="include_cable_notes"
+                />
+                Include Cable Routing Paths on Floor Plans
+              </label>
             </div>
 
             <label class="field-label" style="margin-top: 1rem;">
@@ -509,6 +536,9 @@ export class ProcessingComponent implements OnInit, OnDestroy {
       visualize_floor_plans: [true],
       show_azimuth_arrows: [false],
       ap_opacity: [0.6],
+      include_text_notes: [false],
+      include_picture_notes: [false],
+      include_cable_notes: [false],
       short_link_days: [30]
     });
   }
@@ -525,8 +555,9 @@ export class ProcessingComponent implements OnInit, OnDestroy {
       next: (project) => {
         this.project.set(project);
 
-        // If project has existing processing flags, update form
-        if (project.processing_flags) {
+        // If project has existing processing flags, update form ONLY if user hasn't made changes
+        // This prevents overwriting user's checkbox changes when they click "Retry"
+        if (project.processing_flags && this.processingForm.pristine) {
           this.processingForm.patchValue({
             group_by: project.processing_flags['group_by'] || 'model',
             csv_export: project.processing_flags['csv_export'] || false,
@@ -536,7 +567,10 @@ export class ProcessingComponent implements OnInit, OnDestroy {
             pdf_export: project.processing_flags['pdf_export'] || false,
             visualize_floor_plans: project.processing_flags['visualize_floor_plans'] || false,
             show_azimuth_arrows: project.processing_flags['show_azimuth_arrows'] || false,
-            ap_opacity: project.processing_flags['ap_opacity'] || 0.6
+            ap_opacity: project.processing_flags['ap_opacity'] || 0.6,
+            include_text_notes: project.processing_flags['include_text_notes'] || false,
+            include_picture_notes: project.processing_flags['include_picture_notes'] || false,
+            include_cable_notes: project.processing_flags['include_cable_notes'] || false
           });
         }
 
@@ -577,6 +611,9 @@ export class ProcessingComponent implements OnInit, OnDestroy {
       visualize_floor_plans: formValue.visualize_floor_plans || false,
       show_azimuth_arrows: formValue.show_azimuth_arrows || false,
       ap_opacity: formValue.ap_opacity || 0.6,
+      include_text_notes: formValue.include_text_notes || false,
+      include_picture_notes: formValue.include_picture_notes || false,
+      include_cable_notes: formValue.include_cable_notes || false,
     };
 
     const shortLinkDays = this.processingForm.get('short_link_days')?.value || 30;
