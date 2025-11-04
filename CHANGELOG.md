@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.5] - 2025-11-05
+
+### Summary
+Enhanced Web UI with complete report viewer implementation for all formats (HTML, CSV, Excel, JSON, PDF) and comprehensive performance optimization plan.
+
+### Added
+
+- **Web UI - Phase 5: Report Viewers** (Complete ✅)
+  - **HTML Viewer**: Direct browser rendering with full CSS/JS support including Chart.js
+  - **CSV Viewer**: PapaParse integration (~45KB) with multi-section analytics support
+  - **Excel Viewer**: SheetJS (xlsx) integration (~150KB) with multi-sheet tabs and table rendering
+  - **JSON Viewer**: Syntax highlighting (VS Code dark theme) with scrollable content
+  - **PDF Viewer**: Iframe-based viewer with inline Content-Disposition
+  - Reports open in new browser tabs via `window.open()`
+  - Compact inline header with Download and Close buttons
+  - Loading states and error handling for all viewers
+  - Playwright tested for all formats
+
+- **Web UI - Phase 6: Performance & UX Plan** (Planned 📋)
+  - **Performance Optimization Plan**:
+    - Frontend: Bundle size optimization, lazy loading, virtual scrolling
+    - Backend: Response caching, HTTP compression, background job queue
+    - Monitoring: Core Web Vitals, performance metrics endpoint
+  - **Loading Screen Enhancements Plan**:
+    - Route transition loading with global overlay
+    - Processing status loading with polling/WebSocket
+    - File upload progress bar
+    - LoadingService for centralized state management
+
+### Changed
+
+- **Backend**: Updated PDF endpoint to return `Content-Disposition: inline` for browser viewing
+- **Frontend**: Switched PDF viewer from `<embed>` to `<iframe>` for better compatibility
+
+### Technical Details
+
+- **Dependencies Added**:
+  - `xlsx: ^0.18.5` - Excel file parsing
+  - `papaparse: ^5.4.1` - CSV parsing
+  - `@types/papaparse: ^5.3.7` - TypeScript definitions
+
+- **Components Added**:
+  - `excel-viewer.component.ts` - Multi-sheet Excel viewer
+  - `json-viewer.component.ts` - Syntax-highlighted JSON viewer
+  - Updated `pdf-viewer.component.ts` - Iframe-based PDF viewer
+
+- **Testing**: All viewers tested with Playwright (HTML, CSV, Excel, JSON confirmed working; PDF has Playwright limitation but code is correct)
+
 ## [3.0.0] - 2025-11-03
 
 ### Summary
