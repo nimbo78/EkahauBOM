@@ -159,6 +159,31 @@ class StorageService:
                 files.append({"filename": f.name, "size": f.stat().st_size})
         return files
 
+    def load_project_data(self, project_id: UUID) -> Optional[dict]:
+        """
+        Загрузить {project_name}_data.json из reports директории.
+
+        Args:
+            project_id: UUID проекта
+
+        Returns:
+            Словарь с данными проекта или None если файл не существует
+        """
+        # Get metadata to find project name
+        metadata = self.load_metadata(project_id)
+        if not metadata or not metadata.project_name:
+            return None
+
+        # Construct path to data.json
+        reports_dir = self.get_reports_dir(project_id)
+        data_file = reports_dir / f"{metadata.project_name}_data.json"
+
+        if not data_file.exists():
+            return None
+
+        with open(data_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+
     def delete_project(self, project_id: UUID) -> None:
         """
         Удалить проект полностью.
