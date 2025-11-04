@@ -12,6 +12,7 @@ import {
   ReportsList,
   ProcessingStatus,
 } from '../models/project.model';
+import { NotesData } from '../models/notes.model';
 
 @Injectable({
   providedIn: 'root',
@@ -123,6 +124,11 @@ export class ApiService {
 
   getOriginalFileUrl(projectId: string): string {
     return `${this.apiUrl}/reports/${projectId}/original`;
+  }
+
+  // Notes endpoints
+  getNotes(projectId: string): Observable<NotesData> {
+    return this.http.get<NotesData>(`${this.apiUrl}/notes/${projectId}`);
   }
 
   // Health check
