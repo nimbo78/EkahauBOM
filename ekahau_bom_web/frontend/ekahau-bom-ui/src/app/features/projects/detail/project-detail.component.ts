@@ -311,15 +311,26 @@ import { NotesData } from '../../../core/models/notes.model';
                     <span class="report-name">{{ report.filename }}</span>
                     <span class="report-size">{{ formatFileSize(report.size) }}</span>
                   </div>
-                  <button
-                    tuiButton
-                    appearance="primary"
-                    size="s"
-                    (click)="downloadReport(report.filename)"
-                  >
-                    <tui-icon icon="@tui.download"></tui-icon>
-                    Download
-                  </button>
+                  <div class="report-actions">
+                    <button
+                      tuiButton
+                      appearance="primary"
+                      size="s"
+                      (click)="viewReport(report)"
+                    >
+                      <tui-icon icon="@tui.eye"></tui-icon>
+                      View
+                    </button>
+                    <button
+                      tuiButton
+                      appearance="secondary"
+                      size="s"
+                      (click)="downloadReport(report.filename)"
+                    >
+                      <tui-icon icon="@tui.download"></tui-icon>
+                      Download
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -865,6 +876,11 @@ import { NotesData } from '../../../core/models/notes.model';
     .report-size {
       color: var(--tui-text-02);
       font-size: 0.875rem;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 0.5rem;
     }
 
     .visualizations-grid {
@@ -1509,6 +1525,23 @@ export class ProjectDetailComponent implements OnInit {
 
   getShortLinkUrl(): string {
     return `/s/${this.project()?.short_link}`;
+  }
+
+  viewReport(report: ReportFile): void {
+    if (!this.projectId) {
+      return;
+    }
+
+    // For HTML files, open directly via API to preserve all CSS, JS, and graphics
+    if (report.filename.endsWith('.html')) {
+      const url = `/api/reports/${this.projectId}/download/${report.filename}`;
+      window.open(url, '_blank');
+      return;
+    }
+
+    // For other formats (CSV, PDF, Excel, JSON), use report-viewer
+    const url = `/reports/view/${this.projectId}?filename=${encodeURIComponent(report.filename)}`;
+    window.open(url, '_blank');
   }
 
   downloadReport(filename: string): void {

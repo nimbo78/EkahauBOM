@@ -1,0 +1,94 @@
+// Report viewer container
+.report-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #ffffff;
+  position: relative;
+  z-index: 1;
+
+  .viewer-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #ffffff;
+
+    .inline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--tui-base-03);
+      background: #ffffff;
+      flex-shrink: 0;
+
+      .file-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        h2 {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--tui-text-01);
+        }
+
+        .file-size {
+          font-size: 0.875rem;
+          color: var(--tui-text-03);
+        }
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+    }
+
+    // Wrapper for actual report content (viewer components)
+    > app-html-viewer,
+    > app-csv-viewer,
+    > app-excel-viewer,
+    > app-pdf-viewer {
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .unsupported-format {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      text-align: center;
+      padding: 2rem;
+
+      .warning-icon {
+        font-size: 4rem;
+        color: var(--tui-status-warning);
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: var(--tui-text-01);
+      }
+
+      p {
+        margin: 0;
+        color: var(--tui-text-02);
+        max-width: 400px;
+      }
+
+      button {
+        margin-top: 1rem;
+      }
+    }
+  }
+}

@@ -37,6 +37,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'reports/view/:projectId',
+    loadComponent: () =>
+      import('./features/reports/report-viewer-page/report-viewer-page.component').then(
+        (m) => m.ReportViewerPageComponent
+      ),
+  },
+  {
     path: 'admin',
     canActivate: [adminGuard, shortLinkGuard],
     children: [

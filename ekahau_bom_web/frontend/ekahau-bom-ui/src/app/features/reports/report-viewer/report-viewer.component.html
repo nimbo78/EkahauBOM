@@ -1,0 +1,55 @@
+<div class="report-viewer">
+  <!-- Content with inline header -->
+  <div class="viewer-content">
+    <!-- Compact inline header -->
+    <div class="inline-header">
+      <div class="file-info">
+        <h2>{{ report().filename }}</h2>
+        <span class="file-size">{{ formatFileSize(report().size) }}</span>
+      </div>
+      <div class="actions">
+        <button tuiButton appearance="secondary" size="m" (click)="downloadReport()">
+          <tui-icon icon="@tui.download"></tui-icon>
+          Download
+        </button>
+        <button tuiButton appearance="flat" size="m" (click)="close()">
+          <tui-icon icon="@tui.x"></tui-icon>
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Report content -->
+    @if (isHtml()) {
+      <app-html-viewer
+        [projectId]="projectId()"
+        [filename]="report().filename"
+      ></app-html-viewer>
+    } @else if (isCsv()) {
+      <app-csv-viewer
+        [projectId]="projectId()"
+        [filename]="report().filename"
+      ></app-csv-viewer>
+    } @else if (isExcel()) {
+      <app-excel-viewer
+        [projectId]="projectId()"
+        [filename]="report().filename"
+      ></app-excel-viewer>
+    } @else if (isPdf()) {
+      <app-pdf-viewer
+        [projectId]="projectId()"
+        [filename]="report().filename"
+      ></app-pdf-viewer>
+    } @else {
+      <div class="unsupported-format">
+        <tui-icon icon="@tui.alert-circle" class="warning-icon"></tui-icon>
+        <h3>Unsupported Format</h3>
+        <p>This file format cannot be previewed. Please download the file to view it.</p>
+        <button tuiButton appearance="primary" (click)="downloadReport()">
+          <tui-icon icon="@tui.download"></tui-icon>
+          Download File
+        </button>
+      </div>
+    }
+  </div>
+</div>

@@ -80,7 +80,18 @@ async def download_report(project_id: UUID, filename: str) -> FileResponse:
     }
     media_type = media_types.get(file_path.suffix.lower(), "application/octet-stream")
 
-    return FileResponse(path=file_path, filename=safe_filename, media_type=media_type)
+    # For HTML files, explicitly set inline disposition to display in browser
+    # For other files, use attachment (default)
+    if file_path.suffix.lower() == ".html":
+        return FileResponse(
+            path=file_path,
+            media_type=media_type,
+            headers={"Content-Disposition": "inline"},
+        )
+    else:
+        return FileResponse(
+            path=file_path, filename=safe_filename, media_type=media_type
+        )
 
 
 @router.get("/{project_id}/visualization/{filename}")
