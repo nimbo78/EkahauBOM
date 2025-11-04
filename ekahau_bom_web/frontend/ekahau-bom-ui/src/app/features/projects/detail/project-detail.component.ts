@@ -19,6 +19,7 @@ import {
   ProcessingStatus,
   ReportFile
 } from '../../../core/models/project.model';
+import { NotesData } from '../../../core/models/notes.model';
 
 @Component({
   selector: 'app-project-detail',
@@ -139,6 +140,15 @@ import {
             >
               <tui-icon icon="@tui.image" class="tab-icon"></tui-icon>
               <span class="tab-label">Visualizations</span>
+            </div>
+            <div
+              class="tab-card"
+              [class.active]="activeTab() === 'notes'"
+              [class.disabled]="project()?.processing_status !== ProcessingStatus.COMPLETED"
+              (click)="project()?.processing_status === ProcessingStatus.COMPLETED && setActiveTab('notes')"
+            >
+              <tui-icon icon="@tui.message-circle" class="tab-icon"></tui-icon>
+              <span class="tab-label">Notes</span>
             </div>
           </div>
 
@@ -353,6 +363,137 @@ import {
               <div *ngIf="!loadingVisualizations() && visualizations().length === 0" class="empty-state">
                 <tui-icon icon="@tui.image"></tui-icon>
                 <p>No visualizations available</p>
+              </div>
+            </div>
+
+            <!-- Notes Tab -->
+            <div *ngIf="activeTab() === 'notes'" class="notes-tab">
+              <div *ngIf="loadingNotes()" class="loading-state">
+                <tui-loader size="m"></tui-loader>
+                <p>Loading notes...</p>
+              </div>
+
+              <div *ngIf="!loadingNotes() && notes()">
+                <!-- Summary Cards -->
+                <div class="notes-summary">
+                  <div class="summary-card">
+                    <tui-icon icon="@tui.file-text" class="summary-icon"></tui-icon>
+                    <div class="summary-info">
+                      <span class="summary-count">{{ notes()?.summary?.total_text_notes || 0 }}</span>
+                      <span class="summary-label">Text Notes</span>
+                    </div>
+                  </div>
+                  <div class="summary-card">
+                    <tui-icon icon="@tui.image" class="summary-icon"></tui-icon>
+                    <div class="summary-info">
+                      <span class="summary-count">{{ notes()?.summary?.total_picture_notes || 0 }}</span>
+                      <span class="summary-label">Picture Notes</span>
+                    </div>
+                  </div>
+                  <div class="summary-card">
+                    <tui-icon icon="@tui.trending-up" class="summary-icon"></tui-icon>
+                    <div class="summary-info">
+                      <span class="summary-count">{{ notes()?.summary?.total_cable_notes || 0 }}</span>
+                      <span class="summary-label">Cable Notes</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Text Notes Section -->
+                <div *ngIf="notes()?.text_notes && notes()!.text_notes.length > 0" class="notes-section">
+                  <h3><tui-icon icon="@tui.file-text"></tui-icon> Text Notes</h3>
+                  <div class="notes-list">
+                    <div *ngFor="let note of notes()!.text_notes" class="note-item">
+                      <div class="note-header">
+                        <tui-badge appearance="info">{{ note.id.substring(0, 8) }}</tui-badge>
+                        <span class="note-date">{{ formatDate(note.created_at) }}</span>
+                      </div>
+                      <div class="note-content">
+                        <p>{{ note.text }}</p>
+                      </div>
+                      <div class="note-footer">
+                        <span class="note-author">
+                          <tui-icon icon="@tui.user"></tui-icon>
+                          {{ note.created_by || 'Unknown' }}
+                        </span>
+                        <tui-badge [appearance]="note.status === 'ACTIVE' ? 'success' : 'neutral'">
+                          {{ note.status }}
+                        </tui-badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Picture Notes Section -->
+                <div *ngIf="notes()?.picture_notes && notes()!.picture_notes.length > 0" class="notes-section">
+                  <h3><tui-icon icon="@tui.image"></tui-icon> Picture Notes</h3>
+                  <div class="notes-list">
+                    <div *ngFor="let note of notes()!.picture_notes" class="note-item">
+                      <div class="note-header">
+                        <tui-badge appearance="warning">{{ note.id.substring(0, 8) }}</tui-badge>
+                        <span *ngIf="note.location" class="note-location">
+                          <tui-icon icon="@tui.map-pin"></tui-icon>
+                          {{ note.location.floor_name }}
+                        </span>
+                      </div>
+                      <div class="note-content" *ngIf="note.location">
+                        <div class="location-details">
+                          <span>X: {{ note.location.x | number:'1.2-2' }}</span>
+                          <span>Y: {{ note.location.y | number:'1.2-2' }}</span>
+                        </div>
+                      </div>
+                      <div class="note-footer">
+                        <span *ngIf="note.note_ids && note.note_ids.length > 0" class="linked-notes">
+                          <tui-icon icon="@tui.link"></tui-icon>
+                          {{ note.note_ids.length }} linked text note(s)
+                        </span>
+                        <tui-badge [appearance]="note.status === 'ACTIVE' ? 'success' : 'neutral'">
+                          {{ note.status }}
+                        </tui-badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cable Notes Section -->
+                <div *ngIf="notes()?.cable_notes && notes()!.cable_notes.length > 0" class="notes-section">
+                  <h3><tui-icon icon="@tui.trending-up"></tui-icon> Cable Notes</h3>
+                  <div class="notes-list">
+                    <div *ngFor="let note of notes()!.cable_notes" class="note-item">
+                      <div class="note-header">
+                        <tui-badge appearance="primary">{{ note.id.substring(0, 8) }}</tui-badge>
+                        <span class="note-location">
+                          <tui-icon icon="@tui.map-pin"></tui-icon>
+                          {{ note.floor_name }}
+                        </span>
+                      </div>
+                      <div class="note-content">
+                        <div class="cable-details">
+                          <span>
+                            <tui-icon icon="@tui.more-vertical"></tui-icon>
+                            {{ note.points.length }} points
+                          </span>
+                          <span class="color-indicator" [style.background-color]="note.color || '#404040'"></span>
+                        </div>
+                      </div>
+                      <div class="note-footer">
+                        <span *ngIf="note.note_ids && note.note_ids.length > 0" class="linked-notes">
+                          <tui-icon icon="@tui.link"></tui-icon>
+                          {{ note.note_ids.length }} linked text note(s)
+                        </span>
+                        <tui-badge [appearance]="note.status === 'ACTIVE' ? 'success' : 'neutral'">
+                          {{ note.status }}
+                        </tui-badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Empty state for no notes -->
+                <div *ngIf="!notes()?.text_notes?.length && !notes()?.picture_notes?.length && !notes()?.cable_notes?.length" class="empty-state">
+                  <tui-icon icon="@tui.message-circle"></tui-icon>
+                  <p>No notes found in this project</p>
+                </div>
               </div>
             </div>
           </div>
@@ -808,6 +949,159 @@ import {
       color: var(--tui-text-03);
     }
 
+    /* Notes tab styles */
+    .notes-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .summary-card {
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .summary-card:hover {
+      border-color: var(--tui-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-icon {
+      font-size: 2.5rem;
+      color: var(--tui-primary);
+    }
+
+    .summary-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .summary-count {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--tui-text-01);
+    }
+
+    .summary-label {
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .notes-section {
+      margin-bottom: 2rem;
+    }
+
+    .notes-section h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      color: var(--tui-text-01);
+    }
+
+    .notes-section h3 tui-icon {
+      color: var(--tui-primary);
+    }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .note-item {
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      border-left: 4px solid var(--tui-primary);
+      transition: all 0.2s ease;
+    }
+
+    .note-item:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateX(4px);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .note-date,
+    .note-location {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .note-content {
+      margin-bottom: 0.75rem;
+    }
+
+    .note-content p {
+      margin: 0;
+      color: var(--tui-text-01);
+      line-height: 1.6;
+    }
+
+    .note-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .note-author,
+    .linked-notes {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .location-details,
+    .cable-details {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .cable-details {
+      align-items: center;
+    }
+
+    .cable-details span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .color-indicator {
+      width: 32px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid var(--tui-base-03);
+    }
+
     /* Lightbox styles */
     .lightbox {
       position: fixed;
@@ -1003,13 +1297,16 @@ export class ProjectDetailComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   project = signal<ProjectDetails | null>(null);
-  activeTab = signal<'overview' | 'reports' | 'visualizations'>('overview');
+  activeTab = signal<'overview' | 'reports' | 'visualizations' | 'notes'>('overview');
 
   loadingReports = signal(false);
   reports = signal<ReportFile[]>([]);
 
   loadingVisualizations = signal(false);
   visualizations = signal<ReportFile[]>([]);
+
+  loadingNotes = signal(false);
+  notes = signal<NotesData | null>(null);
 
   // Lightbox state
   lightboxOpen = signal(false);
@@ -1140,8 +1437,32 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
-  setActiveTab(tab: 'overview' | 'reports' | 'visualizations'): void {
+  loadNotes(): void {
+    if (!this.projectId) {
+      return;
+    }
+
+    this.loadingNotes.set(true);
+
+    this.apiService.getNotes(this.projectId).subscribe({
+      next: (notes) => {
+        this.notes.set(notes);
+        this.loadingNotes.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading notes:', err);
+        this.loadingNotes.set(false);
+      }
+    });
+  }
+
+  setActiveTab(tab: 'overview' | 'reports' | 'visualizations' | 'notes'): void {
     this.activeTab.set(tab);
+
+    // Load data when switching to specific tabs
+    if (tab === 'notes' && !this.notes() && this.project()?.processing_status === ProcessingStatus.COMPLETED) {
+      this.loadNotes();
+    }
   }
 
   copyShortLink(): void {

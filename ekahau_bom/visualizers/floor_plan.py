@@ -716,6 +716,65 @@ class FloorPlanVisualizer:
                 outline=pin_color,
             )
 
+    def _draw_dashed_line(
+        self,
+        draw: ImageDraw.ImageDraw,
+        points: list,
+        color: tuple,
+        width: int = 3,
+        dash_length: int = 10,
+        gap_length: int = 5,
+    ) -> None:
+        """Draw a dashed line through multiple points.
+
+        Args:
+            draw: ImageDraw context
+            points: List of (x, y) tuples representing the polyline
+            color: Line color as RGBA tuple
+            width: Line width in pixels
+            dash_length: Length of each dash in pixels
+            gap_length: Length of gap between dashes in pixels
+        """
+        import math
+
+        for i in range(len(points) - 1):
+            x1, y1 = points[i]
+            x2, y2 = points[i + 1]
+
+            # Calculate segment length and direction
+            dx = x2 - x1
+            dy = y2 - y1
+            segment_length = math.sqrt(dx**2 + dy**2)
+
+            if segment_length == 0:
+                continue
+
+            # Normalize direction vector
+            dx_norm = dx / segment_length
+            dy_norm = dy / segment_length
+
+            # Draw dashes along the segment
+            current_distance = 0
+            while current_distance < segment_length:
+                # Start of dash
+                dash_start_x = x1 + dx_norm * current_distance
+                dash_start_y = y1 + dy_norm * current_distance
+
+                # End of dash (or end of segment if dash would exceed)
+                dash_end_distance = min(current_distance + dash_length, segment_length)
+                dash_end_x = x1 + dx_norm * dash_end_distance
+                dash_end_y = y1 + dy_norm * dash_end_distance
+
+                # Draw the dash
+                draw.line(
+                    [(dash_start_x, dash_start_y), (dash_end_x, dash_end_y)],
+                    fill=color,
+                    width=width,
+                )
+
+                # Move to next dash (skip gap)
+                current_distance += dash_length + gap_length
+
     def _draw_cable_notes(
         self,
         draw: ImageDraw.ImageDraw,
@@ -768,11 +827,18 @@ class FloorPlanVisualizer:
                 rgb = self._hex_to_rgb(note.color)
                 line_color = (*rgb, 255)
             else:
-                # Default cable color: dark gray
-                line_color = (64, 64, 64, 255)
+                # Default cable color: purple (like Ekahau)
+                line_color = (139, 92, 246, 255)  # Nice purple color
 
-            # Draw polyline
-            draw.line(scaled_points, fill=line_color, width=line_width)
+            # Draw dashed polyline (like Ekahau)
+            self._draw_dashed_line(
+                draw,
+                scaled_points,
+                color=line_color,
+                width=line_width,
+                dash_length=10,
+                gap_length=5,
+            )
 
     def _draw_text_notes(
         self,
