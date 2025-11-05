@@ -48,14 +48,29 @@ repos:
       - id: mixed-line-ending
         args: [--fix=lf]
 
-  # Pytest - run tests before commit (optional, can be slow)
+  # Pre-push hook - verify formatting and tests before push
+  # This prevents CI/CD failures by catching issues locally
+  - repo: local
+    hooks:
+      - id: pre-push-checks
+        name: Pre-push quality checks
+        entry: bash .pre-push-hook.sh
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+  # Pytest - run quick tests before commit (optional)
   # Uncomment if you want to run tests on every commit
+  # WARNING: This will slow down commits significantly
   # - repo: local
   #   hooks:
-  #     - id: pytest-check
-  #       name: pytest-check
+  #     - id: pytest-quick
+  #       name: Quick unit tests
   #       entry: pytest
   #       language: system
   #       pass_filenames: false
   #       always_run: true
-  #       args: [tests/, -q, --tb=short]
+  #       args: [tests/, -q, --tb=short, -m, "not slow", -x]
+  #       stages: [commit]
