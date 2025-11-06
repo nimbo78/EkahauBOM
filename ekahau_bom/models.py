@@ -190,10 +190,12 @@ class Floor:
     Attributes:
         id: Unique identifier for the floor
         name: Human-readable name of the floor
+        floor_number: Numeric floor number (0=ground, -1=basement, 1=first floor above ground, etc.)
     """
 
     id: str
     name: str
+    floor_number: int = 0  # Default to ground floor
 
 
 @dataclass

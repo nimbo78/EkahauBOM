@@ -330,7 +330,7 @@ class TestPDFExporterAvailable:
             access_points=aps,
             antennas=[],
             floors={},
-            project_name="Test",
+            project_name="Enterprise WiFi Project",  # Use metadata.name as project_name
             metadata=metadata,
         )
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import platform
 import sys
 from pathlib import Path
 
@@ -271,7 +272,120 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="Custom project name (overrides filename). Special characters will be sanitized for filenames. Preserves Unicode characters (Cyrillic, Chinese, etc.)",
     )
 
+    # Output options
+    output_group = parser.add_argument_group("output options")
+
+    output_group.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Suppress BOM summary console output (only show logs)",
+    )
+
     return parser
+
+
+def _configure_console_encoding() -> None:
+    """Configure console encoding for UTF-8 output on Windows.
+
+    On Windows, the default console encoding is often cp1251 or cp866,
+    which cannot display UTF-8 characters (like Cyrillic). This function
+    reconfigures stdout to use UTF-8 encoding.
+
+    For Linux/Mac, UTF-8 is typically the default, so no action is needed.
+    """
+    if platform.system() == "Windows":
+        try:
+            # Python 3.7+ supports reconfigure() method
+            if hasattr(sys.stdout, "reconfigure"):
+                sys.stdout.reconfigure(encoding="utf-8")
+            # Fallback for older Python versions (shouldn't be needed with Python 3.7+)
+            else:
+                import codecs
+
+                sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
+        except (AttributeError, OSError):
+            # Some environments (like pytest capture) don't support reconfiguration
+            # Silently continue - the output may have encoding issues but won't crash
+            pass
+
+
+def _print_bom_summary(
+    access_points: list,
+    antennas: list,
+    project_name: str,
+) -> None:
+    """Print BOM summary to console.
+
+    Args:
+        access_points: List of AccessPoint objects
+        antennas: List of Antenna objects
+        project_name: Project name
+    """
+    from collections import Counter
+
+    # Configure console encoding for UTF-8 (especially important for Windows)
+    _configure_console_encoding()
+
+    print(f"\n{'=' * 60}")
+    print(f"BOM Summary: {project_name}")
+    print("=" * 60)
+
+    # Access Points BOM (grouped by vendor + model)
+    ap_counts = Counter((ap.vendor, ap.model) for ap in access_points)
+
+    print("\nAccess Points BOM:")
+    for (vendor, model), count in sorted(ap_counts.items()):
+        print(f"  {count}x {vendor} {model}")
+
+    # External Antennas BOM (only external)
+    external_antennas = [ant for ant in antennas if ant.is_external]
+
+    if external_antennas:
+        # Group dual-band antennas by (AP ID, antenna_model)
+        # This aggregates 2.4GHz + 5GHz radios into physical antenna count
+        from collections import defaultdict
+
+        antenna_groups = defaultdict(list)
+        for ant in external_antennas:
+            # Group by AP ID + antenna model (extracted from AP model)
+            if ant.access_point_id and ant.antenna_model:
+                key = (ant.access_point_id, ant.antenna_model)
+                antenna_groups[key].append(ant)
+
+        # Calculate physical antenna counts
+        antenna_counts = Counter()
+
+        for (ap_id, antenna_model), group_antennas in antenna_groups.items():
+            # Get max spatial streams across all radios (determines physical antenna count)
+            max_spatial_streams = max(ant.spatial_streams for ant in group_antennas)
+
+            # Create aggregated name for dual-band antennas
+            if len(group_antennas) > 1:
+                # Multiple radios (2.4GHz + 5GHz) = Dual-Band
+                antenna_display_name = f"{antenna_model} Dual-Band"
+            else:
+                # Single radio = keep antenna model as-is
+                antenna_display_name = antenna_model
+
+            # Add quantity based on max spatial streams (physical antennas)
+            antenna_counts[antenna_display_name] += max_spatial_streams
+
+        print("\nExternal Antennas BOM:")
+        for antenna_name, count in sorted(antenna_counts.items()):
+            print(f"  {count}x {antenna_name}")
+
+    # Total summary
+    total_aps = len(access_points)
+    total_external = len(set(ant.access_point_id for ant in external_antennas))
+
+    print(f"\nTotal: {total_aps} Access Points", end="")
+    if total_external > 0:
+        print(f" ({total_external} with external antennas)")
+    else:
+        print()
+
+    print("=" * 60)
 
 
 def print_header():
@@ -482,6 +596,7 @@ def process_project(
     include_picture_notes: bool = False,
     include_cable_notes: bool = False,
     project_name: str | None = None,
+    quiet: bool = False,
 ) -> int:
     """Process Ekahau project and generate BOM.
 
@@ -551,10 +666,21 @@ def process_project(
             notes_data = parser.get_notes()
             cable_notes_data = parser.get_cable_notes()
             picture_notes_data = parser.get_picture_notes()
+            building_floors_data = parser.get_building_floors()
+
+            # Create floor number mapping from buildingFloors.json
+            floor_number_map = {
+                bf["floorPlanId"]: bf.get("floorNumber", 0)
+                for bf in building_floors_data.get("buildingFloors", [])
+            }
 
             # Build floor lookup dictionary (optimized for O(1) access)
             floors = {
-                floor["id"]: Floor(id=floor["id"], name=floor["name"])
+                floor["id"]: Floor(
+                    id=floor["id"],
+                    name=floor["name"],
+                    floor_number=floor_number_map.get(floor["id"], 0),
+                )
                 for floor in floor_plans_data.get("floorPlans", [])
             }
             logger.info(f"Found {len(floors)} floors")
@@ -653,15 +779,30 @@ def process_project(
                 network_settings_data
             )
 
-            # Determine project name: use custom name if provided, otherwise use filename
+            # Determine project name: priority order:
+            # 1. CLI argument (--project-name)
+            # 2. Project metadata title
+            # 3. Project metadata name
+            # 4. Filename (fallback)
             if project_name:
                 project_name_value = sanitize_filename(project_name)
                 logger.info(
                     f"Using custom project name: '{project_name_value}' (original: '{project_name}')"
                 )
             else:
-                project_name_value = esx_file.stem
-                logger.debug(f"Using filename as project name: '{project_name_value}'")
+                # Try to get from project metadata
+                metadata_title = project_metadata_data.get("title", "").strip()
+                metadata_name = project_metadata_data.get("name", "").strip()
+
+                if metadata_title:
+                    project_name_value = metadata_title
+                    logger.debug(f"Using project title from metadata: '{project_name_value}'")
+                elif metadata_name:
+                    project_name_value = metadata_name
+                    logger.debug(f"Using project name from metadata: '{project_name_value}'")
+                else:
+                    project_name_value = esx_file.stem
+                    logger.debug(f"Using filename as project name: '{project_name_value}'")
 
             # Create project data container
             project_data = ProjectData(
@@ -841,6 +982,54 @@ def process_project(
             from .exporters.html_exporter import HTMLExporter
             from .exporters.json_exporter import JSONExporter
 
+            # Generate floor plan visualizations FIRST (before PDF export)
+            # so that PDF can embed the images
+            viz_output_dir = None
+            visualization_files = []
+            if visualize_floor_plans:
+                try:
+                    from .visualizers.floor_plan import FloorPlanVisualizer
+
+                    logger.info("=" * 60)
+                    logger.info("Generating Floor Plan Visualizations")
+                    logger.info("=" * 60)
+
+                    # Create visualizations subdirectory
+                    viz_output_dir = output_dir / "visualizations"
+                    viz_output_dir.mkdir(parents=True, exist_ok=True)
+
+                    # Create visualizer
+                    with FloorPlanVisualizer(
+                        esx_path=esx_file,
+                        output_dir=viz_output_dir,
+                        ap_circle_radius=ap_circle_radius,
+                        show_ap_names=show_ap_names,
+                        show_azimuth_arrows=show_azimuth_arrows,
+                        ap_opacity=ap_opacity,
+                        include_text_notes=include_text_notes,
+                        include_picture_notes=include_picture_notes,
+                        include_cable_notes=include_cable_notes,
+                        text_notes=notes,
+                        picture_notes=picture_notes,
+                        cable_notes=cable_notes,
+                    ) as visualizer:
+                        visualization_files = visualizer.visualize_all_floors(
+                            floors=floors, access_points=access_points, radios=radios
+                        )
+
+                    if visualization_files:
+                        logger.info(
+                            f"Generated {len(visualization_files)} floor plan visualizations:"
+                        )
+                        for viz_file in visualization_files:
+                            logger.info(f"  - {viz_file.name}")
+                except ImportError as e:
+                    logger.warning(f"Floor plan visualization not available: {e}")
+                    logger.warning("Install Pillow to enable floor plan visualizations")
+                except Exception as e:
+                    logger.error(f"Error generating floor plan visualizations: {e}")
+
+            # Now export to requested formats (PDF will have visualizations available)
             exporters = {
                 "csv": CSVExporter(output_dir),
                 "excel": ExcelExporter(output_dir),
@@ -853,7 +1042,7 @@ def process_project(
                 try:
                     from .exporters.pdf_exporter import PDFExporter
 
-                    exporters["pdf"] = PDFExporter(output_dir)
+                    exporters["pdf"] = PDFExporter(output_dir, visualization_dir=viz_output_dir)
                 except ImportError as e:
                     logger.warning(f"PDF export not available: {e}")
                     logger.warning(
@@ -898,57 +1087,6 @@ def process_project(
                     else:
                         logger.warning(f"Unknown export format: {format_name}")
 
-            # Generate floor plan visualizations if requested
-            visualization_files = []
-            if visualize_floor_plans:
-                try:
-                    from .visualizers.floor_plan import FloorPlanVisualizer
-
-                    logger.info("=" * 60)
-                    logger.info("Generating Floor Plan Visualizations")
-                    logger.info("=" * 60)
-
-                    # Create visualizations subdirectory
-                    viz_output_dir = output_dir / "visualizations"
-                    viz_output_dir.mkdir(parents=True, exist_ok=True)
-
-                    # Create visualizer
-                    with FloorPlanVisualizer(
-                        esx_path=esx_file,
-                        output_dir=viz_output_dir,
-                        ap_circle_radius=ap_circle_radius,
-                        show_ap_names=show_ap_names,
-                        show_azimuth_arrows=show_azimuth_arrows,
-                        ap_opacity=ap_opacity,
-                        include_text_notes=include_text_notes,
-                        include_picture_notes=include_picture_notes,
-                        include_cable_notes=include_cable_notes,
-                        text_notes=notes,
-                        picture_notes=picture_notes,
-                        cable_notes=cable_notes,
-                    ) as visualizer:
-                        visualization_files = visualizer.visualize_all_floors(
-                            floors=floors, access_points=access_points, radios=radios
-                        )
-
-                    if visualization_files:
-                        logger.info(
-                            f"Generated {len(visualization_files)} floor plan visualizations:"
-                        )
-                        for viz_file in visualization_files:
-                            logger.info(f"  - {viz_file.name}")
-                    else:
-                        logger.warning("No floor plan visualizations were generated")
-
-                except ImportError as e:
-                    logger.error(f"Floor plan visualization requires Pillow library: {e}")
-                    logger.error("Install with: pip install Pillow")
-                except Exception as e:
-                    logger.error(f"Error generating floor plan visualizations: {e}")
-                    import traceback
-
-                    logger.debug(traceback.format_exc())
-
             # Print summary with Rich
             if RICH_AVAILABLE and console:
                 console.print("\n[bold green]✓ Processing completed successfully![/bold green]\n")
@@ -974,6 +1112,10 @@ def process_project(
                 for file in exported_files:
                     logger.info(f"  - {file}")
                 logger.info("=" * 60)
+
+            # Print BOM summary (unless --quiet flag is set)
+            if not quiet:
+                _print_bom_summary(access_points, antennas, project_name_value)
 
             return 0
 
@@ -1166,6 +1308,7 @@ def main(args: list[str] | None = None) -> int:
                 include_picture_notes=merged_config.get("include_picture_notes", False),
                 include_cable_notes=merged_config.get("include_cable_notes", False),
                 project_name=merged_config.get("project_name"),
+                quiet=merged_config.get("quiet", False),
             )
 
             if exit_code != 0:

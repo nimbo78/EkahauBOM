@@ -25,6 +25,7 @@ from .constants import (
     ESX_PICTURE_NOTES_FILE,
     ESX_ACCESS_POINT_MODELS_FILE,
     ESX_NETWORK_CAPACITY_SETTINGS_FILE,
+    ESX_BUILDING_FLOORS_FILE,
 )
 
 logger = logging.getLogger(__name__)
@@ -253,6 +254,21 @@ class EkahauParser:
         except KeyError:
             logger.debug(f"{ESX_NETWORK_CAPACITY_SETTINGS_FILE} not found in project")
             return {"networkCapacitySettings": []}
+
+    def get_building_floors(self) -> dict[str, Any]:
+        """Get building floors data from the project.
+
+        Building floors contain floor numbers and height information that maps
+        to floor plans. Used for proper floor sorting (basement to top floor).
+
+        Returns:
+            Dictionary with building floors data. Returns empty dict if not found.
+        """
+        try:
+            return self._read_json(ESX_BUILDING_FLOORS_FILE)
+        except KeyError:
+            logger.debug(f"{ESX_BUILDING_FLOORS_FILE} not found in project")
+            return {"buildingFloors": []}
 
     def list_files(self) -> list[str]:
         """List all files in the .esx archive.

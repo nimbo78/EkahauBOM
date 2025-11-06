@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2025-11-07
+
+### Summary
+Enhanced PDF export with floor plan visualizations, proper floor sorting, and improved project name handling.
+
+### Added
+
+- **PDF Export - Floor Plan Visualizations**
+  - Floor plan visualizations are now embedded in PDF reports as base64-encoded images
+  - Floors are automatically sorted by floor number (basement → ground → upper floors)
+  - Images are sized at 90% width for optimal viewing
+  - Supports both portrait and landscape floor plans
+  - Multiple floors displayed in ascending order
+
+- **Floor Sorting**
+  - Added `floor_number` field to Floor model (0=ground, -1=basement, 1=first floor above, etc.)
+  - Parser now reads buildingFloors.json for floor number data
+  - New `get_building_floors()` method in EkahauParser
+
+### Fixed
+
+- **PDF Exporter**: Fixed project name display to use correct priority (CLI arg → title → name → filename)
+- **Operation Order**: Floor plan visualizations now generate BEFORE PDF export to ensure images are available for embedding
+
+### Changed
+
+- **PDF CSS**: Optimized floor plan image sizing and page break handling for better layout
+- **CLI Processing**: Reordered operations to generate visualizations before PDF export
+
 ## [3.0.5] - 2025-11-05
 
 ### Summary
