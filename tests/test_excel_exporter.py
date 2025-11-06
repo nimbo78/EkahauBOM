@@ -147,7 +147,7 @@ def detailed_project_data():
         schema_version="1.0",
     )
     return ProjectData(
-        project_name="Detailed Project",
+        project_name="Enterprise Campus Project",  # Use metadata.name as project_name
         access_points=aps,
         antennas=[],
         floors=floors,

@@ -217,11 +217,11 @@ class ExcelExporter(BaseExporter):
             ws[f"A{row}"].font = self.SECTION_FONT
             row += 1
 
-            if project_data.metadata.name:
-                ws[f"A{row}"] = "Project Name:"
-                ws[f"B{row}"] = project_data.metadata.name
-                ws[f"A{row}"].font = Font(bold=True)
-                row += 1
+            # Use project_data.project_name (already has correct priority: title → name → filename)
+            ws[f"A{row}"] = "Project Name:"
+            ws[f"B{row}"] = project_data.project_name
+            ws[f"A{row}"].font = Font(bold=True)
+            row += 1
 
             if project_data.metadata.customer:
                 ws[f"A{row}"] = "Customer:"

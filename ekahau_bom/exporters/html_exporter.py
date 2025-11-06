@@ -153,10 +153,10 @@ class HTMLExporter(BaseExporter):
         metadata_html = ""
         if metadata:
             metadata_items = []
-            if metadata.name:
-                metadata_items.append(
-                    f"<div class='metadata-item'><strong>Project Name:</strong> {html.escape(metadata.name)}</div>"
-                )
+            # Use project_name parameter (already has correct priority: title → name → filename)
+            metadata_items.append(
+                f"<div class='metadata-item'><strong>Project Name:</strong> {html.escape(project_name)}</div>"
+            )
             if metadata.customer:
                 metadata_items.append(
                     f"<div class='metadata-item'><strong>Customer:</strong> {html.escape(metadata.customer)}</div>"

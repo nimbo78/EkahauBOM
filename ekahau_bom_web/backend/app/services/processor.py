@@ -12,8 +12,10 @@ from typing import Optional
 from uuid import UUID
 
 from app.models import ProcessingStatus, ProjectMetadata
+from app.services.cache import cache_service
 from app.services.index import index_service
 from app.services.storage import StorageService
+from app.utils.thumbnails import generate_all_thumbnails
 
 logger = logging.getLogger(__name__)
 
@@ -129,12 +131,14 @@ class ProcessorService:
                     )
 
                 # Extract metadata from project if possible
-                await self._extract_project_metadata(
-                    project_id, original_file, metadata
-                )
+                await self._extract_project_metadata(project_id, original_file, metadata)
 
                 # Extract summary from JSON report if available
                 await self._extract_report_summary(project_id, reports_dir, metadata)
+
+                # Generate thumbnails for floor plan visualizations
+                if visualize_floor_plans:
+                    await self._generate_thumbnails(project_id, visualizations_dir)
 
                 # Update metadata
                 metadata.processing_status = ProcessingStatus.COMPLETED
@@ -175,6 +179,9 @@ class ProcessorService:
             self.storage.save_metadata(project_id, metadata)
             index_service.add(metadata)
             index_service.save_to_disk()
+
+            # Invalidate cache (project processed/updated)
+            cache_service.invalidate_project(project_id)
 
     def _build_command(
         self,
@@ -251,9 +258,7 @@ class ProcessorService:
                     # Project data is nested under "project" key
                     project_info = project_data.get("project", {})
                     # Try 'title' first (user-friendly name), then fall back to 'name'
-                    metadata.project_name = project_info.get(
-                        "title"
-                    ) or project_info.get("name")
+                    metadata.project_name = project_info.get("title") or project_info.get("name")
 
                     # Extract project details
                     metadata.customer = project_info.get("customer")
@@ -323,6 +328,51 @@ class ProcessorService:
 
         except Exception as e:
             logger.warning(f"Could not extract report summary for {project_id}: {e}")
+
+    async def _generate_thumbnails(self, project_id: UUID, visualizations_dir: Path) -> None:
+        """Generate thumbnails for all floor plan PNG visualizations.
+
+        Creates small (200x150) and medium (800x600) thumbnails for each PNG file
+        in the visualizations directory.
+
+        Args:
+            project_id: Project UUID
+            visualizations_dir: Directory containing PNG visualizations
+        """
+        try:
+            # Find all PNG files
+            png_files = list(visualizations_dir.glob("*.png"))
+            if not png_files:
+                logger.debug(f"No PNG visualizations found for {project_id}")
+                return
+
+            # Create thumbs directory
+            thumbs_dir = visualizations_dir / "thumbs"
+            thumbs_dir.mkdir(parents=True, exist_ok=True)
+
+            logger.info(f"Generating thumbnails for {len(png_files)} visualizations...")
+
+            # Generate thumbnails for each PNG file
+            thumbnail_count = 0
+            for png_file in png_files:
+                try:
+                    # Run thumbnail generation in thread pool to avoid blocking
+                    def generate_thumbs():
+                        return generate_all_thumbnails(png_file, thumbs_dir)
+
+                    thumbs = await asyncio.to_thread(generate_thumbs)
+                    thumbnail_count += len(thumbs)
+                    logger.debug(f"Generated thumbnails for {png_file.name}: {list(thumbs.keys())}")
+
+                except Exception as e:
+                    logger.error(f"Failed to generate thumbnails for {png_file.name}: {e}")
+                    # Continue with other files even if one fails
+
+            logger.info(f"Generated {thumbnail_count} thumbnails for project {project_id}")
+
+        except Exception as e:
+            logger.error(f"Error generating thumbnails for {project_id}: {e}")
+            # Don't fail the entire processing if thumbnail generation fails
 
     async def cancel_processing(self, project_id: UUID) -> None:
         """Cancel ongoing processing (if possible).

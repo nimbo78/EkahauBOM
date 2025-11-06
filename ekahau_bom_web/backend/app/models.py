@@ -59,6 +59,10 @@ class ProjectMetadata(BaseModel):
     short_link: Optional[str] = None
     short_link_expires: Optional[datetime] = None
 
+    # Archive
+    archived: bool = False
+    last_accessed: Optional[datetime] = None
+
 
 class ProjectListItem(BaseModel):
     """Project list item for UI."""
@@ -85,9 +89,7 @@ class UploadResponse(BaseModel):
 class ProcessingRequest(BaseModel):
     """Request for project processing."""
 
-    group_by: Optional[str] = (
-        "model"  # 'model', 'floor', 'color', 'vendor', 'tag', or None
-    )
+    group_by: Optional[str] = "model"  # 'model', 'floor', 'color', 'vendor', 'tag', or None
     output_formats: list[str] = [
         "csv",
         "excel",

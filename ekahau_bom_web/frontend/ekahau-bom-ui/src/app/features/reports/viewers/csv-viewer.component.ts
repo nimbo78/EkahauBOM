@@ -1,15 +1,15 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TuiLoader, TuiIcon } from '@taiga-ui/core';
 import { TuiTable } from '@taiga-ui/addon-table';
-import Papa from 'papaparse';
 import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-csv-viewer',
   standalone: true,
   imports: [CommonModule, TuiLoader, TuiTable, TuiIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="csv-viewer">
       @if (loading()) {
@@ -182,13 +182,13 @@ export class CsvViewerComponent implements OnInit {
       .get(url, { responseType: 'text' })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: (csvText) => {
+        next: async (csvText) => {
           try {
             // Check if this is a multi-section analytics report
             if (csvText.includes('===') && this.filename().includes('analytics')) {
-              this.parseMultiSectionCsv(csvText);
+              await this.parseMultiSectionCsv(csvText);
             } else {
-              this.parseStandardCsv(csvText);
+              await this.parseStandardCsv(csvText);
             }
           } catch (err) {
             this.error.set('Failed to parse CSV file');
@@ -202,7 +202,10 @@ export class CsvViewerComponent implements OnInit {
       });
   }
 
-  private parseStandardCsv(csvText: string): void {
+  private async parseStandardCsv(csvText: string): Promise<void> {
+    // Lazy load papaparse only when needed
+    const Papa = (await import('papaparse')).default;
+
     const result = Papa.parse(csvText, {
       header: true,
       dynamicTyping: true,
@@ -218,7 +221,10 @@ export class CsvViewerComponent implements OnInit {
     this.csvData.set(result.data);
   }
 
-  private parseMultiSectionCsv(csvText: string): void {
+  private async parseMultiSectionCsv(csvText: string): Promise<void> {
+    // Lazy load papaparse only when needed
+    const Papa = (await import('papaparse')).default;
+
     // For multi-section reports, flatten all data into a single table
     // with Section, Key, Value, Unit columns
     const lines = csvText.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));

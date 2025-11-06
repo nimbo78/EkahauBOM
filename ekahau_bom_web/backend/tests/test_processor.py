@@ -68,6 +68,9 @@ async def test_build_command(processor, sample_metadata, temp_storage):
         visualize_floor_plans=True,
         show_azimuth_arrows=False,
         ap_opacity=0.6,
+        include_text_notes=True,
+        include_picture_notes=True,
+        include_cable_notes=True,
     )
 
     assert "python" in str(cmd) or "-m" in cmd
@@ -98,6 +101,9 @@ async def test_build_command_minimal(processor, sample_metadata, temp_storage):
         visualize_floor_plans=False,
         show_azimuth_arrows=False,
         ap_opacity=0.6,
+        include_text_notes=False,
+        include_picture_notes=False,
+        include_cable_notes=False,
     )
 
     assert "--group-by" not in cmd
@@ -109,9 +115,7 @@ async def test_build_command_minimal(processor, sample_metadata, temp_storage):
 
 
 @pytest.mark.asyncio
-async def test_process_project_success(
-    processor, sample_metadata, temp_storage, tmp_path
-):
+async def test_process_project_success(processor, sample_metadata, temp_storage, tmp_path):
     """Test successful project processing."""
     project_id = sample_metadata.project_id
 
@@ -136,16 +140,12 @@ async def test_process_project_success(
 
             # Create a valid .esx file for metadata extraction
             with zipfile.ZipFile(original_file, "w") as zf:
-                zf.writestr(
-                    "project.json", json.dumps({"project": {"name": "Test Project"}})
-                )
+                zf.writestr("project.json", json.dumps({"project": {"name": "Test Project"}}))
                 zf.writestr(
                     "accessPoints.json",
                     json.dumps({"accessPoints": [{}, {}, {}]}),  # 3 APs
                 )
-                zf.writestr(
-                    "floorPlans.json", json.dumps({"floorPlans": [{}]})  # 1 floor
-                )
+                zf.writestr("floorPlans.json", json.dumps({"floorPlans": [{}]}))  # 1 floor
 
             # Process
             await processor.process_project(
@@ -212,41 +212,35 @@ async def test_extract_project_metadata(processor, sample_metadata, temp_storage
     # Create a valid .esx file (ZIP) with project metadata
     with zipfile.ZipFile(original_file, "w") as zf:
         # Project info
+        # Note: 'title' has priority over 'name' in metadata extraction
         zf.writestr(
             "project.json",
-            json.dumps({"project": {"name": "Test Project", "title": "Test"}}),
+            json.dumps({"project": {"name": "Test Project", "title": "Test Title"}}),
         )
         # 5 access points
-        zf.writestr(
-            "accessPoints.json", json.dumps({"accessPoints": [{}, {}, {}, {}, {}]})
-        )
+        zf.writestr("accessPoints.json", json.dumps({"accessPoints": [{}, {}, {}, {}, {}]}))
         # 2 floors
         zf.writestr("floorPlans.json", json.dumps({"floorPlans": [{}, {}]}))
 
     # Extract metadata
-    await processor._extract_project_metadata(
-        project_id, original_file, sample_metadata
-    )
+    await processor._extract_project_metadata(project_id, original_file, sample_metadata)
 
     # Verify counts
     assert sample_metadata.aps_count == 5
     assert sample_metadata.floors_count == 2
-    assert sample_metadata.project_name == "Test Project"
+    # Title has priority over name in metadata extraction
+    assert sample_metadata.project_name == "Test Title"
 
 
 @pytest.mark.asyncio
-async def test_extract_project_metadata_no_files(
-    processor, sample_metadata, temp_storage
-):
+async def test_extract_project_metadata_no_files(processor, sample_metadata, temp_storage):
     """Test extracting metadata when no files exist."""
     project_id = sample_metadata.project_id
     project_dir = temp_storage.get_project_dir(project_id)
     original_file = project_dir / "original.esx"
 
     # Should not raise exception
-    await processor._extract_project_metadata(
-        project_id, original_file, sample_metadata
-    )
+    await processor._extract_project_metadata(project_id, original_file, sample_metadata)
 
     # Counts should remain None
     assert sample_metadata.aps_count is None
@@ -276,9 +270,7 @@ async def test_cancel_processing(processor, sample_metadata, temp_storage):
 
 
 @pytest.mark.asyncio
-async def test_processing_updates_status_to_processing(
-    processor, sample_metadata, temp_storage
-):
+async def test_processing_updates_status_to_processing(processor, sample_metadata, temp_storage):
     """Test that processing updates status and index multiple times."""
     import zipfile
     import json

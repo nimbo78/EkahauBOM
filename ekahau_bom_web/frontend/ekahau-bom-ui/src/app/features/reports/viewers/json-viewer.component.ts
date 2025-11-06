@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -9,6 +9,7 @@ import { catchError, finalize, throwError } from 'rxjs';
   selector: 'app-json-viewer',
   standalone: true,
   imports: [CommonModule, TuiLoader],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="json-viewer">
       @if (loading()) {

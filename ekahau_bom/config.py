@@ -327,6 +327,9 @@ class Config:
         # Project naming
         merged["project_name"] = getattr(args, "project_name", None)
 
+        # Output options
+        merged["quiet"] = getattr(args, "quiet", False)
+
         return merged
 
     def _merge_list_arg(self, args: Any, arg_name: str, config_default: list) -> list[str] | None:

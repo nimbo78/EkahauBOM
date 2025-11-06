@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -6,7 +6,8 @@ import {
   TuiIcon,
   TuiNotification,
   TuiLoader,
-  TuiLink
+  TuiLink,
+  TuiHint
 } from '@taiga-ui/core';
 import {
   TuiBadge,
@@ -14,6 +15,7 @@ import {
 } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   ProjectDetails,
   ProcessingStatus,
@@ -33,8 +35,10 @@ import { NotesData } from '../../../core/models/notes.model';
     TuiLoader,
     TuiBadge,
     TuiAccordion,
-    TuiLink
+    TuiLink,
+    TuiHint
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="project-detail-container">
       <!-- Header with back button -->
@@ -95,7 +99,18 @@ import { NotesData } from '../../../core/models/notes.model';
         <div class="project-header">
           <h1>{{ project()?.project_name || 'Unnamed Project' }}</h1>
           <div class="project-meta">
-            <span>File: {{ project()?.filename }}</span>
+            <span>
+              File:
+              <a
+                *ngIf="authService.isAuthenticated()"
+                tuiLink
+                (click)="downloadOriginalFile()"
+                style="cursor: pointer;"
+              >
+                {{ project()?.filename }}
+              </a>
+              <span *ngIf="!authService.isAuthenticated()">{{ project()?.filename }}</span>
+            </span>
             <span>•</span>
             <span>Uploaded: {{ formatDate(project()?.upload_date) }}</span>
             <span>•</span>
@@ -152,6 +167,14 @@ import { NotesData } from '../../../core/models/notes.model';
             </div>
           </div>
 
+          <!-- Keyboard shortcuts hint -->
+          <div class="keyboard-shortcuts-hint">
+            <tui-icon icon="@tui.command" style="font-size: 14px; margin-right: 0.25rem;"></tui-icon>
+            <span class="hint-text">
+              Use <kbd>←</kbd> <kbd>→</kbd> or <kbd>1</kbd>-<kbd>4</kbd> to switch tabs
+            </span>
+          </div>
+
           <div class="tab-content">
             <!-- Overview Tab -->
             <div *ngIf="activeTab() === 'overview'" class="overview-tab">
@@ -179,11 +202,65 @@ import { NotesData } from '../../../core/models/notes.model';
                       <a tuiLink [href]="getShortLinkUrl()" target="_blank">
                         {{ project()?.short_link }}
                       </a>
+                      <tui-badge
+                        *ngIf="isShortLinkExpired()"
+                        appearance="error"
+                        style="margin-left: 0.5rem;"
+                      >
+                        Expired
+                      </tui-badge>
+                      <tui-badge
+                        *ngIf="shouldShowExpiryWarning() && !isShortLinkExpired()"
+                        appearance="warning"
+                        style="margin-left: 0.5rem;"
+                      >
+                        Expires in {{ getDaysUntilExpiry() }} days
+                      </tui-badge>
                     </span>
                   </div>
                   <div class="info-item" *ngIf="project()?.short_link_expires">
                     <span class="label">Expires:</span>
-                    <span class="value">{{ formatDate(project()?.short_link_expires) }}</span>
+                    <span class="value">
+                      {{ formatDate(project()?.short_link_expires) }}
+                      <button
+                        *ngIf="!isShortLinkMode() && authService.isAuthenticated()"
+                        tuiButton
+                        appearance="flat"
+                        size="s"
+                        (click)="renewShortLink()"
+                        [tuiHint]="renewHint"
+                        style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-left: 0.5rem;"
+                      >
+                        <tui-icon icon="@tui.rotate-cw"></tui-icon>
+                      </button>
+                      <button
+                        *ngIf="!isShortLinkMode() && authService.isAuthenticated()"
+                        tuiButton
+                        appearance="flat"
+                        size="s"
+                        (click)="deleteShortLink()"
+                        [tuiHint]="deleteShortLinkHint"
+                        style="background-color: #fce8e6; color: #e01f19; min-width: 36px; padding: 8px; border: 1px solid #e01f19; border-radius: 4px; margin-left: 0.25rem;"
+                      >
+                        <tui-icon icon="@tui.trash-2"></tui-icon>
+                      </button>
+                    </span>
+                  </div>
+                  <div class="info-item" *ngIf="!project()?.short_link && !isShortLinkMode() && authService.isAuthenticated()">
+                    <span class="label">Short Link:</span>
+                    <span class="value">
+                      <button
+                        tuiButton
+                        appearance="flat"
+                        size="s"
+                        (click)="createNewShortLink()"
+                        [tuiHint]="createShortLinkHint"
+                        style="background-color: #e8eef7; color: #526ed3; padding: 8px 12px; border: 1px solid #526ed3; border-radius: 4px;"
+                      >
+                        <tui-icon icon="@tui.link" style="margin-right: 0.25rem;"></tui-icon>
+                        Create Short Link
+                      </button>
+                    </span>
                   </div>
                 </div>
 
@@ -350,7 +427,7 @@ import { NotesData } from '../../../core/models/notes.model';
               <div *ngIf="!loadingVisualizations() && visualizations().length > 0" class="visualizations-grid">
                 <div *ngFor="let viz of visualizations(); let i = index" class="visualization-item">
                   <div class="viz-preview" (click)="openLightbox(i)">
-                    <img [src]="getVisualizationUrl(viz.filename)" [alt]="viz.filename" />
+                    <img [src]="getVisualizationUrl(viz.filename)" [alt]="viz.filename" loading="lazy" />
                     <div class="viz-overlay">
                       <tui-icon icon="@tui.eye"></tui-icon>
                       <span>Click to view</span>
@@ -633,6 +710,28 @@ import { NotesData } from '../../../core/models/notes.model';
         </div>
       </div>
     </div>
+
+    <!-- Tooltip Templates -->
+    <ng-template #renewHint>
+      <div class="custom-hint">
+        <tui-icon icon="@tui.rotate-cw" class="hint-icon"></tui-icon>
+        <span class="hint-text">Renew Short Link</span>
+      </div>
+    </ng-template>
+
+    <ng-template #deleteShortLinkHint>
+      <div class="custom-hint custom-hint-danger">
+        <tui-icon icon="@tui.trash-2" class="hint-icon"></tui-icon>
+        <span class="hint-text">Delete Short Link</span>
+      </div>
+    </ng-template>
+
+    <ng-template #createShortLinkHint>
+      <div class="custom-hint">
+        <tui-icon icon="@tui.link" class="hint-icon"></tui-icon>
+        <span class="hint-text">Create Short Link</span>
+      </div>
+    </ng-template>
   `,
   styles: [`
     .project-detail-container {
@@ -1321,13 +1420,83 @@ import { NotesData } from '../../../core/models/notes.model';
       color: #721C24 !important;
       border: 1px solid #F5C6CB !important;
     }
+
+    // Keyboard shortcuts hint
+    .keyboard-shortcuts-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0;
+      background: rgba(var(--tui-text-primary-rgb), 0.04);
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-secondary);
+
+      .hint-text {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      kbd {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        background: var(--tui-background-base);
+        border: 1px solid var(--tui-border-normal);
+        border-radius: 0.25rem;
+        font-family: monospace;
+        font-size: 0.8em;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    // Custom hint styles
+    .custom-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+      background: rgba(45, 45, 45, 0.80);
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      .hint-icon {
+        font-size: 1rem;
+        flex-shrink: 0;
+        color: #ffffff;
+      }
+
+      .hint-text {
+        color: #ffffff;
+      }
+    }
+
+    .custom-hint-danger {
+      background: rgba(224, 31, 25, 0.80);
+
+      .hint-icon,
+      .hint-text {
+        color: #ffffff;
+      }
+    }
   `]
 })
 export class ProjectDetailComponent implements OnInit {
   private apiService = inject(ApiService);
   private projectService = inject(ProjectService);
+  protected authService = inject(AuthService);  // Protected so template can access
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
+  // Template references for tooltips (public to suppress TypeScript errors)
+  renewHint: any;
+  deleteShortLinkHint: any;
+  createShortLinkHint: any;
 
   // Signals for component state
   loading = signal(false);
@@ -1381,6 +1550,47 @@ export class ProjectDetailComponent implements OnInit {
         this.loadProjectByShortLink(params['shortLink']);
       }
     });
+  }
+
+  /**
+   * Handle keyboard shortcuts for tab navigation
+   */
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardNavigation(event: KeyboardEvent): void {
+    // Don't handle keyboard shortcuts if user is typing in an input field
+    const target = event.target as HTMLElement;
+    const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+    if (isInputField) {
+      return;
+    }
+
+    const tabs: Array<'overview' | 'reports' | 'visualizations' | 'notes'> = ['overview', 'reports', 'visualizations', 'notes'];
+    const currentIndex = tabs.indexOf(this.activeTab());
+
+    // Arrow keys for tab navigation
+    if (event.key === 'ArrowLeft' && currentIndex > 0) {
+      event.preventDefault();
+      this.setActiveTab(tabs[currentIndex - 1]);
+    } else if (event.key === 'ArrowRight' && currentIndex < tabs.length - 1) {
+      event.preventDefault();
+      this.setActiveTab(tabs[currentIndex + 1]);
+    }
+
+    // Number keys (1-4) for direct tab jumping
+    else if (event.key === '1') {
+      event.preventDefault();
+      this.setActiveTab('overview');
+    } else if (event.key === '2') {
+      event.preventDefault();
+      this.setActiveTab('reports');
+    } else if (event.key === '3') {
+      event.preventDefault();
+      this.setActiveTab('visualizations');
+    } else if (event.key === '4') {
+      event.preventDefault();
+      this.setActiveTab('notes');
+    }
   }
 
   loadProject(): void {
@@ -1527,6 +1737,96 @@ export class ProjectDetailComponent implements OnInit {
     return `/s/${this.project()?.short_link}`;
   }
 
+  isShortLinkExpired(): boolean {
+    const expiryDate = this.project()?.short_link_expires;
+    if (!expiryDate) return false;
+    return new Date(expiryDate) < new Date();
+  }
+
+  getDaysUntilExpiry(): number | null {
+    const expiryDate = this.project()?.short_link_expires;
+    if (!expiryDate) return null;
+
+    const now = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  }
+
+  shouldShowExpiryWarning(): boolean {
+    const days = this.getDaysUntilExpiry();
+    return days !== null && days > 0 && days <= 14;
+  }
+
+  renewShortLink(): void {
+    if (!this.projectId) return;
+
+    const days = prompt('Enter number of days to extend (1-365):', '30');
+    if (!days) return;
+
+    const daysNum = parseInt(days, 10);
+    if (isNaN(daysNum) || daysNum < 1 || daysNum > 365) {
+      alert('Invalid number of days. Please enter a value between 1 and 365.');
+      return;
+    }
+
+    this.apiService.renewShortLink(this.projectId, daysNum).subscribe({
+      next: (response) => {
+        console.log('Short link renewed:', response);
+        this.loadProject(); // Reload to get updated expiry date
+      },
+      error: (err) => {
+        console.error('Error renewing short link:', err);
+        alert('Failed to renew short link');
+      }
+    });
+  }
+
+  createNewShortLink(): void {
+    if (!this.projectId) return;
+
+    const days = prompt('Enter number of days until expiry (1-365):', '30');
+    if (!days) return;
+
+    const daysNum = parseInt(days, 10);
+    if (isNaN(daysNum) || daysNum < 1 || daysNum > 365) {
+      alert('Invalid number of days. Please enter a value between 1 and 365.');
+      return;
+    }
+
+    this.apiService.createShortLink(this.projectId, daysNum).subscribe({
+      next: (response) => {
+        console.log('Short link created:', response);
+        this.loadProject(); // Reload to get new short link
+      },
+      error: (err) => {
+        console.error('Error creating short link:', err);
+        alert('Failed to create short link');
+      }
+    });
+  }
+
+  deleteShortLink(): void {
+    if (!this.projectId) return;
+
+    if (!confirm('Are you sure you want to delete this short link?')) {
+      return;
+    }
+
+    this.apiService.deleteShortLink(this.projectId).subscribe({
+      next: (response) => {
+        console.log('Short link deleted:', response);
+        this.loadProject(); // Reload to clear short link
+      },
+      error: (err) => {
+        console.error('Error deleting short link:', err);
+        alert('Failed to delete short link');
+      }
+    });
+  }
+
   viewReport(report: ReportFile): void {
     if (!this.projectId) {
       return;
@@ -1562,11 +1862,38 @@ export class ProjectDetailComponent implements OnInit {
     window.open(url, '_blank');
   }
 
+  downloadOriginalFile(): void {
+    if (!this.projectId) {
+      return;
+    }
+
+    const url = `/api/reports/${this.projectId}/original`;
+    window.open(url, '_blank');
+  }
+
   getVisualizationUrl(filename: string): string {
     if (!this.projectId) {
       return '';
     }
 
+    // Use thumbnail for grid view (small size)
+    return this.getThumbnailUrl(filename, 'small');
+  }
+
+  getThumbnailUrl(filename: string, size: 'small' | 'medium' = 'small'): string {
+    if (!this.projectId) {
+      return '';
+    }
+
+    return `/api/reports/${this.projectId}/visualization/${filename}/thumb?size=${size}`;
+  }
+
+  getFullSizeUrl(filename: string): string {
+    if (!this.projectId) {
+      return '';
+    }
+
+    // Return original image URL for full-size viewing
     return `/api/reports/${this.projectId}/visualization/${filename}`;
   }
 
@@ -1614,7 +1941,8 @@ export class ProjectDetailComponent implements OnInit {
     if (!viz) return;
 
     this.currentVisualizationIndex.set(index);
-    this.lightboxImageUrl.set(this.getVisualizationUrl(viz.filename));
+    // Use full-size image for lightbox (better quality for zooming)
+    this.lightboxImageUrl.set(this.getFullSizeUrl(viz.filename));
     this.lightboxImageName.set(viz.filename);
     this.lightboxOpen.set(true);
     this.resetZoom(); // Reset zoom when opening new image

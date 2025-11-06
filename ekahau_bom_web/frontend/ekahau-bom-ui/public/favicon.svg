@@ -1,0 +1,17 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified Wi-Fi + BOM icon for favicon -->
+  <circle cx="16" cy="22" r="2" fill="#667EEA"/>
+
+  <!-- Wi-Fi arcs -->
+  <path d="M16 18C18.2091 18 20 19.7909 20 22" stroke="#667EEA" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 22C12 19.7909 13.7909 18 16 18" stroke="#667EEA" stroke-width="2" stroke-linecap="round"/>
+
+  <path d="M16 14C20.4183 14 24 17.5817 24 22" stroke="#764BA2" stroke-width="2" stroke-linecap="round"/>
+  <path d="M8 22C8 17.5817 11.5817 14 16 14" stroke="#764BA2" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Document -->
+  <rect x="19" y="6" width="10" height="13" rx="1.5" fill="white" stroke="#667EEA" stroke-width="1.5"/>
+  <line x1="21" y1="9" x2="27" y2="9" stroke="#667EEA" stroke-width="1" stroke-linecap="round"/>
+  <line x1="21" y1="12" x2="27" y2="12" stroke="#764BA2" stroke-width="1" stroke-linecap="round"/>
+  <line x1="21" y1="15" x2="25" y2="15" stroke="#A78BFA" stroke-width="1" stroke-linecap="round"/>
+</svg>

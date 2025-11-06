@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TuiLoader } from '@taiga-ui/core';
@@ -7,6 +7,7 @@ import { TuiLoader } from '@taiga-ui/core';
   selector: 'app-pdf-viewer',
   standalone: true,
   imports: [CommonModule, TuiLoader],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pdf-viewer">
       @if (loading()) {

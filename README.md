@@ -103,6 +103,13 @@ ekahau-bom myproject.esx \
 
 Drag-and-drop .esx files with instant upload and processing queue.
 
+**Keyboard Shortcuts**: Navigate faster with global shortcuts:
+- `Alt+U` - Quick upload (admin only)
+- `Ctrl+K` or `/` - Focus search
+- `Escape` - Clear search
+- `←/→` - Navigate between tabs
+- `1-4` - Jump to specific tab
+
 ### Project Dashboard
 
 ![Projects List](docs/images/webui-projects.png)
@@ -130,6 +137,16 @@ Configure all processing options via web interface:
 - Output formats (CSV, Excel, HTML, PDF, JSON)
 - Visualizations with azimuth arrows and custom opacity
 - Real-time progress tracking
+
+### Archive Management
+
+**Automatic space savings**: Old projects (not accessed for 60+ days) are automatically compressed to tar.gz archives, saving 60-70% disk space. Projects are transparently decompressed on first access.
+
+**Background job** (optional, requires cron/Task Scheduler):
+```bash
+# Run weekly to archive old projects
+python -m app.tasks.archive_old_projects
+```
 
 ---
 

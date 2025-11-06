@@ -128,8 +128,8 @@ class JSONExporter(BaseExporter):
         # Add project metadata if available
         if project_data.metadata:
             project_info = {}
-            if project_data.metadata.name:
-                project_info["project_name"] = project_data.metadata.name
+            # Use project_data.project_name (already has correct priority: title → name → filename)
+            project_info["project_name"] = project_data.project_name
             if project_data.metadata.customer:
                 project_info["customer"] = project_data.metadata.customer
             if project_data.metadata.location:

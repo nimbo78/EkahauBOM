@@ -16,6 +16,7 @@ from app.models import (
     ProjectMetadata,
     UploadResponse,
 )
+from app.services.cache import cache_service
 from app.services.index import index_service
 from app.services.processor import ProcessorService
 from app.services.storage import StorageService
@@ -77,9 +78,7 @@ async def upload_file(
 
     # Validate file size (max 500 MB)
     if file_size > 500 * 1024 * 1024:
-        raise HTTPException(
-            status_code=413, detail="File too large (max 500 MB allowed)"
-        )
+        raise HTTPException(status_code=413, detail="File too large (max 500 MB allowed)")
 
     # Extract project name from .esx file
     project_name = extract_project_name(file_content)
@@ -120,9 +119,7 @@ async def upload_file(
 
     # No existing project - create new one
     # Save file to storage
-    file_path = await storage_service.save_uploaded_file(
-        project_id, file.filename, file_content
-    )
+    file_path = await storage_service.save_uploaded_file(project_id, file.filename, file_content)
 
     # Generate short link
     short_link = generate_short_link()
@@ -145,6 +142,9 @@ async def upload_file(
     # Add to index
     index_service.add(metadata)
     index_service.save_to_disk()
+
+    # Invalidate projects list cache (new project added)
+    cache_service.invalidate_projects_list()
 
     return UploadResponse(
         project_id=project_id,
@@ -196,17 +196,13 @@ async def update_project(
 
     # Validate file size
     if file_size > 500 * 1024 * 1024:
-        raise HTTPException(
-            status_code=413, detail="File too large (max 500 MB allowed)"
-        )
+        raise HTTPException(status_code=413, detail="File too large (max 500 MB allowed)")
 
     # Extract project name from new file
     project_name = extract_project_name(file_content)
 
     # Save new file (overwrites old one)
-    file_path = await storage_service.save_uploaded_file(
-        project_uuid, file.filename, file_content
-    )
+    file_path = await storage_service.save_uploaded_file(project_uuid, file.filename, file_content)
 
     # Update metadata
     from datetime import UTC, datetime
@@ -230,6 +226,9 @@ async def update_project(
     # Update index
     index_service.add(metadata)  # add() also updates existing entries
     index_service.save_to_disk()
+
+    # Invalidate cache (project updated)
+    cache_service.invalidate_project(project_uuid)
 
     return UploadResponse(
         project_id=project_uuid,
@@ -272,9 +271,7 @@ async def process_project(
 
     # Check if already processing
     if metadata.processing_status.value == "processing":
-        raise HTTPException(
-            status_code=409, detail="Project is already being processed"
-        )
+        raise HTTPException(status_code=409, detail="Project is already being processed")
 
     # Start processing in background
     background_tasks.add_task(

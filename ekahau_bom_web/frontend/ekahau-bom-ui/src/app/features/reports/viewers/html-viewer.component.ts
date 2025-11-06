@@ -1,12 +1,12 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { TuiLoader } from '@taiga-ui/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-html-viewer',
   standalone: true,
-  imports: [CommonModule, TuiLoader],
+  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="html-viewer">
       <iframe

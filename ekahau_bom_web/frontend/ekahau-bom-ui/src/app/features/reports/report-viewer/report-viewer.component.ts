@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TuiButton, TuiIcon } from '@taiga-ui/core';
 
@@ -22,6 +22,7 @@ import { ReportFile } from '../../../core/models/project.model';
     PdfViewerComponent,
     JsonViewerComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './report-viewer.component.html',
   styleUrl: './report-viewer.component.scss',
 })

@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import {
   TuiButton,
   TuiIcon,
@@ -12,12 +13,12 @@ import {
   TuiTextfield
 } from '@taiga-ui/core';
 import {
-  TuiBadge,
-  TuiPagination
+  TuiBadge
 } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import {
   ProjectListItem,
   ProjectStats,
@@ -32,6 +33,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
+    ScrollingModule,
     TuiButton,
     TuiIcon,
     TuiNotification,
@@ -39,9 +41,9 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
     TuiBadge,
     TuiTextfield,
     TuiHint,
-    TuiLink,
-    TuiPagination
+    TuiLink
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="projects-container">
       <div class="page-header">
@@ -105,6 +107,12 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
             />
           </tui-textfield>
         </div>
+        <div class="keyboard-shortcuts-hint">
+          <tui-icon icon="@tui.command" style="font-size: 14px; margin-right: 0.25rem;"></tui-icon>
+          <span class="hint-text">
+            Press <kbd>Ctrl</kbd>+<kbd>K</kbd> or <kbd>/</kbd> to focus search
+          </span>
+        </div>
       </div>
 
       <!-- Loading state -->
@@ -124,91 +132,6 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
       <!-- Projects table -->
       <div *ngIf="!loading() && !error()" class="table-wrapper">
-        <table class="projects-table">
-          <thead>
-            <tr>
-              <th>Project Name</th>
-              <th>File Name</th>
-              <th>Upload Date</th>
-              <th>APs Count</th>
-              <th>Status</th>
-              <th>Short Link</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let project of filteredProjects()">
-              <td>
-                <a tuiLink [routerLink]="['/projects', project.project_id]">
-                  {{ project.project_name || 'Unnamed Project' }}
-                </a>
-              </td>
-              <td>{{ project.filename }}</td>
-              <td>{{ formatDate(project.upload_date) }}</td>
-              <td>{{ project.aps_count || '-' }}</td>
-              <td>
-                <tui-badge
-                  [appearance]="getStatusAppearance(project.processing_status)"
-                  [class]="'status-badge-' + project.processing_status.toLowerCase()"
-                >
-                  {{ project.processing_status }}
-                </tui-badge>
-              </td>
-              <td>
-                <a
-                  *ngIf="project.short_link"
-                  tuiLink
-                  [href]="'/s/' + project.short_link"
-                  target="_blank"
-                >
-                  {{ project.short_link }}
-                </a>
-                <span *ngIf="!project.short_link">-</span>
-              </td>
-              <td>
-                <div class="actions">
-                  <button
-                    tuiButton
-                    appearance="flat"
-                    size="s"
-                    [routerLink]="['/projects', project.project_id]"
-                    [tuiHint]="viewHint"
-                    style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
-                  >
-                    <tui-icon icon="@tui.eye"></tui-icon>
-                  </button>
-                  <button
-                    *ngIf="isAuthenticated() &&
-                           (project.processing_status === ProcessingStatus.PENDING ||
-                            project.processing_status === ProcessingStatus.COMPLETED ||
-                            project.processing_status === ProcessingStatus.FAILED)"
-                    tuiButton
-                    appearance="flat"
-                    size="s"
-                    [routerLink]="['/admin/processing']"
-                    [queryParams]="{projectId: project.project_id}"
-                    [tuiHint]="project.processing_status === ProcessingStatus.PENDING ? configureHint : reprocessHint"
-                    style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
-                  >
-                    <tui-icon icon="@tui.settings"></tui-icon>
-                  </button>
-                  <button
-                    *ngIf="isAuthenticated()"
-                    tuiButton
-                    appearance="flat"
-                    size="s"
-                    (click)="confirmDelete(project)"
-                    [tuiHint]="deleteHint"
-                    style="background-color: #fce8e6; color: #e01f19; min-width: 36px; padding: 8px; border: 1px solid #e01f19; border-radius: 4px;"
-                  >
-                    <tui-icon icon="@tui.trash-2"></tui-icon>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
         <!-- Empty state -->
         <div *ngIf="filteredProjects().length === 0" class="empty-state">
           <tui-icon icon="@tui.folder"></tui-icon>
@@ -220,6 +143,98 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
             Use the Upload button in the navigation menu to get started
           </p>
         </div>
+
+        <!-- Virtual scroll table -->
+        <cdk-virtual-scroll-viewport
+          *ngIf="filteredProjects().length > 0"
+          [itemSize]="60"
+          class="virtual-scroll-viewport"
+        >
+          <table class="projects-table">
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>File Name</th>
+                <th>Upload Date</th>
+                <th>APs Count</th>
+                <th>Status</th>
+                <th>Short Link</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *cdkVirtualFor="let project of filteredProjects(); trackBy: trackByProjectId">
+                <td>
+                  <a tuiLink [routerLink]="['/projects', project.project_id]">
+                    {{ project.project_name || 'Unnamed Project' }}
+                  </a>
+                </td>
+                <td>{{ project.filename }}</td>
+                <td>{{ formatDate(project.upload_date) }}</td>
+                <td>{{ project.aps_count || '-' }}</td>
+                <td>
+                  <tui-badge
+                    [appearance]="getStatusAppearance(project.processing_status)"
+                    [class]="'status-badge-' + project.processing_status.toLowerCase()"
+                  >
+                    {{ project.processing_status }}
+                  </tui-badge>
+                </td>
+                <td>
+                  <a
+                    *ngIf="project.short_link"
+                    tuiLink
+                    [href]="'/s/' + project.short_link"
+                    target="_blank"
+                  >
+                    {{ project.short_link }}
+                  </a>
+                  <span *ngIf="!project.short_link">-</span>
+                </td>
+                <td>
+                  <div class="actions">
+                    <button
+                      tuiButton
+                      appearance="flat"
+                      size="s"
+                      [routerLink]="['/projects', project.project_id]"
+                      [tuiHint]="viewHint"
+                      style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
+                    >
+                      <tui-icon icon="@tui.eye"></tui-icon>
+                    </button>
+                    <button
+                      *ngIf="isAuthenticated() &&
+                             (project.processing_status === ProcessingStatus.PENDING ||
+                              project.processing_status === ProcessingStatus.COMPLETED ||
+                              project.processing_status === ProcessingStatus.FAILED)"
+                      tuiButton
+                      appearance="flat"
+                      size="s"
+                      [routerLink]="['/admin/processing']"
+                      [queryParams]="{projectId: project.project_id}"
+                      [tuiHint]="project.processing_status === ProcessingStatus.PENDING ? configureHint : reprocessHint"
+                      style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
+                    >
+                      <tui-icon icon="@tui.settings"></tui-icon>
+                    </button>
+                    <button
+                      *ngIf="isAuthenticated()"
+                      tuiButton
+                      appearance="flat"
+                      size="s"
+                      (click)="confirmDelete(project)"
+                      [tuiHint]="deleteHint"
+                      style="background-color: #fce8e6; color: #e01f19; min-width: 36px; padding: 8px; border: 1px solid #e01f19; border-radius: 4px;"
+                    >
+                      <tui-icon icon="@tui.trash-2"></tui-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </cdk-virtual-scroll-viewport>
       </div>
 
       <!-- Hint templates with icons -->
@@ -390,6 +405,18 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
+    .virtual-scroll-viewport {
+      height: calc(100vh - 480px);
+      min-height: 400px;
+      max-height: 800px;
+      width: 100%;
+
+      // Override CDK styles for table support
+      ::ng-deep .cdk-virtual-scroll-content-wrapper {
+        width: 100%;
+      }
+    }
+
     .projects-table {
       width: 100%;
 
@@ -398,14 +425,21 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
         font-weight: 600;
         background: var(--tui-base-02);
         text-align: left;
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
 
       td {
         padding: 1rem;
       }
 
-      tr:hover {
-        background: var(--tui-base-02);
+      tbody tr {
+        height: 60px; // Must match itemSize in virtual scroll
+
+        &:hover {
+          background: var(--tui-base-02);
+        }
       }
     }
 
@@ -497,12 +531,54 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
         color: #ffffff;
       }
     }
+
+    // Keyboard shortcuts hint
+    .keyboard-shortcuts-hint {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0.5rem 1rem;
+      margin-left: 1rem;
+      background: rgba(var(--tui-text-primary-rgb), 0.04);
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-secondary);
+
+      .hint-text {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      kbd {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        background: var(--tui-background-base);
+        border: 1px solid var(--tui-border-normal);
+        border-radius: 0.25rem;
+        font-family: monospace;
+        font-size: 0.8em;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .search-input {
+        flex: 0 0 300px;
+      }
+    }
   `]
 })
 export class ProjectsListComponent implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
   private projectService = inject(ProjectService);
   private authService = inject(AuthService);
+  private errorMessageService = inject(ErrorMessageService);
   private router = inject(Router);
 
   // Signals for component state
@@ -552,9 +628,9 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set('Failed to load projects. Please try again.');
+        this.errorMessageService.logError(err, 'Load Projects');
+        this.error.set(this.errorMessageService.getErrorMessage(err));
         this.loading.set(false);
-        console.error('Error loading projects:', err);
       }
     });
   }
@@ -636,8 +712,10 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
         this.loadStats();
       },
       error: (err) => {
-        this.error.set('Failed to delete project. Please try again.');
-        console.error('Error deleting project:', err);
+        this.errorMessageService.logError(err, 'Delete Project');
+        const errorMessage = this.errorMessageService.getErrorMessage(err);
+        const suggestion = this.errorMessageService.getSuggestion(err);
+        this.error.set(suggestion ? `${errorMessage}\n\n${suggestion}` : errorMessage);
       }
     });
   }
@@ -660,5 +738,10 @@ export class ProjectsListComponent implements OnInit, OnDestroy {
       default:
         return 'neutral';
     }
+  }
+
+  // TrackBy function for virtual scrolling optimization
+  trackByProjectId(index: number, project: ProjectListItem): string {
+    return project.project_id;
   }
 }

@@ -75,7 +75,12 @@ backend/
 │   ├── services/         # Business logic
 │   │   ├── storage.py    # File storage
 │   │   ├── index.py      # In-memory indexing
-│   │   └── processor.py  # EkahauBOM processing
+│   │   ├── processor.py  # EkahauBOM processing
+│   │   ├── archive.py    # Project archiving
+│   │   └── cache.py      # Response caching
+│   ├── tasks/            # Background jobs
+│   │   ├── archive_old_projects.py    # Archive old projects
+│   │   └── cleanup_expired_links.py   # Remove expired links
 │   └── utils/            # Utilities
 │       └── short_links.py
 ├── tests/                # Tests
@@ -103,3 +108,43 @@ backend/
 - `GET /api/reports/{project_id}/download/{filename}` - Download report
 - `GET /api/reports/{project_id}/visualization/{filename}` - Get visualization
 - `GET /api/reports/{project_id}/original` - Download original .esx
+
+## Background Jobs
+
+### Archive Old Projects
+
+Compress old projects (not accessed for 60+ days) to save disk space:
+
+```bash
+# Run manually
+python -m app.tasks.archive_old_projects
+
+# Schedule with cron (Linux/macOS)
+# Add to crontab -e:
+0 2 * * 0 cd /path/to/backend && ./venv/bin/python -m app.tasks.archive_old_projects
+
+# Schedule with Task Scheduler (Windows)
+# Create task that runs weekly:
+# Program: C:\path\to\backend\venv\Scripts\python.exe
+# Arguments: -m app.tasks.archive_old_projects
+# Start in: C:\path\to\backend
+```
+
+**Archive criteria**:
+- Processing status: COMPLETED
+- Last accessed: > 60 days ago (or never accessed)
+- Not already archived
+
+**Space savings**: 60-70% compression ratio
+
+### Cleanup Expired Links
+
+Remove expired short links from projects:
+
+```bash
+# Run manually
+python -m app.tasks.cleanup_expired_links
+
+# Schedule daily at 3 AM
+0 3 * * * cd /path/to/backend && ./venv/bin/python -m app.tasks.cleanup_expired_links
+```

@@ -1,9 +1,8 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TuiLoader, TuiButton } from '@taiga-ui/core';
 import { catchError, finalize, throwError } from 'rxjs';
-import * as XLSX from 'xlsx';
 
 interface ExcelSheet {
   name: string;
@@ -15,6 +14,7 @@ interface ExcelSheet {
   selector: 'app-excel-viewer',
   standalone: true,
   imports: [CommonModule, TuiLoader, TuiButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="excel-viewer">
       @if (loading()) {
@@ -210,9 +210,9 @@ export class ExcelViewerComponent {
         }),
         finalize(() => this.loading.set(false))
       )
-      .subscribe((buffer) => {
+      .subscribe(async (buffer) => {
         try {
-          this.parseExcelFile(buffer);
+          await this.parseExcelFile(buffer);
         } catch (e) {
           this.error.set('Failed to parse Excel file');
           console.error('Excel parse error:', e);
@@ -220,7 +220,10 @@ export class ExcelViewerComponent {
       });
   }
 
-  private parseExcelFile(buffer: ArrayBuffer): void {
+  private async parseExcelFile(buffer: ArrayBuffer): Promise<void> {
+    // Lazy load xlsx library only when needed
+    const XLSX = await import('xlsx');
+
     const workbook = XLSX.read(buffer, { type: 'array' });
     const parsedSheets: ExcelSheet[] = [];
 

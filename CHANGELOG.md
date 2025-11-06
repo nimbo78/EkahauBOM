@@ -7,34 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.0] - 2025-11-07
+## [3.2.0] - 2025-11-07
 
 ### Summary
-Enhanced PDF export with floor plan visualizations, proper floor sorting, and improved project name handling.
+Major release with PDF floor plan visualizations, Web UI enhancements (keyboard shortcuts, loading states, archive system), and comprehensive project name handling fixes across all exporters.
 
 ### Added
 
-- **PDF Export - Floor Plan Visualizations**
-  - Floor plan visualizations are now embedded in PDF reports as base64-encoded images
-  - Floors are automatically sorted by floor number (basement → ground → upper floors)
-  - Images are sized at 90% width for optimal viewing
-  - Supports both portrait and landscape floor plans
+- **CLI - PDF Export - Floor Plan Visualizations**
+  - Floor plan visualizations now embedded in PDF reports as base64-encoded images
+  - Floors automatically sorted by floor number (basement → ground → upper floors)
+  - Images sized at 90% width for optimal viewing on both portrait and landscape
   - Multiple floors displayed in ascending order
-
-- **Floor Sorting**
   - Added `floor_number` field to Floor model (0=ground, -1=basement, 1=first floor above, etc.)
   - Parser now reads buildingFloors.json for floor number data
   - New `get_building_floors()` method in EkahauParser
 
+- **Web UI - Phase 7.5: Keyboard Shortcuts**
+  - Global shortcuts:
+    - `Alt+U` - Navigate to /admin/upload (admin only)
+    - `Ctrl+K` or `/` - Focus search input (projects list)
+    - `Escape` - Clear search or unfocus input
+  - Project Details shortcuts:
+    - `←` / `→` - Navigate between tabs
+    - `1-4` - Jump to specific tab (Overview, Reports, Visualizations, Notes)
+  - KeyboardService for centralized shortcut management
+  - Styled `<kbd>` UI hints for better UX
+
+- **Web UI - Phase 7.6: Loading States & Performance**
+  - LoadingService for centralized loading state management
+  - LoadingInterceptor for automatic HTTP request tracking
+  - LoadingOverlayComponent with visual feedback
+  - RouterLoadingService for route transition indicators
+  - PerformanceService for metrics tracking
+  - ErrorMessageService for standardized error handling
+
+- **Web UI - Phase 7.7: Archive System**
+  - Automatic archiving of projects not accessed for 60+ days
+  - Tar.gz compression (~60-70% space savings)
+  - Automatic decompression on access
+  - Background tasks: `archive_old_projects.py`, `cleanup_expired_links.py`
+  - Archive service with compression/decompression logic
+  - Cache service for improved performance
+  - ETag support for efficient caching
+  - Thumbnail generation utilities
+
+- **Web UI - Icons & Branding**
+  - Custom favicon.svg and logo.svg
+  - Icon documentation (ICON_README.md)
+
 ### Fixed
 
-- **PDF Exporter**: Fixed project name display to use correct priority (CLI arg → title → name → filename)
-- **Operation Order**: Floor plan visualizations now generate BEFORE PDF export to ensure images are available for embedding
+- **All Exporters**: Fixed project name display to use correct priority (CLI arg → title → name → filename)
+  - PDF Exporter: Consistent project name handling
+  - Excel Exporter: Project name in metadata
+  - HTML Exporter: Project name in header
+  - JSON Exporter: Project name in output
+
+- **CLI**: Floor plan visualizations now generate BEFORE PDF export to ensure images are available
 
 ### Changed
 
 - **PDF CSS**: Optimized floor plan image sizing and page break handling for better layout
 - **CLI Processing**: Reordered operations to generate visualizations before PDF export
+- **Web UI Frontend**: Enhanced app configuration with new services and interceptors
+- **Web UI Backend**: Extended API with archive and cache capabilities
+
+### Removed
+
+- PHASE_VERIFICATION_REPORT.md (completed phases documented in CHANGELOG)
 
 ## [3.0.5] - 2025-11-05
 

@@ -425,7 +425,7 @@ class TestJSONExporter:
             access_points=aps,
             antennas=[],
             floors={},
-            project_name="Test",
+            project_name="Test Project",  # Use metadata.name as project_name
             metadata=metadata,
         )
 

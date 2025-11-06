@@ -13,6 +13,7 @@ import {
 import { TuiCheckbox, TuiBadge } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ProjectService } from '../../../core/services/project.service';
+import { LoadingService } from '../../../shared/services/loading.service';
 import {
   ProcessingFlags,
   ProcessingRequest,
@@ -489,6 +490,7 @@ export class ProcessingComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
   private projectService = inject(ProjectService);
+  private loadingService = inject(LoadingService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -622,6 +624,9 @@ export class ProcessingComponent implements OnInit, OnDestroy {
     this.progressValue.set(10);
     this.progressText.set('Starting processing...');
 
+    // Show global loading overlay with progress
+    this.loadingService.show('Starting processing...', 'processing', 10);
+
     this.apiService.processProject(this.projectId, request as any, shortLinkDays).subscribe({
       next: () => {
         // Start polling for progress
@@ -630,6 +635,7 @@ export class ProcessingComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.processing.set(false);
         this.progressValue.set(0);
+        this.loadingService.hide();
         this.error.set('Failed to start processing');
         console.error('Error starting processing:', err);
       }
@@ -650,19 +656,27 @@ export class ProcessingComponent implements OnInit, OnDestroy {
             // Simulate progress (in real app, backend would provide actual progress)
             const currentProgress = this.progressValue();
             if (currentProgress < 90) {
-              this.progressValue.set(currentProgress + 10);
+              const newProgress = currentProgress + 10;
+              this.progressValue.set(newProgress);
               this.progressText.set('Processing... Please wait');
+
+              // Update global loading overlay
+              this.loadingService.update('Processing project...', newProgress);
             }
           } else if (project.processing_status === ProcessingStatus.COMPLETED) {
             this.progressValue.set(100);
             this.progressText.set('Processing completed!');
             this.processing.set(false);
 
+            // Update global loading overlay to 100%
+            this.loadingService.update('Processing completed!', 100);
+
             // Stop polling
             pollSub.unsubscribe();
 
-            // Redirect to project details after a delay
+            // Hide loading overlay and redirect
             setTimeout(() => {
+              this.loadingService.hide();
               this.router.navigate(['/projects', this.projectId]);
             }, 2000);
           } else if (project.processing_status === ProcessingStatus.FAILED) {
@@ -670,6 +684,9 @@ export class ProcessingComponent implements OnInit, OnDestroy {
             this.progressText.set('Processing failed');
             this.processing.set(false);
             this.error.set('Processing failed. Please try again.');
+
+            // Hide global loading overlay
+            this.loadingService.hide();
 
             // Stop polling
             pollSub.unsubscribe();

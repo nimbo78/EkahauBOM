@@ -5,7 +5,10 @@ import { Router } from '@angular/router';
 import { TuiButton, TuiIcon, TuiLink, TuiNotification, TuiLoader } from '@taiga-ui/core';
 import { TuiFiles, type TuiFileLike } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
+import { ErrorMessageService } from '../../../shared/services/error-message.service';
+import { LoadingService } from '../../../shared/services/loading.service';
 import { finalize, Subscription } from 'rxjs';
+import { HttpEventType } from '@angular/common/http';
 import { UploadResponse } from '../../../core/models/project.model';
 
 @Component({
@@ -301,6 +304,8 @@ import { UploadResponse } from '../../../core/models/project.model';
 export class UploadComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private apiService = inject(ApiService);
+  private errorMessageService = inject(ErrorMessageService);
+  private loadingService = inject(LoadingService);
   private subscription?: Subscription;
 
   // Form control for file input
@@ -339,7 +344,7 @@ export class UploadComponent implements OnInit, OnDestroy {
     // Validate file extension
     if (!file.name.toLowerCase().endsWith('.esx')) {
       console.error('Invalid file extension');
-      this.error.set('Please select a valid .esx file');
+      this.error.set('Only .esx files are supported. Please select a valid Ekahau project file.');
       this.fileControl.reset();
       return;
     }
@@ -348,7 +353,7 @@ export class UploadComponent implements OnInit, OnDestroy {
     const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
       console.error('File too large:', file.size);
-      this.error.set('File size exceeds 500 MB limit');
+      this.error.set('File is too large. Maximum size is 500 MB. Please try uploading a smaller project.');
       this.fileControl.reset();
       return;
     }
@@ -363,35 +368,50 @@ export class UploadComponent implements OnInit, OnDestroy {
     this.uploading.set(true);
     this.error.set(null);
 
-    console.log('Calling apiService.uploadFile...');
+    // Show loading with progress
+    this.loadingService.show('Uploading file...', 'upload', 0);
+
+    console.log('Calling apiService.uploadFileWithProgress...');
     this.apiService
-      .uploadFile(file)
+      .uploadFileWithProgress(file)
       .pipe(
         finalize(() => {
           console.log('Upload finalized');
           this.uploading.set(false);
+          this.loadingService.hide();
         })
       )
       .subscribe({
-        next: (response) => {
-          console.log('Upload success:', response);
+        next: (event) => {
+          // Handle different HTTP event types
+          if (event.type === HttpEventType.UploadProgress && event.total) {
+            // Calculate and update progress
+            const progress = Math.round((100 * event.loaded) / event.total);
+            console.log(`Upload progress: ${progress}%`);
+            this.loadingService.setProgress(progress);
+          } else if (event.type === HttpEventType.Response) {
+            // Upload complete, process response
+            console.log('Upload success:', event.body);
+            const response = event.body!;
 
-          // Check if project with same name already exists
-          if (response.exists && response.existing_project) {
-            console.log('Project already exists:', response.existing_project);
-            this.pendingFile.set(file);
-            this.showDuplicateDialog(response);
-          } else {
-            // New project created successfully
-            this.uploadedFile.set(file);
-            this.uploadResponse.set(response);
+            // Check if project with same name already exists
+            if (response.exists && response.existing_project) {
+              console.log('Project already exists:', response.existing_project);
+              this.pendingFile.set(file);
+              this.showDuplicateDialog(response);
+            } else {
+              // New project created successfully
+              this.uploadedFile.set(file);
+              this.uploadResponse.set(response);
+            }
           }
         },
         error: (err) => {
           console.error('Upload error:', err);
-          this.error.set(
-            err.error?.detail || 'Failed to upload file. Please try again.'
-          );
+          this.errorMessageService.logError(err, 'File Upload');
+          const errorMessage = this.errorMessageService.getErrorMessage(err);
+          const suggestion = this.errorMessageService.getSuggestion(err);
+          this.error.set(suggestion ? `${errorMessage}\n\n${suggestion}` : errorMessage);
           this.fileControl.reset();
         },
       });
@@ -436,25 +456,39 @@ export class UploadComponent implements OnInit, OnDestroy {
     this.error.set(null);
     this.showDuplicateConfirm.set(false);
 
+    // Show loading with progress
+    this.loadingService.show('Updating project...', 'upload', 0);
+
     this.apiService
-      .updateProject(duplicate.existing_project.project_id, file)
+      .updateProjectWithProgress(duplicate.existing_project.project_id, file)
       .pipe(
         finalize(() => {
           this.uploading.set(false);
           this.pendingFile.set(null);
+          this.loadingService.hide();
         })
       )
       .subscribe({
-        next: (response) => {
-          console.log('Project updated successfully:', response);
-          this.uploadedFile.set(file);
-          this.uploadResponse.set(response);
+        next: (event) => {
+          // Handle different HTTP event types
+          if (event.type === HttpEventType.UploadProgress && event.total) {
+            // Calculate and update progress
+            const progress = Math.round((100 * event.loaded) / event.total);
+            console.log(`Update progress: ${progress}%`);
+            this.loadingService.setProgress(progress);
+          } else if (event.type === HttpEventType.Response) {
+            // Update complete, process response
+            console.log('Project updated successfully:', event.body);
+            this.uploadedFile.set(file);
+            this.uploadResponse.set(event.body!);
+          }
         },
         error: (err) => {
           console.error('Update error:', err);
-          this.error.set(
-            err.error?.detail || 'Failed to update project. Please try again.'
-          );
+          this.errorMessageService.logError(err, 'Project Update');
+          const errorMessage = this.errorMessageService.getErrorMessage(err);
+          const suggestion = this.errorMessageService.getSuggestion(err);
+          this.error.set(suggestion ? `${errorMessage}\n\n${suggestion}` : errorMessage);
           this.fileControl.reset();
         },
       });

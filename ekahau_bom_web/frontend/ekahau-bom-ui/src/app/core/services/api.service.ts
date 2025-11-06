@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
 import {
   ProjectListItem,
   ProjectMetadata,
@@ -29,10 +30,36 @@ export class ApiService {
     return this.http.post<UploadResponse>(`${this.apiUrl}/upload`, formData);
   }
 
+  /**
+   * Upload file with progress tracking
+   * Returns HttpEvent stream with upload progress
+   */
+  uploadFileWithProgress(file: File): Observable<HttpEvent<UploadResponse>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<UploadResponse>(`${this.apiUrl}/upload`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    });
+  }
+
   updateProject(projectId: string, file: File): Observable<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.put<UploadResponse>(`${this.apiUrl}/upload/${projectId}/update`, formData);
+  }
+
+  /**
+   * Update project with progress tracking
+   * Returns HttpEvent stream with upload progress
+   */
+  updateProjectWithProgress(projectId: string, file: File): Observable<HttpEvent<UploadResponse>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.put<UploadResponse>(`${this.apiUrl}/upload/${projectId}/update`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    });
   }
 
   startProcessing(
@@ -134,5 +161,18 @@ export class ApiService {
   // Health check
   checkHealth(): Observable<any> {
     return this.http.get('/health');
+  }
+
+  // Short link management (admin only)
+  renewShortLink(projectId: string, days: number = 30): Observable<any> {
+    return this.http.post(`${this.apiUrl}/projects/${projectId}/short-link/renew?days=${days}`, {});
+  }
+
+  createShortLink(projectId: string, days: number = 30): Observable<any> {
+    return this.http.post(`${this.apiUrl}/projects/${projectId}/short-link/create?days=${days}`, {});
+  }
+
+  deleteShortLink(projectId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/projects/${projectId}/short-link`);
   }
 }

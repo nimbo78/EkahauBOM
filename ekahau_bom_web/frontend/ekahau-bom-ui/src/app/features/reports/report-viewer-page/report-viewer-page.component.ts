@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -12,6 +12,7 @@ import { ReportFile, ReportsList } from '../../../core/models/project.model';
   selector: 'app-report-viewer-page',
   standalone: true,
   imports: [CommonModule, TuiLoader, ReportViewerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="report-viewer-page">
       @if (loading()) {

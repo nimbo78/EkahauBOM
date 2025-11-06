@@ -1,8 +1,12 @@
-import { Component, signal, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, Router } from '@angular/router';
+import { Component, signal, OnInit, inject } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { TuiRoot, TuiIcon } from '@taiga-ui/core';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { LoadingOverlayComponent } from './shared/components/loading-overlay.component';
+import { RouterLoadingService } from './core/services/router-loading.service';
+import { PerformanceService } from './shared/services/performance.service';
+import { KeyboardService } from './core/services/keyboard.service';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +17,7 @@ import { filter } from 'rxjs/operators';
     RouterLinkActive,
     TuiRoot,
     TuiIcon,
+    LoadingOverlayComponent,
   ],
   template: `
     <tui-root>
@@ -20,7 +25,7 @@ import { filter } from 'rxjs/operators';
         <header *ngIf="shouldShowHeader()" class="app-header">
           <div class="header-content">
             <div class="logo-section">
-              <tui-icon icon="@tui.database" class="logo-icon"></tui-icon>
+              <img src="logo.svg" alt="Ekahau BOM" class="logo-icon" width="40" height="40">
               <h1 class="app-title">Ekahau BOM Registry</h1>
             </div>
             <nav class="nav-menu">
@@ -47,6 +52,9 @@ import { filter } from 'rxjs/operators';
           <router-outlet />
         </main>
       </div>
+
+      <!-- Global Loading Overlay -->
+      <app-loading-overlay />
     </tui-root>
   `,
   styleUrl: './app.scss'
@@ -55,18 +63,30 @@ export class App implements OnInit {
   title = 'Ekahau BOM Registry';
   isShortLinkMode = signal(false);
 
-  constructor(private router: Router) {}
+  private router = inject(Router);
+  private routerLoadingService = inject(RouterLoadingService);
+  private performanceService = inject(PerformanceService);
+  private keyboardService = inject(KeyboardService); // Initialize global keyboard shortcuts
 
   ngOnInit(): void {
+    // Measure initial page load performance
+    this.performanceService.measureNavigationTiming();
+
+    // Initialize router loading
+    this.routerLoadingService.init();
+
     // Check short link mode on init
     this.checkShortLinkMode();
 
-    // Check on every navigation
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
+    // Track navigation performance
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.performanceService.startTimer(`navigation-${event.url}`);
+      } else if (event instanceof NavigationEnd) {
+        this.performanceService.endTimer(`navigation-${event.url}`);
         this.checkShortLinkMode();
-      });
+      }
+    });
   }
 
   private checkShortLinkMode(): void {
