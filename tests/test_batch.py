@@ -496,7 +496,8 @@ def test_batch_processor_process_file_success(tmp_path):
 
     # Mock process function
     def mock_process(**kwargs):
-        # Simulate successful processing
+        # Simulate successful processing with measurable time
+        time.sleep(0.01)  # Small delay to ensure non-zero processing time on Windows
         return 0
 
     result = processor.process_file(
