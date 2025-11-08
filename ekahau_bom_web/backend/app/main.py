@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, notes, projects, reports, upload
+from app.api import auth, batches, notes, projects, reports, upload
 from app.config import settings
 from app.services.index import index_service
 
@@ -49,6 +49,7 @@ app.include_router(upload.router, prefix=settings.api_prefix)
 app.include_router(projects.router, prefix=settings.api_prefix)
 app.include_router(reports.router, prefix=settings.api_prefix)
 app.include_router(notes.router, prefix=settings.api_prefix)
+app.include_router(batches.router, prefix=settings.api_prefix)
 
 
 @app.get("/")

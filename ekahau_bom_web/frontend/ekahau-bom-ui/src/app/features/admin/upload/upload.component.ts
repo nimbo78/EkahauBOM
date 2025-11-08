@@ -1,9 +1,9 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { TuiButton, TuiIcon, TuiLink, TuiNotification, TuiLoader } from '@taiga-ui/core';
-import { TuiFiles, type TuiFileLike } from '@taiga-ui/kit';
+import { TuiFiles, type TuiFileLike, TuiRadio } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import { LoadingService } from '../../../shared/services/loading.service';
@@ -11,16 +11,28 @@ import { finalize, Subscription } from 'rxjs';
 import { HttpEventType } from '@angular/common/http';
 import { UploadResponse } from '../../../core/models/project.model';
 
+interface FileUploadItem {
+  file: File;
+  action: 'new' | 'replace' | 'skip';
+  status: 'pending' | 'uploading' | 'completed' | 'error';
+  progress: number;
+  error?: string;
+  projectId?: string;
+}
+
 @Component({
   selector: 'app-upload',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
+    RouterLink,
     TuiButton,
     TuiIcon,
     TuiLink,
     TuiFiles,
+    TuiRadio,
     TuiNotification,
     TuiLoader,
   ],
@@ -28,15 +40,21 @@ import { UploadResponse } from '../../../core/models/project.model';
     <div class="upload-container">
       <div class="page-header">
         <h2 class="page-title">Upload Project</h2>
+        <p class="page-description">
+          Upload a single .esx file.
+          <a tuiLink [routerLink]="['/admin/batch-upload']">Use Batch Upload</a>
+          for multiple files at once.
+        </p>
       </div>
 
       <div class="upload-content">
         <!-- Upload area -->
-        <label *ngIf="!uploadedFile()" tuiInputFiles class="upload-label">
+        <label *ngIf="!uploadedFile() && !showMultipleFilesSection()" tuiInputFiles class="upload-label">
           <input
             tuiInputFiles
             type="file"
             accept=".esx"
+            multiple
             [formControl]="fileControl"
             [disabled]="uploading()"
           />
@@ -46,15 +64,100 @@ import { UploadResponse } from '../../../core/models/project.model';
                 [icon]="dragged ? '@tui.droplet' : '@tui.upload'"
                 class="upload-icon"
               ></tui-icon>
-              <h3>{{ dragged ? 'Drop your file here!' : 'Drag & Drop your .esx file here' }}</h3>
+              <h3>{{ dragged ? 'Drop your files here!' : 'Drag & Drop your .esx files here' }}</h3>
               <p>or</p>
               <button tuiButton appearance="secondary" size="m" [disabled]="uploading()">
                 Browse Files
               </button>
-              <p class="upload-hint">Only .esx files are supported (max 500 MB)</p>
+              <p class="upload-hint">Select one or multiple .esx files (max 500 MB each)</p>
             </div>
           </ng-template>
         </label>
+
+        <!-- Multiple files list -->
+        <div *ngIf="showMultipleFilesSection()" class="multiple-files-section">
+          <div class="section-header">
+            <h3>Selected Files ({{ multipleFiles().length }})</h3>
+            <button tuiButton appearance="flat" size="s" (click)="clearMultipleFiles()">
+              <tui-icon icon="@tui.x"></tui-icon>
+              Clear All
+            </button>
+          </div>
+
+          <tui-notification status="info" class="notification">
+            <p>You've selected multiple files. Choose an action for each file:</p>
+            <ul>
+              <li><strong>Process as New</strong> - Create new project</li>
+              <li><strong>Replace Existing</strong> - Update existing project with same name</li>
+              <li><strong>Skip</strong> - Don't upload this file</li>
+            </ul>
+          </tui-notification>
+
+          <div class="files-list">
+            <div *ngFor="let item of multipleFiles(); let i = index" class="file-item">
+              <div class="file-info">
+                <tui-icon icon="@tui.file" class="file-icon"></tui-icon>
+                <div class="file-details">
+                  <div class="file-name">{{ item.file.name }}</div>
+                  <div class="file-size">{{ formatFileSize(item.file.size) }}</div>
+                </div>
+              </div>
+
+              <div class="file-actions">
+                <label class="radio-option">
+                  <input
+                    tuiRadio
+                    type="radio"
+                    [name]="'action-' + i"
+                    [(ngModel)]="item.action"
+                    value="new"
+                  />
+                  Process as New
+                </label>
+                <label class="radio-option">
+                  <input
+                    tuiRadio
+                    type="radio"
+                    [name]="'action-' + i"
+                    [(ngModel)]="item.action"
+                    value="replace"
+                  />
+                  Replace Existing
+                </label>
+                <label class="radio-option">
+                  <input
+                    tuiRadio
+                    type="radio"
+                    [name]="'action-' + i"
+                    [(ngModel)]="item.action"
+                    value="skip"
+                  />
+                  Skip
+                </label>
+              </div>
+
+              <button
+                tuiButton
+                appearance="flat"
+                size="s"
+                (click)="removeFileFromList(i)"
+                class="remove-btn"
+              >
+                <tui-icon icon="@tui.trash"></tui-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button tuiButton appearance="primary" size="l" (click)="goToBatchUpload()">
+              <tui-icon icon="@tui.layers"></tui-icon>
+              Process as Batch
+            </button>
+            <button tuiButton appearance="secondary" size="l" (click)="clearMultipleFiles()">
+              Cancel
+            </button>
+          </div>
+        </div>
 
         <!-- Loading state -->
         <div *ngIf="uploading()" class="upload-progress">
@@ -168,10 +271,16 @@ import { UploadResponse } from '../../../core/models/project.model';
       }
 
       .page-title {
-        margin: 0;
+        margin: 0 0 8px 0;
         font-size: 24px;
         font-weight: 600;
         color: var(--tui-text-01);
+      }
+
+      .page-description {
+        margin: 0;
+        font-size: 14px;
+        color: var(--tui-text-03);
       }
 
       .upload-content {
@@ -298,6 +407,108 @@ import { UploadResponse } from '../../../core/models/project.model';
       input[type="file"] {
         display: none;
       }
+
+      /* Multiple files section */
+      .multiple-files-section {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--tui-text-01);
+        }
+      }
+
+      .files-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .file-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: var(--tui-base-01);
+        border: 1px solid var(--tui-base-04);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          border-color: var(--tui-base-05);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      .file-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 0 0 200px;
+      }
+
+      .file-icon {
+        font-size: 24px;
+        color: var(--tui-primary);
+      }
+
+      .file-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: var(--tui-text-01);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-size {
+        font-size: 12px;
+        color: var(--tui-text-03);
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 16px;
+        flex: 1;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--tui-text-02);
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: var(--tui-text-01);
+        }
+
+        input[type="radio"] {
+          cursor: pointer;
+        }
+      }
+
+      .remove-btn {
+        flex-shrink: 0;
+      }
     `,
   ],
 })
@@ -308,8 +519,8 @@ export class UploadComponent implements OnInit, OnDestroy {
   private loadingService = inject(LoadingService);
   private subscription?: Subscription;
 
-  // Form control for file input
-  fileControl = new FormControl<File | null>(null);
+  // Form control for file input (supports multiple files, FileList, or single File)
+  fileControl = new FormControl<File[] | File | FileList | null>(null);
 
   // Signals for reactive state
   uploadedFile = signal<TuiFileLike | null>(null);
@@ -322,19 +533,91 @@ export class UploadComponent implements OnInit, OnDestroy {
   duplicateResponse = signal<UploadResponse | null>(null);
   pendingFile = signal<File | null>(null);
 
+  // Multiple files handling
+  multipleFiles = signal<FileUploadItem[]>([]);
+  showMultipleFilesSection = signal(false);
+
   ngOnInit(): void {
     console.log('UploadComponent initialized');
     // Subscribe to file control changes
-    this.subscription = this.fileControl.valueChanges.subscribe((file) => {
-      console.log('File control value changed:', file);
-      if (file) {
-        this.onFileSelect(file);
+    this.subscription = this.fileControl.valueChanges.subscribe((fileOrFiles) => {
+      console.log('File control value changed:', fileOrFiles);
+      console.log('Type:', typeof fileOrFiles);
+      console.log('Is Array:', Array.isArray(fileOrFiles));
+      console.log('Is File:', fileOrFiles instanceof File);
+      console.log('Is FileList:', fileOrFiles instanceof FileList);
+
+      if (fileOrFiles) {
+        // Check if it's a FileList (from drag-and-drop)
+        if (fileOrFiles instanceof FileList) {
+          const filesArray = Array.from(fileOrFiles);
+          console.log('FileList detected, converted to array:', filesArray.length);
+          this.onMultipleFilesSelect(filesArray);
+        }
+        // Check if multiple files selected as array
+        else if (Array.isArray(fileOrFiles)) {
+          console.log('Array detected:', fileOrFiles.length);
+          this.onMultipleFilesSelect(fileOrFiles);
+        }
+        // Single file
+        else if (fileOrFiles instanceof File) {
+          console.log('Single File detected');
+          this.onFileSelect(fileOrFiles);
+        }
       }
     });
   }
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
+  }
+
+  onMultipleFilesSelect(files: File[]): void {
+    console.log('Multiple files selected:', files.length);
+
+    if (files.length > 1) {
+      // Show multiple files section with list
+      const fileItems: FileUploadItem[] = files.map(file => ({
+        file,
+        action: 'new' as const,
+        status: 'pending' as const,
+        progress: 0
+      }));
+
+      this.multipleFiles.set(fileItems);
+      this.showMultipleFilesSection.set(true);
+      this.fileControl.reset();
+    } else if (files.length === 1) {
+      // Single file - process normally
+      this.onFileSelect(files[0]);
+    }
+  }
+
+  removeFileFromList(index: number): void {
+    const files = this.multipleFiles();
+    files.splice(index, 1);
+    this.multipleFiles.set([...files]);
+
+    if (files.length === 0) {
+      this.showMultipleFilesSection.set(false);
+    }
+  }
+
+  goToBatchUpload(): void {
+    this.router.navigate(['/admin/batch-upload']);
+  }
+
+  clearMultipleFiles(): void {
+    this.multipleFiles.set([]);
+    this.showMultipleFilesSection.set(false);
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
   onFileSelect(file: File): void {

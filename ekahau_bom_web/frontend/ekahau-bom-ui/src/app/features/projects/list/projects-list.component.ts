@@ -145,12 +145,9 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
         </div>
 
         <!-- Virtual scroll table -->
-        <cdk-virtual-scroll-viewport
-          *ngIf="filteredProjects().length > 0"
-          [itemSize]="60"
-          class="virtual-scroll-viewport"
-        >
-          <table class="projects-table">
+        <div *ngIf="filteredProjects().length > 0" class="table-container">
+          <!-- Fixed table header -->
+          <table class="projects-table-header">
             <thead>
               <tr>
                 <th>Project Name</th>
@@ -162,8 +159,16 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr *cdkVirtualFor="let project of filteredProjects(); trackBy: trackByProjectId">
+          </table>
+
+          <!-- Scrollable table body -->
+          <cdk-virtual-scroll-viewport
+            [itemSize]="60"
+            class="virtual-scroll-viewport"
+          >
+            <table class="projects-table">
+              <tbody>
+                <tr *cdkVirtualFor="let project of filteredProjects(); trackBy: trackByProjectId">
                 <td>
                   <a tuiLink [routerLink]="['/projects', project.project_id]">
                     {{ project.project_name || 'Unnamed Project' }}
@@ -232,9 +237,10 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
                   </div>
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </cdk-virtual-scroll-viewport>
+              </tbody>
+            </table>
+          </cdk-virtual-scroll-viewport>
+        </div>
       </div>
 
       <!-- Hint templates with icons -->
@@ -405,10 +411,34 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
-    .virtual-scroll-viewport {
+    .table-container {
+      display: flex;
+      flex-direction: column;
       height: calc(100vh - 480px);
       min-height: 400px;
       max-height: 800px;
+    }
+
+    .projects-table-header {
+      width: 100%;
+      flex-shrink: 0;
+
+      thead {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      th {
+        padding: 1rem;
+        font-weight: 600;
+        background: var(--tui-base-02);
+        text-align: left;
+      }
+    }
+
+    .virtual-scroll-viewport {
+      flex: 1;
       width: 100%;
 
       // Override CDK styles for table support
@@ -419,16 +449,7 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
     .projects-table {
       width: 100%;
-
-      th {
-        padding: 1rem;
-        font-weight: 600;
-        background: var(--tui-base-02);
-        text-align: left;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
+      table-layout: fixed;
 
       td {
         padding: 1rem;
@@ -436,12 +457,37 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 
       tbody tr {
         height: 60px; // Must match itemSize in virtual scroll
+        display: table;
+        width: 100%;
+        table-layout: fixed;
 
         &:hover {
           background: var(--tui-base-02);
         }
       }
     }
+
+    // Ensure columns match between header and body
+    .projects-table-header th:nth-child(1),
+    .projects-table td:nth-child(1) { width: 20%; } // Project Name
+
+    .projects-table-header th:nth-child(2),
+    .projects-table td:nth-child(2) { width: 20%; } // File Name
+
+    .projects-table-header th:nth-child(3),
+    .projects-table td:nth-child(3) { width: 15%; } // Upload Date
+
+    .projects-table-header th:nth-child(4),
+    .projects-table td:nth-child(4) { width: 10%; } // APs Count
+
+    .projects-table-header th:nth-child(5),
+    .projects-table td:nth-child(5) { width: 12%; } // Status
+
+    .projects-table-header th:nth-child(6),
+    .projects-table td:nth-child(6) { width: 10%; } // Short Link
+
+    .projects-table-header th:nth-child(7),
+    .projects-table td:nth-child(7) { width: 13%; } // Actions
 
     .actions {
       display: flex;

@@ -7,7 +7,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.services.storage import storage_service
+from app.services.storage_service import storage_service
 from app.services.processor import ProcessorService
 
 processor_service = ProcessorService(storage=storage_service)
@@ -34,18 +34,14 @@ async def update_project_metadata(project_id: str):
 
     # Extract project metadata from .esx
     print("\nExtracting metadata from .esx file...")
-    await processor_service._extract_project_metadata(
-        project_id, original_file, metadata
-    )
+    await processor_service._extract_project_metadata(project_id, original_file, metadata)
 
     # Extract summary from JSON report if available
     if metadata.reports_dir:
         reports_dir = storage_service.projects_dir / metadata.reports_dir
         if reports_dir.exists():
             print("Extracting summary from JSON report...")
-            await processor_service._extract_report_summary(
-                project_id, reports_dir, metadata
-            )
+            await processor_service._extract_report_summary(project_id, reports_dir, metadata)
 
     # Save updated metadata
     storage_service.save_metadata(project_id, metadata)

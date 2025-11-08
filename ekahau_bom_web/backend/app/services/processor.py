@@ -14,7 +14,7 @@ from uuid import UUID
 from app.models import ProcessingStatus, ProjectMetadata
 from app.services.cache import cache_service
 from app.services.index import index_service
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 from app.utils.thumbnails import generate_all_thumbnails
 
 logger = logging.getLogger(__name__)

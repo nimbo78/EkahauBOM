@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.models import ProcessingStatus, ProjectMetadata
 from app.services.index import index_service
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 
 client = TestClient(app)
 
@@ -22,9 +22,13 @@ client = TestClient(app)
 @pytest.fixture
 def temp_storage(tmp_path, monkeypatch):
     """Create temporary storage service and patch it in the app."""
+    from app.services.storage.local import LocalStorage
+
+    # Create storage with temp backend
     storage = StorageService()
-    storage.projects_dir = tmp_path / "projects"
-    storage.projects_dir.mkdir(parents=True, exist_ok=True)
+    temp_backend = LocalStorage(base_dir=tmp_path / "projects")
+    storage.backend = temp_backend
+    storage.projects_dir = tmp_path / "projects"  # Keep for backward compatibility
 
     # Patch the storage service
     monkeypatch.setattr("app.api.upload.storage_service", storage)
@@ -287,9 +291,7 @@ def test_download_report(temp_storage, sample_project):
 
 def test_download_report_not_found(temp_storage, sample_project):
     """Test downloading non-existent report."""
-    response = client.get(
-        f"/api/reports/{sample_project.project_id}/download/nonexistent.csv"
-    )
+    response = client.get(f"/api/reports/{sample_project.project_id}/download/nonexistent.csv")
     assert response.status_code == 404
 
 
@@ -341,7 +343,5 @@ def test_get_visualization(temp_storage, sample_project):
 
 def test_get_visualization_not_found(temp_storage, sample_project):
     """Test getting non-existent visualization."""
-    response = client.get(
-        f"/api/reports/{sample_project.project_id}/visualization/nonexistent.png"
-    )
+    response = client.get(f"/api/reports/{sample_project.project_id}/visualization/nonexistent.png")
     assert response.status_code == 404

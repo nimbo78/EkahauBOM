@@ -12,7 +12,7 @@ from app.models import ProcessingStatus, ProjectListItem, ProjectMetadata
 from app.services.archive import archive_service
 from app.services.cache import cache_service
 from app.services.index import index_service
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 from app.utils.short_links import (
     calculate_expiry_date,
     generate_short_link,

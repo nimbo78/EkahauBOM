@@ -15,6 +15,11 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'logout',
+    loadComponent: () =>
+      import('./features/auth/logout/logout.component').then((m) => m.LogoutComponent),
+  },
+  {
     path: 'forbidden',
     loadComponent: () =>
       import('./features/auth/forbidden/forbidden.component').then(
@@ -59,6 +64,41 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/processing/processing.component').then(
             (m) => m.ProcessingComponent
+          ),
+      },
+      {
+        path: 'batch-upload',
+        loadComponent: () =>
+          import('./features/admin/batch-upload/batch-upload.component').then(
+            (m) => m.BatchUploadComponent
+          ),
+      },
+      {
+        path: 'batches',
+        loadComponent: () =>
+          import('./features/admin/batch-list/batch-list.component').then(
+            (m) => m.BatchListComponent
+          ),
+      },
+      {
+        path: 'batches/:id',
+        loadComponent: () =>
+          import('./features/admin/batch-detail/batch-detail.component').then(
+            (m) => m.BatchDetailComponent
+          ),
+      },
+      {
+        path: 'watch-mode',
+        loadComponent: () =>
+          import('./features/admin/watch-mode/watch-mode.component').then(
+            (m) => m.WatchModeComponent
+          ),
+      },
+      {
+        path: 'reports',
+        loadComponent: () =>
+          import('./features/admin/scheduled-reports/scheduled-reports.component').then(
+            (m) => m.ScheduledReportsComponent
           ),
       },
       {

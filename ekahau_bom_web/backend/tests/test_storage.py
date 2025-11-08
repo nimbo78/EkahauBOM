@@ -8,15 +8,18 @@ from uuid import uuid4
 import pytest
 
 from app.models import ProjectMetadata, ProcessingStatus
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 
 
 @pytest.fixture
 def temp_storage(tmp_path):
     """Create temporary storage service."""
+    from app.services.storage.local import LocalStorage
+
     storage = StorageService()
-    storage.projects_dir = tmp_path / "projects"
-    storage.projects_dir.mkdir(parents=True, exist_ok=True)
+    temp_backend = LocalStorage(base_dir=tmp_path / "projects")
+    storage.backend = temp_backend
+    storage.projects_dir = tmp_path / "projects"  # Keep for backward compatibility
     yield storage
     # Cleanup
     if storage.projects_dir.exists():
@@ -61,18 +64,19 @@ async def test_save_uploaded_file(temp_storage, sample_metadata):
     """Test saving uploaded file."""
     file_content = b"Test file content"
 
-    # Save file
-    file_path = await temp_storage.save_uploaded_file(
+    # Save file (returns storage path string)
+    storage_path = await temp_storage.save_uploaded_file(
         sample_metadata.project_id, "test.esx", file_content
     )
 
-    # Check file exists
-    assert file_path.exists()
-    assert file_path.name == "original.esx"
+    # Check file exists using backend
+    assert temp_storage.backend.exists(sample_metadata.project_id, "original.esx")
 
     # Check content
-    with open(file_path, "rb") as f:
-        assert f.read() == file_content
+    file_content_retrieved = temp_storage.backend.get_file(
+        sample_metadata.project_id, "original.esx"
+    )
+    assert file_content_retrieved == file_content
 
 
 def test_get_project_dir(temp_storage, sample_metadata):

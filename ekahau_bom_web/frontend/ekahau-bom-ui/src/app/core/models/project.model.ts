@@ -66,6 +66,8 @@ export interface ProcessingRequest {
   include_text_notes: boolean;
   include_picture_notes: boolean;
   include_cable_notes: boolean;
+  create_short_link?: boolean;
+  short_link_days?: number;
 }
 
 export interface ProjectStats {

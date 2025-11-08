@@ -12,15 +12,18 @@ import pytest
 
 from app.models import ProcessingStatus, ProjectMetadata
 from app.services.processor import ProcessorService
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 
 
 @pytest.fixture
 def temp_storage(tmp_path):
     """Create temporary storage service."""
+    from app.services.storage.local import LocalStorage
+
     storage = StorageService()
-    storage.projects_dir = tmp_path / "projects"
-    storage.projects_dir.mkdir(parents=True, exist_ok=True)
+    temp_backend = LocalStorage(base_dir=tmp_path / "projects")
+    storage.backend = temp_backend
+    storage.projects_dir = tmp_path / "projects"  # Keep for backward compatibility
     return storage
 
 

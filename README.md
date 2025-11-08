@@ -14,7 +14,7 @@ Generate comprehensive equipment reports from Ekahau .esx files via **CLI** or *
 
 ---
 
-## 🌟 What's New in v3.0.0
+## 🌟 What's New in v3.2.0
 
 ### 🎉 Web UI - Centralized Project Registry
 
@@ -25,7 +25,8 @@ Upload, process, and share Ekahau projects via web browser:
 - **Floor plan visualizations** with zoom/pan
 - **Download reports** (CSV, Excel, HTML, PDF, JSON)
 - **Short link sharing** for easy collaboration
-- **No database required** - JSON-based storage
+- **Flexible storage** - Local filesystem or S3-compatible cloud storage
+- **No database required** - JSON-based metadata
 
 [See Web UI Guide](#-web-ui-new-in-v300) →
 
@@ -138,15 +139,76 @@ Configure all processing options via web interface:
 - Visualizations with azimuth arrows and custom opacity
 - Real-time progress tracking
 
+### Batch Processing
+
+Process multiple .esx files simultaneously with comprehensive batch management:
+
+**Features:**
+- **Multi-file upload** - Drag-and-drop multiple files or select via browse dialog
+- **Batch dashboard** - View all batches with status filtering and pagination
+- **Real-time monitoring** - Per-project status tracking with progress indicators
+- **Background processing** - Configurable parallel workers (1-8) for faster completion
+- **Aggregate reports** - Combined BOM reports across all projects in batch
+- **Batch actions** - View details, monitor progress, or delete entire batches
+
+**Usage:**
+1. Navigate to **Batch Upload** from the admin menu
+2. Drag-and-drop multiple .esx files (or click to browse)
+3. Configure processing options (grouping, formats, visualizations)
+4. Set parallel workers for optimal performance
+5. Monitor progress in the **Batches** dashboard
+6. Download aggregate reports when processing completes
+
+### Storage Backends
+
+**Flexible storage options**: Choose between local filesystem or cloud S3-compatible storage:
+
+**Local Storage** (default):
+- Simple file-based storage in `projects/` directory
+- Automatic archiving of old projects (60+ days → tar.gz, 60-70% space savings)
+- Perfect for single-server deployments
+
+**S3-Compatible Storage** (AWS S3, MinIO, Wasabi, DigitalOcean Spaces):
+- Unlimited scalability and redundancy
+- Multi-server deployments with shared storage
+- Built-in lifecycle policies for cost optimization
+- Migration tool for seamless local ↔ S3 transfers
+
+Configure via `.env`:
+```bash
+# Local storage (default)
+STORAGE_BACKEND=local
+
+# S3 storage
+STORAGE_BACKEND=s3
+S3_BUCKET_NAME=ekahau-bom-projects
+S3_REGION=us-east-1
+S3_ACCESS_KEY=your_access_key
+S3_SECRET_KEY=your_secret_key
+```
+
+**Migration between backends**:
+```bash
+# Migrate all projects from local to S3
+python -m app.utils.migrate_storage local-to-s3 --all
+
+# Migrate specific project
+python -m app.utils.migrate_storage s3-to-local --project-id <uuid>
+```
+
+See [Backend README](ekahau_bom_web/backend/README.md) for complete S3 configuration examples (AWS, MinIO, Wasabi, DigitalOcean, Corporate S3).
+
 ### Archive Management
 
-**Automatic space savings**: Old projects (not accessed for 60+ days) are automatically compressed to tar.gz archives, saving 60-70% disk space. Projects are transparently decompressed on first access.
+**Automatic space savings** (Local storage only): Old projects (not accessed for 60+ days) are automatically compressed to tar.gz archives, saving 60-70% disk space. Projects are transparently decompressed on first access.
 
 **Background job** (optional, requires cron/Task Scheduler):
 ```bash
-# Run weekly to archive old projects
+# Run weekly to archive old projects (local storage only)
 python -m app.tasks.archive_old_projects
 ```
+
+**Note**: S3 storage doesn't need archiving - use S3 lifecycle policies instead.
 
 ---
 
@@ -328,20 +390,66 @@ pip install weasyprint
 
 ---
 
+## 🗺️ Roadmap
+
+### Recently Completed
+
+#### ✅ Batch Processing
+Process multiple .esx files in a single operation for maximum efficiency.
+
+**CLI Batch Processing:**
+```bash
+# Process all .esx files in directory
+ekahau-bom --batch /path/to/projects/
+
+# Parallel processing with 4 workers
+ekahau-bom --batch /path/to/projects/ --parallel 4
+
+# Generate aggregated report across all projects
+ekahau-bom --batch /path/to/projects/ --aggregate --output-dir batch_report/
+```
+
+**Features:**
+- Parallel processing with configurable workers (1-8)
+- Aggregate BOM reports (CSV, Excel, HTML) combining all projects
+- Support for all grouping modes (model, floor, color, vendor, tag)
+- Summary statistics across all projects in batch
+- 20+ unit tests ensuring reliability
+
+**Web UI Batch Upload:**
+- Drag-and-drop multiple .esx files simultaneously
+- Batch processing dashboard with real-time status tracking
+- Batch list view with status filtering and pagination
+- Per-project status monitoring
+- Background task processing with parallel workers
+- Batch delete functionality
+- 21 comprehensive API tests (all passing ✅)
+
+### Planned Features
+
+#### Docker Containerization
+- Pre-built Docker images for backend and frontend
+- docker-compose setup for easy deployment
+- Production-ready configuration
+
+---
+
 ## 🧪 Testing
 
 ```bash
-# Run all tests
+# Run all tests (CLI + Web Backend)
 pytest tests/ -v
+pytest ekahau_bom_web/backend/tests/ -v
 
 # With coverage report
 pytest tests/ --cov=ekahau_bom --cov-report=html
+pytest ekahau_bom_web/backend/tests/ --cov=app --cov-report=html
 
-# Backend API tests only
+# Backend API + Storage tests
 pytest ekahau_bom_web/backend/tests/ -v
 ```
 
-**Current stats**: 545 tests passing | 86% coverage
+**Current stats**: 669 tests passing (545 CLI + 124 storage) | 86% coverage
 
 ---
 

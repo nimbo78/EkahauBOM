@@ -101,3 +101,142 @@ class ProcessingRequest(BaseModel):
     include_text_notes: bool = False
     include_picture_notes: bool = False
     include_cable_notes: bool = False
+    create_short_link: bool = False  # Whether to create short link
+    short_link_days: int = 30  # Short link expiration in days (1-365)
+
+
+# ============================================================================
+# Batch Processing Models
+# ============================================================================
+
+
+class BatchStatus(str, Enum):
+    """Batch processing status enum."""
+
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    PARTIAL = "partial"  # Some projects succeeded, some failed
+
+
+class BatchProjectStatus(BaseModel):
+    """Status of individual project within batch."""
+
+    project_id: UUID
+    filename: str
+    status: ProcessingStatus
+    processing_time: Optional[float] = None  # seconds
+    error_message: Optional[str] = None
+    access_points_count: Optional[int] = None
+    antennas_count: Optional[int] = None
+
+
+class BatchStatistics(BaseModel):
+    """Aggregated statistics for batch processing."""
+
+    total_projects: int = 0
+    successful_projects: int = 0
+    failed_projects: int = 0
+    total_processing_time: float = 0.0  # seconds
+
+    # Equipment totals
+    total_access_points: int = 0
+    total_antennas: int = 0
+
+    # Aggregated BOM (vendor+model -> quantity)
+    ap_by_vendor_model: dict[str, int] = {}  # "Vendor|Model" -> quantity
+    antenna_by_model: dict[str, int] = {}  # "Model" -> quantity
+
+
+class BatchMetadata(BaseModel):
+    """Batch metadata for storage in batch_metadata.json."""
+
+    batch_id: UUID = Field(default_factory=uuid4)
+    batch_name: Optional[str] = None  # User-provided or auto-generated
+    created_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_by: str = "admin"  # User who created the batch
+
+    # Batch status
+    status: BatchStatus = BatchStatus.PENDING
+    processing_started: Optional[datetime] = None
+    processing_completed: Optional[datetime] = None
+
+    # Projects in batch
+    project_ids: list[UUID] = []
+    project_statuses: list[BatchProjectStatus] = []
+
+    # Processing options (inherited by all projects)
+    processing_options: ProcessingRequest = Field(default_factory=lambda: ProcessingRequest())
+
+    # Parallel processing
+    parallel_workers: int = 1
+
+    # Statistics
+    statistics: BatchStatistics = Field(default_factory=BatchStatistics)
+
+    # File paths (relative)
+    batch_dir: str  # batches/{batch_id}/
+    aggregated_reports_dir: Optional[str] = None  # batches/{batch_id}/aggregated/
+
+    # Archive
+    archived: bool = False
+    last_accessed: Optional[datetime] = None
+
+
+class BatchListItem(BaseModel):
+    """Batch list item for UI."""
+
+    batch_id: UUID
+    batch_name: Optional[str]
+    created_date: datetime
+    status: BatchStatus
+    total_projects: int
+    successful_projects: int
+    failed_projects: int
+
+
+class BatchUploadRequest(BaseModel):
+    """Request for batch upload."""
+
+    batch_name: Optional[str] = None
+    processing_options: Optional[ProcessingRequest] = None
+    parallel_workers: int = 1
+
+
+class BatchUploadResponse(BaseModel):
+    """Response for batch upload."""
+
+    batch_id: UUID
+    message: str
+    files_count: int
+    files_uploaded: list[str]
+    files_failed: list[str]
+
+
+class ScannedFile(BaseModel):
+    """Information about a scanned .esx file."""
+
+    filename: str
+    filepath: str  # Absolute path
+    filesize: int  # bytes
+    modified_date: datetime
+
+
+class DirectoryScanResponse(BaseModel):
+    """Response for directory scan."""
+
+    directory: str
+    total_files: int
+    files: list[ScannedFile]
+    subdirectories_scanned: int = 0
+
+
+class ImportFromPathsRequest(BaseModel):
+    """Request for importing files from server paths."""
+
+    file_paths: list[str]
+    batch_name: str | None = None
+    parallel_workers: int = Field(default=1, ge=1, le=8)
+    processing_options: dict | None = None  # ProcessingRequest as dict
+    auto_process: bool = False

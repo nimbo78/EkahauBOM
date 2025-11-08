@@ -10,7 +10,7 @@ def test_import_main():
     """Test main package import."""
     import ekahau_bom
 
-    assert ekahau_bom.__version__ == "3.2.0"
+    assert ekahau_bom.__version__ == "3.3.0"
 
 
 def test_import_models():

@@ -7,12 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Batch Processing** (Completed!)
+  - **CLI**: Process multiple .esx files with parallel execution and aggregated reports
+    - Batch processing with configurable parallel workers (1-8)
+    - Aggregate BOM reports (CSV, Excel, HTML) combining data from all projects
+    - Support for all grouping modes (model, floor, color, vendor, tag)
+    - Summary statistics across all projects in batch
+    - 20+ unit tests for batch processing functionality
+  - **Web UI**: Multiple file upload, batch dashboard, and comprehensive batch management
+    - Batch upload with multiple file selection and drag-and-drop support
+    - Batch list view with status filtering and pagination
+    - Batch detail view with per-project status tracking
+    - Real-time processing progress monitoring
+    - Background task processing with parallel workers
+    - Batch delete functionality
+    - 21 comprehensive API tests (all passing ✅)
+  - **Upload Component Enhancement**:
+    - Multiple file selection support in standard upload
+    - Automatic redirect to Batch Upload when multiple files selected
+    - User-visible hints linking to Batch Upload feature
+    - FileList detection for drag-and-drop operations
+  - **Comprehensive Testing** (Phase 3 Complete - 2025-11-09)
+    - **CLI Tests**: 51 tests passing (38 unit + 13 integration)
+      - Integration tests with real .esx files (311 APs, 623 Antennas)
+      - Performance tests (sequential vs parallel processing)
+      - Error handling and recovery tests
+      - Aggregated report generation tests
+    - **Web UI Load Tests**: 6 tests passing
+      - Large batch uploads (50-100 files): 0.43s for 50 files (9ms per file)
+      - Concurrent batch uploads: 5 batches in 0.10s
+      - Large file handling: 3×1MB files in 0.04s
+      - API performance: List batches 8ms, Batch detail 2ms
+    - **Full Test Suite**: 595 tests, 85% code coverage
+    - **E2E Validation**: 12 batches, 56 projects, 3622 APs tested successfully
+
 ## [3.2.0] - 2025-11-07
 
 ### Summary
-Major release with PDF floor plan visualizations, Web UI enhancements (keyboard shortcuts, loading states, archive system), and comprehensive project name handling fixes across all exporters.
+Major release with PDF floor plan visualizations, Web UI enhancements (keyboard shortcuts, loading states, archive system), S3 storage backend support, and comprehensive project name handling fixes across all exporters.
 
 ### Added
+
+- **Web UI - S3 Storage Backend Support** (NEW!)
+  - **Storage Abstraction Layer**:
+    - StorageBackend abstract base class for pluggable storage backends
+    - LocalStorage implementation (existing file-based storage)
+    - S3Storage implementation for S3-compatible cloud storage
+    - StorageFactory for configuration-based backend selection
+  - **S3-Compatible Storage Support**:
+    - AWS S3, MinIO, Wasabi, DigitalOcean Spaces
+    - Dell EMC ECS, IBM Cloud Object Storage, NetApp StorageGRID
+    - Cloudflare R2, Backblaze B2, Ceph RGW
+    - Custom corporate S3 with CA certificate support
+  - **Migration Tool** (`app.utils.migrate_storage`):
+    - Seamless migration between local and S3 storage
+    - Migrate all projects or specific project by ID
+    - Dry-run mode for testing
+    - Progress tracking and error recovery
+  - **Configuration** (`.env`):
+    - `STORAGE_BACKEND=local|s3` - Choose storage backend
+    - S3 configuration options (bucket, region, credentials, endpoint, SSL)
+  - **Archive Behavior**:
+    - Local storage: Automatic archiving to tar.gz (60-70% space savings)
+    - S3 storage: Archiving skipped (use S3 lifecycle policies instead)
+  - **Testing**: 124 comprehensive tests (all passing ✅)
+    - 38 unit tests (LocalStorage + S3Storage + StorageService + Factory)
+    - 36 integration tests (behavioral consistency between backends)
+    - 30 performance tests (upload, download, list operations)
+    - 20 error handling tests (network failures, invalid credentials)
+  - **Documentation**:
+    - Comprehensive backend README with S3 configuration examples
+    - STORAGE_PLAN.md with all 5 phases completed
+    - STORAGE_TESTING_REPORT.md with performance benchmarks
+    - Migration guide and best practices
+  - **Performance**:
+    - Local: Fastest for single-server deployments
+    - S3: Unlimited scalability, multi-server support, built-in redundancy
+    - Automatic backend selection via configuration
 
 - **CLI - PDF Export - Floor Plan Visualizations**
   - Floor plan visualizations now embedded in PDF reports as base64-encoded images
@@ -76,6 +148,22 @@ Major release with PDF floor plan visualizations, Web UI enhancements (keyboard 
 ### Removed
 
 - PHASE_VERIFICATION_REPORT.md (completed phases documented in CHANGELOG)
+
+### Technical Details
+
+- **Dependencies Added** (S3 Storage):
+  - `boto3>=1.35.0` - AWS SDK for S3 storage backend
+  - `botocore>=1.35.0` - AWS SDK core (boto3 dependency)
+  - `moto[s3]>=5.0.0` - Mock AWS services for S3 storage testing (dev)
+
+- **Backend Modules Added**:
+  - `app/services/storage/base.py` - Abstract StorageBackend interface
+  - `app/services/storage/local.py` - Local filesystem implementation
+  - `app/services/storage/s3.py` - S3-compatible storage implementation
+  - `app/services/storage/factory.py` - Backend factory
+  - `app/utils/migrate_storage.py` - Storage migration tool
+
+- **Testing**: Total 669 tests (545 CLI + 124 storage)
 
 ## [3.0.5] - 2025-11-05
 

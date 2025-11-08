@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse, Response
 
 from app.services.archive import archive_service
 from app.services.cache import cache_service
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 from app.utils.etag import generate_etag, should_return_304
 from app.utils.thumbnails import get_thumbnail_path, ThumbnailSize
 

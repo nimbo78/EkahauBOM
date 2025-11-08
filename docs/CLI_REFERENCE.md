@@ -460,7 +460,7 @@ ekahau-bom project.esx --enable-pricing --no-volume-discounts --discount 20
 
 ## Batch Processing
 
-Process multiple .esx files at once.
+Process multiple .esx files in a single operation with advanced features like parallel processing, file filtering, and aggregated reporting.
 
 ### `--batch BATCH`
 
@@ -469,6 +469,7 @@ Process all .esx files in directory.
 - **Type**: Path (directory)
 - **Searches**: Only direct children by default
 - **Use with** `--recursive` for subdirectories
+- **Replaces**: Single file argument
 
 **Examples:**
 ```bash
@@ -476,7 +477,7 @@ Process all .esx files in directory.
 ekahau-bom --batch projects/
 
 # Process with specific output
-ekahau-bom --batch projects/ --output-dir batch-reports/
+ekahau-bom --batch projects/ --batch-output-dir batch-reports/
 
 # Process with format
 ekahau-bom --batch projects/ --format excel,pdf
@@ -499,6 +500,169 @@ ekahau-bom --batch /projects/ --recursive
 ekahau-bom --batch projects/ --recursive --filter-vendor Cisco
 ```
 
+### `--parallel N`
+
+Process N files in parallel.
+
+- **Type**: Integer
+- **Default**: 1 (sequential)
+- **Recommended**: Number of CPU cores
+- **Use case**: Speed up large batches
+
+**Examples:**
+```bash
+# Process 4 files in parallel
+ekahau-bom --batch projects/ --parallel 4
+
+# Use all CPU cores (adjust N to your system)
+ekahau-bom --batch projects/ --parallel 8 --format csv
+```
+
+**Performance:**
+- Sequential: ~0.1s per file
+- Parallel (4 workers): ~4x faster for I/O-bound tasks
+- Best for: 10+ files with similar processing times
+
+### `--aggregate-report`
+
+Generate aggregated report across all projects.
+
+- **Type**: Flag
+- **Requires**: `--batch`
+- **Output**: `summary/batch_summary.txt` and `summary/batch_aggregate.csv`
+- **Includes**: Combined BOM, totals, statistics
+
+**Example:**
+```bash
+# Generate aggregated report
+ekahau-bom --batch projects/ --aggregate-report
+
+# With parallel processing
+ekahau-bom --batch projects/ --parallel 4 --aggregate-report --format csv,excel
+```
+
+**Aggregated report contains:**
+- Total projects processed (successful/failed)
+- Combined equipment counts by vendor/model
+- Processing statistics (time, errors)
+- Batch-level BOM summary
+
+### `--batch-include PATTERN`
+
+Include only files matching glob pattern.
+
+- **Type**: String (glob pattern)
+- **Requires**: `--batch`
+- **Syntax**: Unix-style glob (`*`, `?`, `[...]`)
+- **Case**: Platform-dependent
+
+**Examples:**
+```bash
+# Only office projects
+ekahau-bom --batch projects/ --batch-include "*office*"
+
+# Only 2024 projects
+ekahau-bom --batch projects/ --batch-include "*2024*.esx"
+
+# Specific naming convention
+ekahau-bom --batch projects/ --batch-include "SITE_*"
+```
+
+### `--batch-exclude PATTERN`
+
+Exclude files matching glob pattern.
+
+- **Type**: String (glob pattern)
+- **Requires**: `--batch`
+- **Use case**: Skip backups, drafts, test files
+
+**Examples:**
+```bash
+# Exclude backups
+ekahau-bom --batch projects/ --batch-exclude "*backup*"
+
+# Exclude draft projects
+ekahau-bom --batch projects/ --batch-exclude "*draft*.esx"
+
+# Exclude test files
+ekahau-bom --batch projects/ --batch-exclude "test_*"
+```
+
+### `--batch-output-dir DIR`
+
+Custom output directory for batch results.
+
+- **Type**: Path
+- **Default**: `output/batch_TIMESTAMP/`
+- **Structure**: Each project gets subdirectory, plus `summary/` for aggregated reports
+
+**Example:**
+```bash
+# Custom batch output directory
+ekahau-bom --batch projects/ --batch-output-dir batch-reports/
+
+# Date-based batch directory
+ekahau-bom --batch projects/ --batch-output-dir "reports/batch_2024-01-15/"
+```
+
+**Output structure:**
+```
+batch-reports/
+├── project1/
+│   ├── Project1_access_points.csv
+│   ├── Project1_report.xlsx
+│   └── visualizations/
+├── project2/
+│   ├── Project2_access_points.csv
+│   └── Project2_report.xlsx
+└── summary/
+    ├── batch_summary.txt         # Text summary
+    ├── batch_aggregate.csv        # Aggregated BOM
+    └── batch_errors.log           # Error log (if any)
+```
+
+### `--continue-on-error`
+
+Continue processing remaining files even if some fail.
+
+- **Type**: Flag
+- **Default**: Enabled
+- **Behavior**: Log errors but don't stop batch
+- **Error log**: `summary/batch_errors.log`
+
+**Example:**
+```bash
+# Continue on errors (default behavior)
+ekahau-bom --batch projects/ --continue-on-error
+
+# Stop on first error (disable with negative flag - not available)
+# Batch processing will continue by default
+```
+
+### Combining Batch Options
+
+**Advanced batch workflow:**
+```bash
+# Process office projects in parallel with aggregated report
+ekahau-bom --batch projects/ \
+  --batch-include "*office*" \
+  --batch-exclude "*backup*" \
+  --parallel 4 \
+  --aggregate-report \
+  --format csv,excel \
+  --batch-output-dir reports/offices/
+
+# Recursive batch with filters
+ekahau-bom --batch /projects/ \
+  --recursive \
+  --batch-include "2024*.esx" \
+  --parallel 8 \
+  --aggregate-report \
+  --enable-pricing \
+  --format excel,pdf \
+  --batch-output-dir deliverables/2024-batch/
+```
+
 **Directory structure example:**
 ```
 projects/
@@ -512,16 +676,24 @@ projects/
 
 **Command:**
 ```bash
-ekahau-bom --batch projects/ --recursive --format excel
+ekahau-bom --batch projects/ --recursive --parallel 2 --aggregate-report --format excel
 ```
 
 **Output:**
 ```
-batch-reports/
-├── building-a_floor1_report.xlsx
-├── building-a_floor2_report.xlsx
-├── building-b_warehouse_report.xlsx
-└── campus_report.xlsx
+output/batch_20240115_143022/
+├── floor1/
+│   └── Floor1_report.xlsx
+├── floor2/
+│   └── Floor2_report.xlsx
+├── warehouse/
+│   └── Warehouse_report.xlsx
+├── campus/
+│   └── Campus_report.xlsx
+└── summary/
+    ├── batch_summary.txt         # Overall statistics
+    ├── batch_aggregate.csv        # Combined BOM
+    └── batch_errors.log           # Errors (if any)
 ```
 
 ---
@@ -690,15 +862,53 @@ ekahau-bom project.esx \
 
 **Process all projects:**
 ```bash
-ekahau-bom --batch projects/ --format excel --output-dir batch-reports/
+ekahau-bom --batch projects/ --format excel --batch-output-dir batch-reports/
+```
+
+**Parallel processing with aggregated report:**
+```bash
+ekahau-bom --batch projects/ \
+  --parallel 4 \
+  --aggregate-report \
+  --format csv,excel
+```
+
+**Filtered batch processing:**
+```bash
+# Only office projects, excluding backups
+ekahau-bom --batch projects/ \
+  --batch-include "*office*" \
+  --batch-exclude "*backup*" \
+  --parallel 4 \
+  --aggregate-report \
+  --format excel
 ```
 
 **Recursive with pricing:**
 ```bash
 ekahau-bom --batch /projects/ \
   --recursive \
+  --parallel 8 \
   --enable-pricing \
-  --format excel,pdf
+  --aggregate-report \
+  --format excel,pdf \
+  --batch-output-dir deliverables/batch-2024-01/
+```
+
+**Maximum efficiency batch:**
+```bash
+# Process all 2024 projects in parallel with full reporting
+ekahau-bom --batch /projects/2024/ \
+  --recursive \
+  --batch-include "2024*.esx" \
+  --batch-exclude "*test*" \
+  --parallel 8 \
+  --aggregate-report \
+  --enable-pricing \
+  --visualize-floor-plans \
+  --format csv,excel,pdf \
+  --batch-output-dir reports/2024-batch/ \
+  --continue-on-error
 ```
 
 ### Visualization
@@ -869,5 +1079,5 @@ Check the log file for detailed error messages.
 
 ---
 
-**Version**: 2.7.0
-**Last Updated**: 2025-10-28
+**Version**: 3.2.0
+**Last Updated**: 2025-11-07

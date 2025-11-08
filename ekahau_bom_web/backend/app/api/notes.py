@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 

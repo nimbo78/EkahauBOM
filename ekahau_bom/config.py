@@ -312,6 +312,14 @@ class Config:
         else:
             merged["recursive"] = self.get("batch.recursive", False)
 
+        # Batch filtering and processing options
+        merged["batch_include"] = getattr(args, "batch_include", None)
+        merged["batch_exclude"] = getattr(args, "batch_exclude", None)
+        merged["parallel"] = getattr(args, "parallel", 1)
+        merged["aggregate_report"] = getattr(args, "aggregate_report", False)
+        merged["batch_output_dir"] = getattr(args, "batch_output_dir", None)
+        merged["continue_on_error"] = getattr(args, "continue_on_error", True)
+
         # Visualization
         merged["visualize_floor_plans"] = getattr(args, "visualize_floor_plans", False)
         merged["ap_circle_radius"] = getattr(args, "ap_circle_radius", 15)

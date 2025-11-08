@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 
 from app.services.cache import cache_service
 from app.services.index import index_service
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 from app.utils.short_links import is_link_expired
 
 # Configure logging

@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from app.services.archive import archive_service
 from app.services.cache import cache_service
 from app.services.index import index_service
-from app.services.storage import StorageService
+from app.services.storage_service import StorageService
 
 # Configure logging
 logging.basicConfig(

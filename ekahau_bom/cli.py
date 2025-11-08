@@ -49,6 +49,7 @@ from .utils import (
     setup_logging,
     sanitize_filename,
 )
+from .batch import BatchProcessor, filter_files
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +209,44 @@ def create_argument_parser() -> argparse.ArgumentParser:
         "--recursive",
         action="store_true",
         help="Search for .esx files recursively in subdirectories (use with --batch)",
+    )
+
+    batch_group.add_argument(
+        "--batch-include",
+        type=str,
+        help='Include only files matching glob pattern (e.g., "*office*.esx", use with --batch)',
+    )
+
+    batch_group.add_argument(
+        "--batch-exclude",
+        type=str,
+        help='Exclude files matching glob pattern (e.g., "*backup*.esx", use with --batch)',
+    )
+
+    batch_group.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Process N files in parallel (default: 1 = sequential processing)",
+    )
+
+    batch_group.add_argument(
+        "--aggregate-report",
+        action="store_true",
+        help="Generate aggregated report across all projects in batch (use with --batch)",
+    )
+
+    batch_group.add_argument(
+        "--batch-output-dir",
+        type=Path,
+        help="Custom output directory for batch results (default: output/batch_TIMESTAMP/)",
+    )
+
+    batch_group.add_argument(
+        "--continue-on-error",
+        action="store_true",
+        help="Continue processing remaining files even if some fail (use with --batch)",
     )
 
     # Visualization options
@@ -1225,15 +1264,35 @@ def main(args: list[str] | None = None) -> int:
     export_formats = merged_config.get("export_formats", ["csv"])
 
     # Determine files to process
-    files_to_process = []
-
     batch_dir = merged_config.get("batch")
+
     if batch_dir:
-        # Batch mode: find all .esx files in directory
+        # Batch mode: find and process all .esx files in directory
         try:
             files_to_process = find_esx_files(batch_dir, merged_config.get("recursive", False))
+
+            # Apply include/exclude filters
+            batch_include = merged_config.get("batch_include")
+            batch_exclude = merged_config.get("batch_exclude")
+            if batch_include or batch_exclude:
+                original_count = len(files_to_process)
+                files_to_process = filter_files(
+                    files_to_process, include_pattern=batch_include, exclude_pattern=batch_exclude
+                )
+
+                if RICH_AVAILABLE and console:
+                    if batch_include:
+                        console.print(f"[yellow]Include filter:[/yellow] {batch_include}")
+                    if batch_exclude:
+                        console.print(f"[yellow]Exclude filter:[/yellow] {batch_exclude}")
+                    console.print(
+                        f"Filtered: {original_count} → [bold green]{len(files_to_process)}[/bold green] files"
+                    )
+
             if not files_to_process:
                 logger.error(f"No .esx files found in {batch_dir}")
+                if RICH_AVAILABLE and console:
+                    console.print(f"[bold red]✗ No .esx files found in {batch_dir}[/bold red]")
                 return 1
 
             if RICH_AVAILABLE and console:
@@ -1247,12 +1306,87 @@ def main(args: list[str] | None = None) -> int:
                 console.print()
             else:
                 logger.info(f"Batch mode: Processing {len(files_to_process)} file(s)")
+
+            # Determine batch output directory
+            batch_output_dir = merged_config.get("batch_output_dir")
+            if not batch_output_dir:
+                from datetime import datetime
+
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                batch_output_dir = Path("output") / f"batch_{timestamp}"
+
+            # Create BatchProcessor
+            parallel_workers = merged_config.get("parallel", 1)
+            continue_on_error = merged_config.get("continue_on_error", True)
+
+            processor = BatchProcessor(
+                files=files_to_process,
+                output_dir=batch_output_dir,
+                parallel_workers=parallel_workers,
+                continue_on_error=continue_on_error,
+                console=console,
+            )
+
+            # Prepare process_project kwargs
+            process_kwargs = {
+                "output_dir": batch_output_dir,
+                "colors_config": merged_config.get("colors_config"),
+                "export_formats": export_formats,
+                "filter_floors": filter_floors,
+                "filter_colors": filter_colors,
+                "filter_vendors": filter_vendors,
+                "filter_models": filter_models,
+                "filter_tags": filter_tags,
+                "exclude_floors": exclude_floors,
+                "exclude_colors": exclude_colors,
+                "exclude_vendors": exclude_vendors,
+                "group_by": merged_config.get("group_by"),
+                "tag_key": merged_config.get("tag_key"),
+                "enable_pricing": merged_config.get("enable_pricing"),
+                "pricing_file": merged_config.get("pricing_file"),
+                "discount": merged_config.get("discount", 0.0),
+                "no_volume_discounts": merged_config.get("no_volume_discounts", False),
+                "visualize_floor_plans": merged_config.get("visualize_floor_plans", False),
+                "ap_circle_radius": merged_config.get("ap_circle_radius", 15),
+                "show_ap_names": not merged_config.get("no_ap_names", False),
+                "show_azimuth_arrows": merged_config.get("show_azimuth_arrows", False),
+                "ap_opacity": merged_config.get("ap_opacity", 0.6),
+                "include_text_notes": merged_config.get("include_text_notes", False),
+                "include_picture_notes": merged_config.get("include_picture_notes", False),
+                "include_cable_notes": merged_config.get("include_cable_notes", False),
+                "project_name": merged_config.get("project_name"),
+                "quiet": True,  # Suppress individual project output in batch mode
+            }
+
+            # Process batch
+            aggregated_report = processor.process(process_project, **process_kwargs)
+
+            # Print summary
+            processor.print_summary()
+
+            # Generate aggregated report if requested
+            if merged_config.get("aggregate_report"):
+                if RICH_AVAILABLE and console:
+                    console.print("\n[bold cyan]Generating aggregated reports...[/bold cyan]")
+
+                generated_files = aggregated_report.generate_reports(batch_output_dir)
+
+                if RICH_AVAILABLE and console:
+                    console.print("[bold green]✓[/bold green] Aggregated reports generated:")
+                    for file_path in generated_files:
+                        console.print(f"  [cyan]•[/cyan] {file_path}")
+                else:
+                    logger.info(f"Generated {len(generated_files)} aggregated report files")
+
+            return 1 if aggregated_report.failed_projects > 0 else 0
+
         except (FileNotFoundError, NotADirectoryError) as e:
             if RICH_AVAILABLE and console:
                 console.print(f"[bold red]✗ Error:[/bold red] {e}")
             else:
                 logger.error(str(e))
             return 1
+
     else:
         # Single file mode
         if not parsed_args.esx_file:
@@ -1262,98 +1396,40 @@ def main(args: list[str] | None = None) -> int:
                     "[bold red]✗ Error:[/bold red] Either provide an .esx file or use --batch option"
                 )
             return 1
-        files_to_process = [parsed_args.esx_file]
 
-    # Process all files
-    total_files = len(files_to_process)
-    failed_files = []
+        # Process single file
+        exit_code = process_project(
+            esx_file=parsed_args.esx_file,
+            output_dir=merged_config.get("output_dir"),
+            colors_config=merged_config.get("colors_config"),
+            export_formats=export_formats,
+            filter_floors=filter_floors,
+            filter_colors=filter_colors,
+            filter_vendors=filter_vendors,
+            filter_models=filter_models,
+            filter_tags=filter_tags,
+            exclude_floors=exclude_floors,
+            exclude_colors=exclude_colors,
+            exclude_vendors=exclude_vendors,
+            group_by=merged_config.get("group_by"),
+            tag_key=merged_config.get("tag_key"),
+            enable_pricing=merged_config.get("enable_pricing"),
+            pricing_file=merged_config.get("pricing_file"),
+            discount=merged_config.get("discount", 0.0),
+            no_volume_discounts=merged_config.get("no_volume_discounts", False),
+            visualize_floor_plans=merged_config.get("visualize_floor_plans", False),
+            ap_circle_radius=merged_config.get("ap_circle_radius", 15),
+            show_ap_names=not merged_config.get("no_ap_names", False),
+            show_azimuth_arrows=merged_config.get("show_azimuth_arrows", False),
+            ap_opacity=merged_config.get("ap_opacity", 0.6),
+            include_text_notes=merged_config.get("include_text_notes", False),
+            include_picture_notes=merged_config.get("include_picture_notes", False),
+            include_cable_notes=merged_config.get("include_cable_notes", False),
+            project_name=merged_config.get("project_name"),
+            quiet=merged_config.get("quiet", False),
+        )
 
-    for idx, esx_file in enumerate(files_to_process, 1):
-        if total_files > 1:
-            if RICH_AVAILABLE and console:
-                console.print(f"\n[bold blue]{'='*60}[/bold blue]")
-                console.print(
-                    f"[bold cyan]Processing file {idx}/{total_files}:[/bold cyan] [yellow]{esx_file.name}[/yellow]"
-                )
-                console.print(f"[bold blue]{'='*60}[/bold blue]\n")
-            else:
-                logger.info(f"Processing file {idx}/{total_files}: {esx_file.name}")
-
-        try:
-            exit_code = process_project(
-                esx_file=esx_file,
-                output_dir=merged_config.get("output_dir"),
-                colors_config=merged_config.get("colors_config"),
-                export_formats=export_formats,
-                filter_floors=filter_floors,
-                filter_colors=filter_colors,
-                filter_vendors=filter_vendors,
-                filter_models=filter_models,
-                filter_tags=filter_tags,
-                exclude_floors=exclude_floors,
-                exclude_colors=exclude_colors,
-                exclude_vendors=exclude_vendors,
-                group_by=merged_config.get("group_by"),
-                tag_key=merged_config.get("tag_key"),
-                enable_pricing=merged_config.get("enable_pricing"),
-                pricing_file=merged_config.get("pricing_file"),
-                discount=merged_config.get("discount", 0.0),
-                no_volume_discounts=merged_config.get("no_volume_discounts", False),
-                visualize_floor_plans=merged_config.get("visualize_floor_plans", False),
-                ap_circle_radius=merged_config.get("ap_circle_radius", 15),
-                show_ap_names=not merged_config.get("no_ap_names", False),
-                show_azimuth_arrows=merged_config.get("show_azimuth_arrows", False),
-                ap_opacity=merged_config.get("ap_opacity", 0.6),
-                include_text_notes=merged_config.get("include_text_notes", False),
-                include_picture_notes=merged_config.get("include_picture_notes", False),
-                include_cable_notes=merged_config.get("include_cable_notes", False),
-                project_name=merged_config.get("project_name"),
-                quiet=merged_config.get("quiet", False),
-            )
-
-            if exit_code != 0:
-                failed_files.append(esx_file.name)
-        except Exception as e:
-            logger.error(f"Failed to process {esx_file.name}: {e}")
-            if RICH_AVAILABLE and console:
-                console.print(f"[bold red]✗ Failed to process {esx_file.name}:[/bold red] {e}")
-            failed_files.append(esx_file.name)
-
-    # Print summary for batch mode
-    if total_files > 1:
-        if RICH_AVAILABLE and console:
-            console.print(f"\n[bold blue]{'='*60}[/bold blue]")
-            console.print(f"[bold cyan]Batch Processing Summary[/bold cyan]")
-            console.print(f"[bold blue]{'='*60}[/bold blue]\n")
-
-            table = Table(
-                title="Results",
-                box=box.ROUNDED,
-                show_header=True,
-                header_style="bold cyan",
-            )
-            table.add_column("Metric", style="cyan")
-            table.add_column("Count", justify="right", style="green")
-
-            table.add_row("Total Files", str(total_files))
-            table.add_row("Successful", str(total_files - len(failed_files)))
-            if failed_files:
-                table.add_row("Failed", f"[red]{len(failed_files)}[/red]")
-
-            console.print(table)
-
-            if failed_files:
-                console.print("\n[bold red]Failed files:[/bold red]")
-                for filename in failed_files:
-                    console.print(f"  [red]✗[/red] {filename}")
-        else:
-            logger.info(
-                f"Batch processing complete: {total_files - len(failed_files)}/{total_files} successful"
-            )
-            if failed_files:
-                logger.error(f"Failed files: {', '.join(failed_files)}")
-
-    return 1 if failed_files else 0
+        return exit_code
 
 
 if __name__ == "__main__":

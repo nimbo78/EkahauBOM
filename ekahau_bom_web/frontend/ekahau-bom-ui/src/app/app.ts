@@ -7,6 +7,7 @@ import { LoadingOverlayComponent } from './shared/components/loading-overlay.com
 import { RouterLoadingService } from './core/services/router-loading.service';
 import { PerformanceService } from './shared/services/performance.service';
 import { KeyboardService } from './core/services/keyboard.service';
+import { NotificationService } from './core/services/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -45,9 +46,63 @@ import { KeyboardService } from './core/services/keyboard.service';
                 <tui-icon icon="@tui.upload"></tui-icon>
                 Upload
               </a>
+              <a
+                routerLink="/admin/batch-upload"
+                routerLinkActive="active"
+                class="nav-link"
+              >
+                <tui-icon icon="@tui.upload-cloud"></tui-icon>
+                Batch Upload
+              </a>
+              <a
+                routerLink="/admin/batches"
+                routerLinkActive="active"
+                class="nav-link"
+              >
+                <tui-icon icon="@tui.layers"></tui-icon>
+                Batches
+              </a>
+              <a
+                routerLink="/admin/watch-mode"
+                routerLinkActive="active"
+                class="nav-link"
+              >
+                <tui-icon icon="@tui.eye"></tui-icon>
+                Watch Mode
+              </a>
+              <a
+                routerLink="/admin/reports"
+                routerLinkActive="active"
+                class="nav-link"
+              >
+                <tui-icon icon="@tui.bar-chart"></tui-icon>
+                Reports
+              </a>
             </nav>
           </div>
         </header>
+
+        <!-- Notification Permission Banner -->
+        <div *ngIf="showNotificationBanner()" class="notification-banner">
+          <div class="banner-content">
+            <div class="banner-icon">
+              <tui-icon icon="@tui.bell"></tui-icon>
+            </div>
+            <div class="banner-text">
+              <strong>Enable notifications</strong>
+              <span>Get notified when batch processing completes</span>
+            </div>
+            <div class="banner-actions">
+              <button class="btn-enable" (click)="requestNotificationPermission()">
+                Enable
+              </button>
+              <button class="btn-dismiss" (click)="dismissNotificationBanner()">
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>
+
         <main class="app-content">
           <router-outlet />
         </main>
@@ -62,11 +117,13 @@ import { KeyboardService } from './core/services/keyboard.service';
 export class App implements OnInit {
   title = 'Ekahau BOM Registry';
   isShortLinkMode = signal(false);
+  showNotificationBanner = signal(false);
 
   private router = inject(Router);
   private routerLoadingService = inject(RouterLoadingService);
   private performanceService = inject(PerformanceService);
   private keyboardService = inject(KeyboardService); // Initialize global keyboard shortcuts
+  private notificationService = inject(NotificationService);
 
   ngOnInit(): void {
     // Measure initial page load performance
@@ -78,6 +135,9 @@ export class App implements OnInit {
     // Check short link mode on init
     this.checkShortLinkMode();
 
+    // Check if we should show notification permission banner
+    this.checkNotificationPermission();
+
     // Track navigation performance
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
@@ -87,6 +147,43 @@ export class App implements OnInit {
         this.checkShortLinkMode();
       }
     });
+  }
+
+  private checkNotificationPermission(): void {
+    // Show banner if:
+    // 1. Notifications are supported
+    // 2. Permission not yet requested
+    // 3. Permission not already granted or denied
+    if (
+      this.notificationService.isSupported() &&
+      !this.notificationService.hasRequestedPermission() &&
+      Notification.permission === 'default'
+    ) {
+      // Show banner after a short delay to not overwhelm user on first load
+      setTimeout(() => {
+        this.showNotificationBanner.set(true);
+      }, 2000);
+    }
+  }
+
+  async requestNotificationPermission(): Promise<void> {
+    const granted = await this.notificationService.requestPermission();
+    this.showNotificationBanner.set(false);
+
+    if (granted) {
+      console.log('[App] Notification permission granted');
+      // Show a test notification
+      this.notificationService.showSuccess(
+        'Notifications enabled!',
+        'You will receive notifications when batch processing completes.'
+      );
+    }
+  }
+
+  dismissNotificationBanner(): void {
+    this.showNotificationBanner.set(false);
+    // Mark as requested so we don't show the banner again this session
+    localStorage.setItem('notification_permission_requested', 'true');
   }
 
   private checkShortLinkMode(): void {

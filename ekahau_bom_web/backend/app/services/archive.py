@@ -1,4 +1,8 @@
-"""Archive Service - project compression and decompression."""
+"""Archive Service - project compression and decompression.
+
+Note: Archiving only applies to local storage backend.
+For S3 storage, archiving is skipped since S3 already provides efficient storage.
+"""
 
 import logging
 import shutil
@@ -12,7 +16,8 @@ from app.config import settings
 from app.models import ProcessingStatus, ProjectMetadata
 from app.services.cache import cache_service
 from app.services.index import index_service
-from app.services.storage import storage_service
+from app.services.storage.local import LocalStorage
+from app.services.storage_service import storage_service
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +26,26 @@ ARCHIVE_AFTER_DAYS = 60  # Archive projects not accessed for 60 days
 
 
 class ArchiveService:
-    """Service for archiving and unarchiving projects."""
+    """Service for archiving and unarchiving projects.
+
+    Archiving (compression to tar.gz) is only applicable to local storage backend.
+    For S3 storage, archiving is automatically skipped as S3 already provides
+    efficient storage and lifecycle policies.
+    """
 
     def __init__(self):
         """Initialize the archive service."""
         self.projects_dir = settings.projects_dir
-        self.projects_dir.mkdir(parents=True, exist_ok=True)
+        if self.projects_dir.exists() or settings.storage_backend == "local":
+            self.projects_dir.mkdir(parents=True, exist_ok=True)
+
+    def _is_local_storage(self) -> bool:
+        """Check if using local storage backend.
+
+        Returns:
+            True if using local storage, False if using S3 or other backend
+        """
+        return isinstance(storage_service.backend, LocalStorage)
 
     def get_archive_path(self, project_id: UUID) -> Path:
         """
@@ -41,25 +60,31 @@ class ArchiveService:
         return self.projects_dir / f"{project_id}.tar.gz"
 
     def is_archived(self, project_id: UUID) -> bool:
-        """
-        Check if project is currently archived.
+        """Check if project is currently archived.
 
         Args:
             project_id: Project UUID
 
         Returns:
             True if project is archived (tar.gz exists, directory doesn't)
+
+        Note:
+            Always returns False for S3 storage (archiving not applicable)
         """
+        # S3 storage doesn't support archiving
+        if not self._is_local_storage():
+            return False
+
         archive_path = self.get_archive_path(project_id)
         project_dir = storage_service.get_project_dir(project_id)
 
-        return archive_path.exists() and not project_dir.exists()
+        return archive_path.exists() and not Path(project_dir).exists()
 
     def should_archive(self, metadata: ProjectMetadata) -> bool:
-        """
-        Check if project should be archived based on criteria.
+        """Check if project should be archived based on criteria.
 
         A project should be archived if:
+        - Using local storage (S3 doesn't need archiving)
         - Processing is completed
         - Not already archived
         - Last accessed more than ARCHIVE_AFTER_DAYS ago (or never accessed)
@@ -69,7 +94,14 @@ class ArchiveService:
 
         Returns:
             True if project should be archived
+
+        Note:
+            Always returns False for S3 storage
         """
+        # S3 storage doesn't need archiving
+        if not self._is_local_storage():
+            return False
+
         # Must be completed
         if metadata.processing_status != ProcessingStatus.COMPLETED:
             return False
@@ -97,13 +129,21 @@ class ArchiveService:
 
         Returns:
             True if archiving succeeded, False otherwise
+
+        Note:
+            Only applicable to local storage. Returns False for S3 storage.
         """
+        # S3 storage doesn't need archiving
+        if not self._is_local_storage():
+            logger.debug(f"Skipping archiving for project {project_id} (S3 storage)")
+            return False
+
         try:
             project_dir = storage_service.get_project_dir(project_id)
             archive_path = self.get_archive_path(project_id)
 
             # Check if project directory exists
-            if not project_dir.exists():
+            if not Path(project_dir).exists():
                 logger.warning(f"Project directory not found: {project_dir}")
                 return False
 
@@ -162,7 +202,15 @@ class ArchiveService:
 
         Returns:
             True if unarchiving succeeded, False otherwise
+
+        Note:
+            Only applicable to local storage. Returns False for S3 storage.
         """
+        # S3 storage doesn't use archiving
+        if not self._is_local_storage():
+            logger.debug(f"Skipping unarchiving for project {project_id} (S3 storage)")
+            return False
+
         try:
             archive_path = self.get_archive_path(project_id)
             project_dir = storage_service.get_project_dir(project_id)
@@ -173,7 +221,7 @@ class ArchiveService:
                 return False
 
             # Check if directory already exists
-            if project_dir.exists():
+            if Path(project_dir).exists():
                 logger.warning(f"Project directory already exists: {project_dir}")
                 return False
 
@@ -184,7 +232,7 @@ class ArchiveService:
                 tar.extractall(path=self.projects_dir)
 
             # Verify directory was created
-            if not project_dir.exists():
+            if not Path(project_dir).exists():
                 logger.error(f"Failed to extract archive: {archive_path}")
                 return False
 
@@ -210,7 +258,7 @@ class ArchiveService:
         except Exception as e:
             logger.error(f"Error unarchiving project {project_id}: {e}", exc_info=True)
             # Clean up partial extraction if it exists
-            if project_dir.exists():
+            if Path(project_dir).exists():
                 shutil.rmtree(project_dir)
             return False
 

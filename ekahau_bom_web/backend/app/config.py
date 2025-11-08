@@ -1,6 +1,8 @@
 """Configuration settings for Ekahau BOM Web API."""
 
 from pathlib import Path
+from typing import Literal
+
 from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
@@ -11,9 +13,23 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"  # development | production
 
-    # Paths
+    # Storage Backend Configuration
+    storage_backend: Literal["local", "s3"] = "local"  # local | s3
+
+    # Paths (used when storage_backend=local)
     projects_dir: Path = Path("data/projects")
     index_file: Path = Path("data/index.json")
+
+    # S3-Compatible Storage Settings (used when storage_backend=s3)
+    # Works with AWS S3, MinIO, Wasabi, DigitalOcean Spaces, Dell EMC ECS, etc.
+    s3_access_key: str | None = None
+    s3_secret_key: str | None = None
+    s3_region: str = "us-east-1"  # Provider-specific region
+    s3_bucket_name: str | None = None
+    s3_endpoint_url: str | None = None  # Custom endpoint for MinIO/Corporate S3
+    s3_use_ssl: bool = True
+    s3_verify: bool = True  # Can be False for dev/test (not recommended for prod)
+    s3_ca_bundle: str | None = None  # Path to custom CA certificate bundle
 
     # API
     api_prefix: str = "/api"
@@ -53,3 +69,15 @@ if settings.environment == "production":
         "https://ekahau-bom.example.com",
         # Add production domains here
     ]
+
+
+def get_settings() -> Settings:
+    """Get application settings.
+
+    Returns:
+        Settings instance
+
+    Note:
+        This function is useful for dependency injection in FastAPI.
+    """
+    return settings
