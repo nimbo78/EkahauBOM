@@ -14,7 +14,33 @@ Generate comprehensive equipment reports from Ekahau .esx files via **CLI** or *
 
 ---
 
-## 🌟 What's New in v3.2.0
+## 🌟 What's New in v3.3.0
+
+### 🚀 Batch Processing System - Process Multiple Projects
+
+**CLI Batch Processing:**
+- Process multiple .esx files with a single command
+- Parallel execution with configurable workers (1-8)
+- Aggregated BOM reports combining data from all projects
+- File filtering with glob patterns (include/exclude)
+- Progress tracking with Rich library
+
+**Web UI Batch Management:**
+- Multi-file upload with drag-and-drop
+- Batch dashboard with real-time status tracking
+- Per-project progress monitoring
+- Aggregate reports across all batch projects
+- Background processing with parallel workers
+
+**Comprehensive Testing:**
+- 595 tests passing with 85% code coverage
+- 51 CLI batch tests (38 unit + 13 integration)
+- 6 Web UI load tests with excellent performance
+- E2E validation: 12 batches, 56 projects, 3622 APs tested
+
+[See Batch Processing Guide](#-batch-processing-new-in-v330) →
+
+---
 
 ### 🎉 Web UI - Centralized Project Registry
 
@@ -275,6 +301,69 @@ ekahau-bom project.esx \
 
 # Enable verbose logging
 ekahau-bom project.esx --verbose
+```
+
+### 🆕 Batch Processing _(New in v3.3.0)_
+
+Process multiple .esx files with parallel execution and aggregated reports:
+
+```bash
+# Process all .esx files in directory
+ekahau-bom --batch projects/ --format csv
+
+# Parallel processing with 4 workers
+ekahau-bom --batch projects/ \
+  --parallel 4 \
+  --format csv,excel
+
+# With aggregated report
+ekahau-bom --batch projects/ \
+  --parallel 4 \
+  --aggregate-report \
+  --format csv
+
+# File filtering with glob patterns
+ekahau-bom --batch projects/ \
+  --batch-include "*office*.esx" \
+  --aggregate-report
+
+# Exclude specific files
+ekahau-bom --batch projects/ \
+  --batch-exclude "*backup*.esx" \
+  --parallel 4 \
+  --aggregate-report
+
+# Full example with all options
+ekahau-bom --batch projects/ \
+  --parallel 8 \
+  --aggregate-report \
+  --format csv,excel,html \
+  --group-by model \
+  --visualize-floor-plans \
+  --output-dir batch_output
+```
+
+**Batch Features:**
+- **Parallel processing**: 1-8 workers for faster completion
+- **Aggregated BOM**: Combined reports across all projects
+- **File filtering**: Include/exclude patterns with wildcards
+- **Progress tracking**: Real-time progress with Rich library
+- **Error handling**: Continue processing on individual file errors
+- **Summary reports**: Batch statistics and error logs
+
+**Output Structure:**
+```
+batch_output/
+├── project1/                    # Individual project outputs
+│   ├── project1_access_points.csv
+│   └── ...
+├── project2/                    # Individual project outputs
+│   ├── project2_access_points.csv
+│   └── ...
+└── summary/                     # Batch aggregated reports
+    ├── batch_summary.txt        # Processing statistics
+    ├── batch_aggregate.csv      # Combined BOM report
+    └── batch_errors.log         # Error log (if any)
 ```
 
 ---
