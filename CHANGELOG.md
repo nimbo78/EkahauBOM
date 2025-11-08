@@ -7,40 +7,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2025-11-09
+
+### Summary
+🚀 **Major Release**: Complete batch processing system with CLI and Web UI support, comprehensive testing suite (595 tests, 85% coverage), and excellent performance metrics.
+
 ### Added
-- **Batch Processing** (Completed!)
-  - **CLI**: Process multiple .esx files with parallel execution and aggregated reports
-    - Batch processing with configurable parallel workers (1-8)
-    - Aggregate BOM reports (CSV, Excel, HTML) combining data from all projects
-    - Support for all grouping modes (model, floor, color, vendor, tag)
-    - Summary statistics across all projects in batch
-    - 20+ unit tests for batch processing functionality
-  - **Web UI**: Multiple file upload, batch dashboard, and comprehensive batch management
-    - Batch upload with multiple file selection and drag-and-drop support
-    - Batch list view with status filtering and pagination
-    - Batch detail view with per-project status tracking
-    - Real-time processing progress monitoring
+
+- **🔄 Batch Processing System** (Complete Implementation!)
+  - **CLI Batch Processing**:
+    - Process multiple .esx files with single command (`--batch` flag)
+    - Parallel execution with configurable workers (`--parallel 1-8`)
+    - Aggregated BOM reports combining all projects (`--aggregate-report`)
+    - File filtering with glob patterns (`--batch-include`, `--batch-exclude`)
+    - Progress tracking with Rich library (real-time progress bars)
+    - Summary reports with statistics and error logs
+    - Support for all grouping modes and output formats
+    - Continue-on-error handling for robust processing
+
+  - **Web UI Batch Management**:
+    - Multi-file upload with drag-and-drop support
+    - Batch dashboard with status filtering and pagination
+    - Per-project status tracking with progress indicators
+    - Real-time processing monitoring
     - Background task processing with parallel workers
+    - Aggregate reports download across all batch projects
     - Batch delete functionality
-    - 21 comprehensive API tests (all passing ✅)
-  - **Upload Component Enhancement**:
-    - Multiple file selection support in standard upload
-    - Automatic redirect to Batch Upload when multiple files selected
-    - User-visible hints linking to Batch Upload feature
-    - FileList detection for drag-and-drop operations
-  - **Comprehensive Testing** (Phase 3 Complete - 2025-11-09)
-    - **CLI Tests**: 51 tests passing (38 unit + 13 integration)
-      - Integration tests with real .esx files (311 APs, 623 Antennas)
-      - Performance tests (sequential vs parallel processing)
-      - Error handling and recovery tests
-      - Aggregated report generation tests
-    - **Web UI Load Tests**: 6 tests passing
-      - Large batch uploads (50-100 files): 0.43s for 50 files (9ms per file)
-      - Concurrent batch uploads: 5 batches in 0.10s
-      - Large file handling: 3×1MB files in 0.04s
-      - API performance: List batches 8ms, Batch detail 2ms
-    - **Full Test Suite**: 595 tests, 85% code coverage
-    - **E2E Validation**: 12 batches, 56 projects, 3622 APs tested successfully
+    - Directory scan for server-side file import
+    - Scheduled reports generation (last week/month/quarter/year)
+    - Batch archive system (compress old batches to save space)
+
+  - **Files Added**:
+    - `ekahau_bom/batch.py` (760 lines) - Core batch processing logic
+    - `ekahau_bom_web/backend/app/api/batches.py` - Batch API endpoints
+    - `ekahau_bom_web/backend/app/services/batch_service.py` - Business logic
+    - `ekahau_bom_web/backend/app/services/batch_archive_service.py` - Archive management
+    - `ekahau_bom_web/backend/app/services/report_schedule_service.py` - Scheduled reports
+    - `ekahau_bom_web/frontend/.../batch-*` - Angular batch UI components
+
+- **✅ Comprehensive Testing Suite**:
+  - **595 total tests passing** (16.65s execution time)
+  - **85% code coverage** (4183 statements, 638 missed)
+  - Coverage HTML report: `htmlcov/index.html`
+
+  - **CLI Tests** (51 tests, 2.08s):
+    - 38 unit tests (BatchProcessor, AggregatedReport, filter_files)
+    - 13 integration tests with real .esx files
+    - Real projects tested: 311 APs, 623 Antennas
+    - Performance tests (sequential vs parallel)
+    - Error handling and recovery tests
+    - File filtering with glob patterns
+
+  - **Web UI Load Tests** (6 tests, 2.08s):
+    - Large batch uploads: 50 files in 0.43s (9ms per file) ⚡
+    - Concurrent uploads: 5 batches in 0.10s 🚄
+    - Large file handling: 3×1MB files in 0.04s 💪
+    - API performance: List batches 8ms, Detail 2ms 🎯
+
+  - **E2E Validation**:
+    - 12 batches tested successfully
+    - 56 projects processed
+    - 3622 Access Points validated
+
+  - **Test Files Added**:
+    - `tests/test_batch.py` (38 unit tests)
+    - `tests/test_batch_integration.py` (13 integration tests)
+    - `ekahau_bom_web/backend/tests/test_batch_api.py` - API tests
+    - `ekahau_bom_web/backend/tests/test_batch_service.py` - Service tests
+    - `ekahau_bom_web/backend/tests/test_load.py` - Load testing suite
+
+### Performance
+
+- **Excellent performance metrics**:
+  - 50 files upload: 0.43s (9ms per file)
+  - 5 concurrent batches: 0.10s total
+  - Large files (3×1MB): 0.04s
+  - API List endpoint: 8ms
+  - API Detail endpoint: 2ms
+
+### Documentation
+
+- **Updated for v3.3.0**:
+  - `README.md` - Added batch processing guide and examples
+  - `README.ru.md` - Russian translation with batch features
+  - `CHANGELOG.md` - Comprehensive release notes
+  - `planning/BATCH_PLAN.md` - Phases 1-3 complete status
+  - Coverage badges updated to 85%
+
+### Technical Details
+
+- **76 files changed** (+17,000 insertions)
+- **Code quality**: All pre-commit hooks passing
+- **Version consistency**: 3.3.0 across all files
+- **Test coverage**: 100% for analytics, config, models, pricing, processors
+- **High coverage** (97-99%): html_exporter, parser, pdf_exporter, floor_plan
+
+---
 
 ## [3.2.0] - 2025-11-07
 
