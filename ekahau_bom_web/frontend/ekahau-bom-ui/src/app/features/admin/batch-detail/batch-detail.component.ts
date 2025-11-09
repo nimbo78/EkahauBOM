@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -13,13 +13,14 @@ import { TuiBadge, TuiAccordion, TuiProgressBar } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
 import {
   BatchMetadata,
   BatchStatus,
   BatchProjectStatus,
   ProcessingStatus,
 } from '../../../core/models/batch.model';
-import { interval, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-batch-detail',
@@ -650,12 +651,13 @@ import { interval, Subscription } from 'rxjs';
     `,
   ],
 })
-export class BatchDetailComponent implements OnInit {
+export class BatchDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private apiService = inject(ApiService);
   private errorMessageService = inject(ErrorMessageService);
   private notificationService = inject(NotificationService);
+  private wsService = inject(WebSocketService);
 
   // Expose enums to template
   BatchStatus = BatchStatus;
@@ -669,20 +671,52 @@ export class BatchDetailComponent implements OnInit {
   // Track previous status for notification on change
   private previousStatus: BatchStatus | null = null;
 
-  // Polling for status updates
-  private pollingSubscription?: Subscription;
+  // WebSocket subscriptions
+  private batchUpdateSubscription?: Subscription;
+  private projectUpdateSubscription?: Subscription;
   batchId: string = '';
 
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
       this.batchId = params['id'];
       this.loadBatch();
-      this.startPolling();
+      this.setupWebSocketSubscriptions();
     });
+
+    // Connect to WebSocket if not already connected
+    if (!this.wsService.isConnected()) {
+      this.wsService.connect();
+    }
   }
 
   ngOnDestroy(): void {
-    this.stopPolling();
+    // Clean up WebSocket subscriptions
+    this.batchUpdateSubscription?.unsubscribe();
+    this.projectUpdateSubscription?.unsubscribe();
+  }
+
+  private setupWebSocketSubscriptions(): void {
+    // Subscribe to batch updates
+    this.batchUpdateSubscription = this.wsService.batchUpdates$.subscribe((update) => {
+      // Only process updates for this batch
+      if (update.batch_id === this.batchId) {
+        console.log('[BatchDetail] Received batch update:', update);
+
+        // Reload batch to get full updated data
+        this.loadBatch();
+      }
+    });
+
+    // Subscribe to project updates
+    this.projectUpdateSubscription = this.wsService.projectUpdates$.subscribe((update) => {
+      // Only process updates for this batch
+      if (update.batch_id === this.batchId) {
+        console.log('[BatchDetail] Received project update:', update);
+
+        // Reload batch to get full updated data
+        this.loadBatch();
+      }
+    });
   }
 
   loadBatch(): void {
@@ -707,15 +741,6 @@ export class BatchDetailComponent implements OnInit {
 
         // Update previous status
         this.previousStatus = batch.status;
-
-        // Stop polling if batch is in final state
-        if (
-          batch.status === BatchStatus.COMPLETED ||
-          batch.status === BatchStatus.FAILED ||
-          batch.status === BatchStatus.PARTIAL
-        ) {
-          this.stopPolling();
-        }
       },
       error: (err) => {
         console.error('Error loading batch:', err);
@@ -759,23 +784,6 @@ export class BatchDetailComponent implements OnInit {
         batch.batch_name || 'Untitled Batch',
         'Batch processing failed'
       );
-    }
-  }
-
-  startPolling(): void {
-    // Poll every 5 seconds if batch is processing
-    this.pollingSubscription = interval(5000).subscribe(() => {
-      const currentBatch = this.batch();
-      if (currentBatch?.status === BatchStatus.PROCESSING) {
-        this.loadBatch();
-      }
-    });
-  }
-
-  stopPolling(): void {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-      this.pollingSubscription = undefined;
     }
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -14,10 +14,12 @@ import {
 import { TuiBadge, TuiChip } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
 import {
   BatchListItem,
   BatchStatus,
 } from '../../../core/models/batch.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-batch-list',
@@ -807,10 +809,11 @@ import {
     `,
   ],
 })
-export class BatchListComponent implements OnInit {
+export class BatchListComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private apiService = inject(ApiService);
   private errorMessageService = inject(ErrorMessageService);
+  private wsService = inject(WebSocketService);
 
   // Expose enum to template
   BatchStatus = BatchStatus;
@@ -831,8 +834,49 @@ export class BatchListComponent implements OnInit {
   sortBy: 'date' | 'name' | 'project_count' | 'success_rate' = 'date';
   sortOrder: 'asc' | 'desc' = 'desc';
 
+  // WebSocket subscriptions
+  private batchUpdateSubscription?: Subscription;
+  private batchCreatedSubscription?: Subscription;
+  private batchDeletedSubscription?: Subscription;
+
   ngOnInit(): void {
     this.loadBatches();
+    this.setupWebSocketSubscriptions();
+
+    // Connect to WebSocket if not already connected
+    if (!this.wsService.isConnected()) {
+      this.wsService.connect();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Clean up WebSocket subscriptions
+    this.batchUpdateSubscription?.unsubscribe();
+    this.batchCreatedSubscription?.unsubscribe();
+    this.batchDeletedSubscription?.unsubscribe();
+  }
+
+  private setupWebSocketSubscriptions(): void {
+    // Subscribe to batch updates (status changes)
+    this.batchUpdateSubscription = this.wsService.batchUpdates$.subscribe((update) => {
+      console.log('[BatchList] Received batch update:', update);
+      // Reload list to reflect status changes
+      this.loadBatches();
+    });
+
+    // Subscribe to new batch creations
+    this.batchCreatedSubscription = this.wsService.batchCreated$.subscribe((data) => {
+      console.log('[BatchList] Received batch created:', data);
+      // Reload list to show new batch
+      this.loadBatches();
+    });
+
+    // Subscribe to batch deletions
+    this.batchDeletedSubscription = this.wsService.batchDeleted$.subscribe((data) => {
+      console.log('[BatchList] Received batch deleted:', data);
+      // Reload list to remove deleted batch
+      this.loadBatches();
+    });
   }
 
   loadBatches(): void {

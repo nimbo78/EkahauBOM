@@ -16,6 +16,7 @@ from app.services.cache import cache_service
 from app.services.index import index_service
 from app.services.storage_service import StorageService
 from app.utils.thumbnails import generate_all_thumbnails
+from app.websocket import connection_manager
 
 logger = logging.getLogger(__name__)
 

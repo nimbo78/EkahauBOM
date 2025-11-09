@@ -22,6 +22,7 @@ from app.models import (
 )
 from app.services.processor import ProcessorService
 from app.services.storage_service import StorageService
+from app.websocket import connection_manager
 
 logger = logging.getLogger(__name__)
 
@@ -334,6 +335,14 @@ class BatchService:
         metadata.processing_started = datetime.now(UTC)
         self._save_batch_metadata(metadata)
 
+        # Broadcast batch started
+        await connection_manager.send_batch_update(
+            batch_id=batch_id,
+            status="processing",
+            progress=0,
+            message=f"Started processing {len(metadata.project_ids)} projects",
+        )
+
         logger.info(
             f"Starting batch processing for {batch_id}: {len(metadata.project_ids)} projects"
         )
@@ -341,6 +350,17 @@ class BatchService:
         # Process projects (sequential for now, parallel implementation later)
         for idx, project_id in enumerate(metadata.project_ids):
             logger.info(f"Processing project {idx + 1}/{len(metadata.project_ids)}: {project_id}")
+
+            # Calculate progress (0-100%)
+            progress = int((idx / len(metadata.project_ids)) * 100)
+
+            # Broadcast project started
+            await connection_manager.send_project_update(
+                batch_id=batch_id,
+                project_id=project_id,
+                status="processing",
+                message=f"Processing project {idx + 1} of {len(metadata.project_ids)}",
+            )
 
             try:
                 # Load project metadata
@@ -364,6 +384,23 @@ class BatchService:
                     processing_time,
                 )
 
+                # Broadcast project completed
+                await connection_manager.send_project_update(
+                    batch_id=batch_id,
+                    project_id=project_id,
+                    status="completed" if success else "failed",
+                    message=f"Project {idx + 1} completed in {processing_time:.1f}s",
+                )
+
+                # Update batch progress
+                progress_after = int(((idx + 1) / len(metadata.project_ids)) * 100)
+                await connection_manager.send_batch_update(
+                    batch_id=batch_id,
+                    status="processing",
+                    progress=progress_after,
+                    message=f"Completed {idx + 1} of {len(metadata.project_ids)} projects",
+                )
+
             except Exception as e:
                 logger.error(f"Failed to process project {project_id}: {e}")
                 self._update_project_status(
@@ -371,6 +408,23 @@ class BatchService:
                     project_id,
                     ProcessingStatus.FAILED,
                     error_message=str(e),
+                )
+
+                # Broadcast project failed
+                await connection_manager.send_project_update(
+                    batch_id=batch_id,
+                    project_id=project_id,
+                    status="failed",
+                    message=f"Project {idx + 1} failed: {str(e)}",
+                )
+
+                # Update batch progress even on failure
+                progress_after = int(((idx + 1) / len(metadata.project_ids)) * 100)
+                await connection_manager.send_batch_update(
+                    batch_id=batch_id,
+                    status="processing",
+                    progress=progress_after,
+                    message=f"Completed {idx + 1} of {len(metadata.project_ids)} projects ({metadata.statistics.failed_projects + 1} failed)",
                 )
 
         # Calculate final statistics
@@ -386,6 +440,17 @@ class BatchService:
 
         metadata.processing_completed = datetime.now(UTC)
         self._save_batch_metadata(metadata)
+
+        # Broadcast final batch status
+        status_str = (
+            metadata.status.value if hasattr(metadata.status, "value") else str(metadata.status)
+        )
+        await connection_manager.send_batch_update(
+            batch_id=batch_id,
+            status=status_str,
+            progress=100,
+            message=f"Batch processing complete: {metadata.statistics.successful_projects} succeeded, {metadata.statistics.failed_projects} failed",
+        )
 
         logger.info(
             f"Batch {batch_id} processing completed: "

@@ -40,6 +40,7 @@ from app.services.index import index_service
 from app.services.watch_service import get_watch_service, WatchConfig
 from app.services.report_schedule_service import get_report_schedule_service, TimeRange
 from app.services.batch_archive_service import get_batch_archive_service
+from app.websocket import connection_manager
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +241,9 @@ async def upload_batch(
     # Save index to disk
     if files_uploaded:
         index_service.save_to_disk()
+
+    # Broadcast batch created notification
+    await connection_manager.send_batch_created(batch_metadata.batch_id)
 
     # Schedule batch processing in background if auto_process is True
     if files_uploaded and auto_process and proc_options:
@@ -521,6 +525,9 @@ async def delete_batch(batch_id: UUID) -> dict:
     success = batch_service.delete_batch(batch_id)
     if not success:
         raise HTTPException(status_code=404, detail="Batch not found")
+
+    # Broadcast batch deleted notification
+    await connection_manager.send_batch_deleted(batch_id)
 
     return {"message": f"Batch {batch_id} deleted successfully"}
 
