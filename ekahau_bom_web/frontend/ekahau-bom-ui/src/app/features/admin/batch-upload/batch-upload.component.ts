@@ -16,7 +16,7 @@ import { ErrorMessageService } from '../../../shared/services/error-message.serv
 import { LoadingService } from '../../../shared/services/loading.service';
 import { finalize, Subscription } from 'rxjs';
 import { HttpEvent, HttpEventType } from '@angular/common/http';
-import { BatchUploadResponse, DirectoryScanResponse, ScannedFile } from '../../../core/models/batch.model';
+import { BatchUploadResponse, DirectoryScanResponse, ScannedFile, BatchTemplate } from '../../../core/models/batch.model';
 import { ProcessingRequest, ProjectListItem } from '../../../core/models/project.model';
 import JSZip from 'jszip';
 
@@ -251,6 +251,52 @@ interface BatchFileConfig {
                   />
                   <span>Automatically start processing after upload</span>
                 </label>
+              </div>
+
+              <!-- Template Selector -->
+              <div class="template-selector">
+                <div class="template-header">
+                  <label tuiLabel class="input-label">
+                    <tui-icon icon="@tui.layout"></tui-icon>
+                    Processing Template (optional)
+                  </label>
+                  <button
+                    *ngIf="selectedTemplateId()"
+                    tuiButton
+                    appearance="flat"
+                    size="xs"
+                    (click)="clearTemplate()"
+                    type="button"
+                  >
+                    <tui-icon icon="@tui.x"></tui-icon>
+                    Clear Template
+                  </button>
+                </div>
+
+                <select
+                  class="tui-select"
+                  [value]="selectedTemplateId() || ''"
+                  (change)="onTemplateChange($any($event.target).value)"
+                  [disabled]="loadingTemplates()"
+                  [tuiHint]="'Choose a predefined template to auto-fill processing options'"
+                >
+                  <option value="">-- Choose a template --</option>
+                  <optgroup *ngIf="hasSystemTemplates" label="System Templates">
+                    <option *ngFor="let template of systemTemplates" [value]="template.template_id">
+                      {{ template.name }} - {{ template.description }}
+                    </option>
+                  </optgroup>
+                  <optgroup *ngIf="hasCustomTemplates" label="Custom Templates">
+                    <option *ngFor="let template of customTemplates" [value]="template.template_id">
+                      {{ template.name }} - {{ template.description }}
+                    </option>
+                  </optgroup>
+                </select>
+
+                <p *ngIf="selectedTemplateName" class="template-info">
+                  <tui-icon icon="@tui.check-circle" class="success-icon"></tui-icon>
+                  Template applied: <strong>{{ selectedTemplateName }}</strong>
+                </p>
               </div>
 
               <!-- Processing Options (always shown) -->
@@ -804,6 +850,68 @@ interface BatchFileConfig {
         span {
           color: var(--tui-text-01);
           font-size: 14px;
+        }
+      }
+
+      .template-selector {
+        margin-top: 24px;
+        padding: 20px;
+        background: var(--tui-base-02);
+        border-radius: 8px;
+        border: 2px solid var(--tui-primary-hover);
+
+        .template-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+
+          .input-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--tui-text-01);
+
+            tui-icon {
+              font-size: 18px;
+              color: var(--tui-primary);
+            }
+          }
+
+          button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+        }
+
+        .tui-select {
+          margin-bottom: 12px;
+        }
+
+        .template-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: 12px 0 0 0;
+          padding: 12px;
+          background: var(--tui-success-bg);
+          border-radius: 6px;
+          font-size: 14px;
+          color: var(--tui-success);
+
+          .success-icon {
+            font-size: 18px;
+            color: var(--tui-success);
+          }
+
+          strong {
+            color: var(--tui-success);
+            font-weight: 600;
+          }
         }
       }
 
@@ -1410,7 +1518,14 @@ export class BatchUploadComponent implements OnInit, OnDestroy {
   selectedScannedFiles = signal<Set<string>>(new Set()); // Track selected file paths
   importingFromPaths = signal(false);
 
+  // Template signals
+  templates = signal<BatchTemplate[]>([]);
+  selectedTemplateId = signal<string | null>(null);
+  loadingTemplates = signal(false);
+
   ngOnInit(): void {
+    // Load templates
+    this.loadTemplates();
     console.log('BatchUploadComponent initialized');
     // Subscribe to file control changes
     this.subscription = this.filesControl.valueChanges.subscribe((value) => {
@@ -1904,5 +2019,137 @@ export class BatchUploadComponent implements OnInit, OnDestroy {
           this.error.set(suggestion ? `${errorMessage}\n\n${suggestion}` : errorMessage);
         }
       });
+  }
+
+  // Template getters for template binding
+  get systemTemplates(): BatchTemplate[] {
+    return this.templates().filter(t => t.is_system);
+  }
+
+  get customTemplates(): BatchTemplate[] {
+    return this.templates().filter(t => !t.is_system);
+  }
+
+  get hasSystemTemplates(): boolean {
+    return this.systemTemplates.length > 0;
+  }
+
+  get hasCustomTemplates(): boolean {
+    return this.customTemplates.length > 0;
+  }
+
+  get selectedTemplateName(): string | null {
+    const template = this.templates().find(t => t.template_id === this.selectedTemplateId());
+    return template ? template.name : null;
+  }
+
+  /**
+   * Handle template selection change.
+   */
+  onTemplateChange(templateId: string): void {
+    if (!templateId || templateId === '') {
+      this.clearTemplate();
+      return;
+    }
+    this.selectedTemplateId.set(templateId);
+    this.applyTemplate(templateId);
+  }
+
+  /**
+   * Load all available templates from backend.
+   */
+  loadTemplates(): void {
+    this.loadingTemplates.set(true);
+    this.apiService.listTemplates(true).subscribe({
+      next: (templates) => {
+        this.templates.set(templates);
+        this.loadingTemplates.set(false);
+        console.log('Loaded templates:', templates);
+      },
+      error: (err) => {
+        console.error('Error loading templates:', err);
+        this.errorMessageService.logError(err, 'Load Templates');
+        this.loadingTemplates.set(false);
+      },
+    });
+  }
+
+  /**
+   * Apply selected template to batch form.
+   */
+  applyTemplate(templateId: string): void {
+    const template = this.templates().find(t => t.template_id === templateId);
+    if (!template) {
+      console.warn('Template not found:', templateId);
+      return;
+    }
+
+    console.log('Applying template:', template.name, template.processing_options);
+
+    // Apply processing options from template
+    const options = template.processing_options;
+
+    // Group by
+    if (options.group_by) {
+      this.batchForm.patchValue({ groupBy: options.group_by });
+    }
+
+    // Visualization options
+    this.batchForm.patchValue({
+      visualizeFloorPlans: options.visualize_floor_plans ?? true,
+      showAzimuthArrows: options.show_azimuth_arrows ?? false,
+      apOpacity: options.ap_opacity ? Math.round(options.ap_opacity * 100) : 60,
+    });
+
+    // Notes options
+    this.batchForm.patchValue({
+      includeTextNotes: options.include_text_notes ?? false,
+      includePictureNotes: options.include_picture_notes ?? false,
+      includeCableNotes: options.include_cable_notes ?? false,
+    });
+
+    // Output formats
+    const formats = options.output_formats || [];
+    this.batchForm.patchValue({
+      formatCsv: formats.includes('csv'),
+      formatExcel: formats.includes('excel'),
+      formatHtml: formats.includes('html'),
+      formatPdf: formats.includes('pdf'),
+      formatJson: formats.includes('json'),
+    });
+
+    // Parallel workers
+    this.batchForm.patchValue({
+      parallelWorkers: template.parallel_workers || 1,
+    });
+
+    // Short link options (keep defaults, template doesn't control this)
+    // User can still change these if needed
+
+    console.log('Template applied successfully:', template.name);
+  }
+
+  /**
+   * Clear template selection and reset to defaults.
+   */
+  clearTemplate(): void {
+    this.selectedTemplateId.set(null);
+    // Reset form to defaults
+    this.batchForm.patchValue({
+      groupBy: 'model',
+      visualizeFloorPlans: true,
+      showAzimuthArrows: true,
+      apOpacity: 60,
+      includeTextNotes: true,
+      includePictureNotes: true,
+      includeCableNotes: true,
+      formatCsv: true,
+      formatExcel: true,
+      formatHtml: true,
+      formatPdf: true,
+      formatJson: true,
+      parallelWorkers: 1,
+    });
+    console.log('Template cleared, form reset to defaults');
   }
 }
