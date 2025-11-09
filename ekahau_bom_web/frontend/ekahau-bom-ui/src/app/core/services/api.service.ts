@@ -29,6 +29,14 @@ import {
   AggregatedReportResponse,
   VendorAnalysisResponse,
 } from '../models/batch.model';
+import {
+  Schedule,
+  ScheduleListItem,
+  ScheduleRun,
+  ScheduleCreateRequest,
+  ScheduleUpdateRequest,
+  TriggerType,
+} from '../models/schedule.model';
 
 @Injectable({
   providedIn: 'root',
@@ -556,5 +564,102 @@ export class ApiService {
     const params = new HttpParams().set('time_range', timeRange);
 
     return this.http.get<VendorAnalysisResponse>(`${this.apiUrl}/batches/reports/vendor-analysis`, { params });
+  }
+
+  // ============================================================================
+  // Schedule API Methods (Automated Batch Processing)
+  // ============================================================================
+
+  /**
+   * List all schedules with optional filtering
+   */
+  listSchedules(options?: {
+    enabled?: boolean;
+    triggerType?: TriggerType;
+  }): Observable<ScheduleListItem[]> {
+    let params = new HttpParams();
+
+    if (options) {
+      if (options.enabled !== undefined) {
+        params = params.set('enabled', options.enabled.toString());
+      }
+      if (options.triggerType) {
+        params = params.set('trigger_type', options.triggerType);
+      }
+    }
+
+    return this.http.get<ScheduleListItem[]>(`${this.apiUrl}/schedules`, { params });
+  }
+
+  /**
+   * Get schedule details by ID
+   */
+  getSchedule(scheduleId: string): Observable<Schedule> {
+    return this.http.get<Schedule>(`${this.apiUrl}/schedules/${scheduleId}`);
+  }
+
+  /**
+   * Create a new schedule
+   */
+  createSchedule(request: ScheduleCreateRequest): Observable<Schedule> {
+    return this.http.post<Schedule>(`${this.apiUrl}/schedules`, request);
+  }
+
+  /**
+   * Update an existing schedule
+   */
+  updateSchedule(scheduleId: string, request: ScheduleUpdateRequest): Observable<Schedule> {
+    return this.http.put<Schedule>(`${this.apiUrl}/schedules/${scheduleId}`, request);
+  }
+
+  /**
+   * Delete a schedule
+   */
+  deleteSchedule(scheduleId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/schedules/${scheduleId}`);
+  }
+
+  /**
+   * Manually trigger schedule execution
+   */
+  runSchedule(scheduleId: string): Observable<{ message: string; schedule_id: string }> {
+    return this.http.post<{ message: string; schedule_id: string }>(
+      `${this.apiUrl}/schedules/${scheduleId}/run`,
+      {}
+    );
+  }
+
+  /**
+   * Get execution history for a schedule
+   */
+  getScheduleHistory(
+    scheduleId: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+    }
+  ): Observable<ScheduleRun[]> {
+    let params = new HttpParams();
+
+    if (options) {
+      if (options.limit !== undefined) {
+        params = params.set('limit', options.limit.toString());
+      }
+      if (options.offset !== undefined) {
+        params = params.set('offset', options.offset.toString());
+      }
+    }
+
+    return this.http.get<ScheduleRun[]>(
+      `${this.apiUrl}/schedules/${scheduleId}/history`,
+      { params }
+    );
+  }
+
+  /**
+   * Toggle schedule enabled/disabled status (convenience method)
+   */
+  toggleSchedule(scheduleId: string, enabled: boolean): Observable<Schedule> {
+    return this.updateSchedule(scheduleId, { enabled });
   }
 }

@@ -55,6 +55,18 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "EkahauAdmin"
 
+    # SMTP Settings (for email notifications)
+    smtp_host: str = ""  # e.g., "smtp.gmail.com"
+    smtp_port: int = 587  # TLS: 587, SSL: 465
+    smtp_username: str = ""  # SMTP username
+    smtp_password: str = ""  # SMTP password or app password
+    smtp_from_email: str = "noreply@ekahau-bom.local"  # Sender email address
+    smtp_use_tls: bool = True  # Use TLS encryption
+
+    # Scheduler Settings
+    scheduler_timezone: str = "UTC"  # Timezone for scheduled jobs
+    scheduler_enabled: bool = True  # Enable/disable scheduler
+
     # CORS
     cors_origins: list[str] = ["http://localhost:4200"]
 

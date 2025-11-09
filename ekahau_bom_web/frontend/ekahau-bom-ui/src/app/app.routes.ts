@@ -109,6 +109,27 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'schedules',
+        loadComponent: () =>
+          import('./features/admin/schedule-list/schedule-list.component').then(
+            (m) => m.ScheduleListComponent
+          ),
+      },
+      {
+        path: 'schedule-create',
+        loadComponent: () =>
+          import('./features/admin/schedule-form/schedule-form.component').then(
+            (m) => m.ScheduleFormComponent
+          ),
+      },
+      {
+        path: 'schedule-edit/:id',
+        loadComponent: () =>
+          import('./features/admin/schedule-form/schedule-form.component').then(
+            (m) => m.ScheduleFormComponent
+          ),
+      },
+      {
         path: '',
         redirectTo: 'upload',
         pathMatch: 'full',

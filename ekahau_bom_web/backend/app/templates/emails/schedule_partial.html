@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            background: #f59e0b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning-box h4 {
+            margin-top: 0;
+            color: #d97706;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+        .stat-value.success {
+            color: #10b981;
+        }
+        .stat-value.failed {
+            color: #ef4444;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚠️ Schedule Completed with Errors</h1>
+    </div>
+
+    <div class="content">
+        <h2>{{ schedule_name }}</h2>
+        <p>{{ schedule_description }}</p>
+
+        <div class="status-badge">{{ status }}</div>
+
+        <div class="warning-box">
+            <h4>Partial Success:</h4>
+            <p>Some projects were processed successfully, but {{ projects_failed }} project(s) failed.</p>
+        </div>
+
+        <div class="stats">
+            <h3>Execution Summary</h3>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ projects_processed }}</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-value success">{{ projects_succeeded }}</div>
+                    <div class="stat-label">Succeeded</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-value failed">{{ projects_failed }}</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-value">{{ duration }}</div>
+                    <div class="stat-label">Duration</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <p><strong>Executed At:</strong> {{ executed_at }}</p>
+            </div>
+        </div>
+
+        {% if batch_id %}
+        <p style="text-align: center;">
+            <strong>Batch ID:</strong> <code>{{ batch_id }}</code>
+        </p>
+        {% endif %}
+
+        {% if error_message %}
+        <div style="background: #fef3c7; padding: 10px; border-radius: 4px; margin-top: 15px;">
+            <p><strong>Error Details:</strong></p>
+            <code style="font-size: 12px;">{{ error_message }}</code>
+        </div>
+        {% endif %}
+
+        <p><strong>Recommendation:</strong> Review the failed projects and reprocess if needed.</p>
+    </div>
+
+    <div class="footer">
+        <p>Ekahau BOM Web - Automated Batch Processing</p>
+        <p>This is an automated notification. Please do not reply to this email.</p>
+    </div>
+</body>
+</html>

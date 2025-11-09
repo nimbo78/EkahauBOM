@@ -296,3 +296,128 @@ class TemplateUpdateRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     processing_options: Optional[ProcessingRequest] = None
     parallel_workers: Optional[int] = Field(None, ge=1, le=8)
+
+
+# ============================================================================
+# Scheduled Processing Models
+# ============================================================================
+
+
+class TriggerType(str, Enum):
+    """Schedule trigger type."""
+
+    CRON = "cron"  # Time-based trigger with cron expression
+    DIRECTORY = "directory"  # Watch directory for new files
+    S3 = "s3"  # Watch S3 bucket for new objects
+
+
+class ScheduleStatus(str, Enum):
+    """Schedule execution status."""
+
+    SUCCESS = "success"  # Batch processing completed successfully
+    FAILED = "failed"  # Batch processing failed
+    PARTIAL = "partial"  # Some projects succeeded, some failed
+    RUNNING = "running"  # Currently executing
+
+
+class TriggerConfig(BaseModel):
+    """Trigger-specific configuration."""
+
+    directory: Optional[str] = None  # Directory path for directory trigger
+    s3_bucket: Optional[str] = None  # S3 bucket name for S3 trigger
+    s3_prefix: Optional[str] = None  # S3 object prefix filter
+    batch_template_id: Optional[UUID] = None  # Template to use for processing
+    pattern: str = "*.esx"  # File pattern for filtering
+    recursive: bool = True  # Search subdirectories
+
+
+class NotificationConfig(BaseModel):
+    """Notification configuration."""
+
+    email: list[str] = Field(default_factory=list)  # Email addresses
+    webhook_url: Optional[str] = None  # Webhook URL for HTTP POST
+    slack_webhook: Optional[str] = None  # Slack webhook URL
+    notify_on_success: bool = True  # Send notification on success
+    notify_on_failure: bool = True  # Send notification on failure
+    notify_on_partial: bool = True  # Send notification on partial success
+
+
+class Schedule(BaseModel):
+    """Scheduled batch processing job."""
+
+    schedule_id: UUID = Field(default_factory=uuid4)
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = ""
+    cron_expression: str  # Cron expression (e.g., "0 2 * * *")
+    enabled: bool = True  # Schedule is active
+    trigger_type: TriggerType = TriggerType.CRON
+    trigger_config: TriggerConfig = Field(default_factory=TriggerConfig)
+    notification_config: NotificationConfig = Field(default_factory=NotificationConfig)
+
+    # Execution tracking
+    next_run_time: Optional[datetime] = None  # Next scheduled execution
+    last_run_time: Optional[datetime] = None  # Last execution time
+    last_run_status: Optional[ScheduleStatus] = None  # Last execution status
+    last_batch_id: Optional[UUID] = None  # Last created batch ID
+    execution_count: int = 0  # Total number of executions
+
+    # Metadata
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_by: str = "admin"  # User who created the schedule
+
+
+class ScheduleRun(BaseModel):
+    """Schedule execution history entry."""
+
+    run_id: UUID = Field(default_factory=uuid4)
+    schedule_id: UUID  # Parent schedule
+    executed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    status: ScheduleStatus  # Execution status
+    batch_id: Optional[UUID] = None  # Created batch ID
+    duration_seconds: float = 0.0  # Execution duration
+    projects_processed: int = 0  # Number of projects processed
+    projects_succeeded: int = 0  # Number of successful projects
+    projects_failed: int = 0  # Number of failed projects
+    error_message: Optional[str] = None  # Error message if failed
+    files_found: int = 0  # Number of .esx files found
+    files_processed: int = 0  # Number of .esx files processed
+
+
+class ScheduleListItem(BaseModel):
+    """Schedule list item for UI."""
+
+    schedule_id: UUID
+    name: str
+    description: str
+    cron_expression: str
+    enabled: bool
+    trigger_type: TriggerType
+    next_run_time: Optional[datetime]
+    last_run_time: Optional[datetime]
+    last_run_status: Optional[ScheduleStatus]
+    execution_count: int
+
+
+class ScheduleCreateRequest(BaseModel):
+    """Request for creating a new schedule."""
+
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = ""
+    cron_expression: str = Field(..., min_length=5)  # Min: "* * * * *"
+    enabled: bool = True
+    trigger_type: TriggerType = TriggerType.CRON
+    trigger_config: TriggerConfig = Field(default_factory=TriggerConfig)
+    notification_config: NotificationConfig = Field(default_factory=NotificationConfig)
+
+
+class ScheduleUpdateRequest(BaseModel):
+    """Request for updating an existing schedule."""
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = None
+    cron_expression: Optional[str] = Field(None, min_length=5)
+    enabled: Optional[bool] = None
+    trigger_type: Optional[TriggerType] = None
+    trigger_config: Optional[TriggerConfig] = None
+    notification_config: Optional[NotificationConfig] = None
