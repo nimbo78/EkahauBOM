@@ -151,6 +151,7 @@ import {
             <thead>
               <tr>
                 <th>Batch Name</th>
+                <th>Tags</th>
                 <th>Created Date</th>
                 <th>Status</th>
                 <th>Total Projects</th>
@@ -165,6 +166,19 @@ import {
                   <a tuiLink [routerLink]="['/admin/batches', batch.batch_id]">
                     {{ batch.batch_name || 'Unnamed Batch' }}
                   </a>
+                </td>
+                <td>
+                  <div class="tags-cell" *ngIf="batch.tags && batch.tags.length > 0">
+                    <tui-badge
+                      *ngFor="let tag of batch.tags"
+                      [appearance]="'accent'"
+                      size="s"
+                      class="tag-badge-small"
+                    >
+                      {{ tag }}
+                    </tui-badge>
+                  </div>
+                  <span *ngIf="!batch.tags || batch.tags.length === 0" class="no-tags-text">—</span>
                 </td>
                 <td>{{ formatDate(batch.created_date) }}</td>
                 <td>
@@ -452,6 +466,22 @@ import {
         display: flex;
         gap: 8px;
         align-items: center;
+      }
+
+      .tags-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        max-width: 250px;
+
+        .tag-badge-small {
+          font-size: 11px;
+        }
+      }
+
+      .no-tags-text {
+        color: var(--tui-text-03);
+        font-style: italic;
       }
 
       .custom-hint {

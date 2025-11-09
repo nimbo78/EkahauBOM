@@ -46,6 +46,9 @@ export interface BatchMetadata {
   created_date: string;
   created_by: string;
 
+  // Tags for categorization and organization
+  tags: string[];
+
   // Batch status
   status: BatchStatus;
   processing_started?: string;
@@ -81,6 +84,7 @@ export interface BatchListItem {
   total_projects: number;
   successful_projects: number;
   failed_projects: number;
+  tags: string[];
 }
 
 export interface BatchUploadRequest {

@@ -128,12 +128,14 @@ class BatchService:
     def list_batches(
         self,
         status: Optional[BatchStatus] = None,
+        tags: Optional[list[str]] = None,
         limit: Optional[int] = None,
     ) -> list[BatchMetadata]:
         """List all batches.
 
         Args:
             status: Optional status filter
+            tags: Optional tags filter (batch must have all specified tags)
             limit: Optional limit
 
         Returns:
@@ -152,8 +154,18 @@ class BatchService:
                 batch_id = UUID(batch_dir.name)
                 metadata = self.load_batch_metadata(batch_id)
                 if metadata:
-                    if status is None or metadata.status == status:
-                        batches.append(metadata)
+                    # Filter by status
+                    if status is not None and metadata.status != status:
+                        continue
+
+                    # Filter by tags (batch must have ALL specified tags)
+                    if tags:
+                        batch_tags = set(metadata.tags)
+                        required_tags = set(tags)
+                        if not required_tags.issubset(batch_tags):
+                            continue
+
+                    batches.append(metadata)
             except (ValueError, Exception) as e:
                 logger.warning(f"Failed to load batch {batch_dir.name}: {e}")
                 continue
@@ -193,6 +205,53 @@ class BatchService:
 
             self._save_batch_metadata(metadata)
             logger.info(f"Added project {project_id} to batch {batch_id}")
+
+    def update_batch_tags(
+        self,
+        batch_id: UUID,
+        tags_to_add: list[str],
+        tags_to_remove: list[str],
+    ) -> list[str]:
+        """Update batch tags by adding and/or removing tags.
+
+        Args:
+            batch_id: Batch UUID
+            tags_to_add: List of tags to add
+            tags_to_remove: List of tags to remove
+
+        Returns:
+            Updated list of tags
+
+        Raises:
+            ValueError: If batch not found
+        """
+        metadata = self.load_batch_metadata(batch_id)
+        if not metadata:
+            raise ValueError(f"Batch {batch_id} not found")
+
+        # Convert to set for efficient operations
+        current_tags = set(metadata.tags)
+
+        # Add new tags
+        for tag in tags_to_add:
+            if tag and tag.strip():  # Only add non-empty tags
+                current_tags.add(tag.strip())
+
+        # Remove tags
+        for tag in tags_to_remove:
+            current_tags.discard(tag.strip())
+
+        # Update metadata
+        metadata.tags = sorted(list(current_tags))  # Keep tags sorted
+        self._save_batch_metadata(metadata)
+
+        logger.info(
+            f"Updated tags for batch {batch_id}: "
+            f"added={tags_to_add}, removed={tags_to_remove}, "
+            f"current={metadata.tags}"
+        )
+
+        return metadata.tags
 
     async def process_batch(self, batch_id: UUID) -> BatchMetadata:
         """Process all projects in batch.

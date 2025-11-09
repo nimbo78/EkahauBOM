@@ -281,11 +281,15 @@ export class ApiService {
    */
   listBatches(
     status?: BatchStatus,
+    tags?: string[],
     limit?: number
   ): Observable<BatchListItem[]> {
     let params = new HttpParams();
     if (status) {
       params = params.set('status', status);
+    }
+    if (tags && tags.length > 0) {
+      params = params.set('tags', tags.join(','));
     }
     if (limit) {
       params = params.set('limit', limit.toString());
@@ -365,6 +369,33 @@ export class ApiService {
    */
   deleteBatch(batchId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/batches/${batchId}`);
+  }
+
+  /**
+   * Update batch tags (add and/or remove tags)
+   */
+  updateBatchTags(
+    batchId: string,
+    tagsToAdd: string[] = [],
+    tagsToRemove: string[] = []
+  ): Observable<{ batch_id: string; tags: string[]; message: string }> {
+    let params = new HttpParams();
+
+    // Add tags to add
+    tagsToAdd.forEach(tag => {
+      params = params.append('tags_to_add', tag);
+    });
+
+    // Add tags to remove
+    tagsToRemove.forEach(tag => {
+      params = params.append('tags_to_remove', tag);
+    });
+
+    return this.http.patch<{ batch_id: string; tags: string[]; message: string }>(
+      `${this.apiUrl}/batches/${batchId}/tags`,
+      null,
+      { params }
+    );
   }
 
   /**

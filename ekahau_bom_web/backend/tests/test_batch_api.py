@@ -447,3 +447,237 @@ class TestBatchEndToEnd:
         # 6. Verify deletion
         get_deleted_response = client.get(f"/api/batches/{batch_id}")
         assert get_deleted_response.status_code == 404
+
+
+class TestBatchTagsEndpoints:
+    """Tests for batch tags functionality."""
+
+    def test_add_tags_to_batch(self, sample_batch, admin_headers):
+        """Test adding tags to a batch."""
+        batch_id = sample_batch["batch_id"]
+
+        # Add tags
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["customer-x", "production", "urgent"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["batch_id"] == batch_id
+        assert set(data["tags"]) == {"customer-x", "production", "urgent"}
+        assert "message" in data
+
+    def test_remove_tags_from_batch(self, sample_batch, admin_headers):
+        """Test removing tags from a batch."""
+        batch_id = sample_batch["batch_id"]
+
+        # First add tags
+        client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["tag1", "tag2", "tag3"]},
+            headers=admin_headers,
+        )
+
+        # Remove one tag
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_remove": ["tag2"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert set(data["tags"]) == {"tag1", "tag3"}
+
+    def test_add_and_remove_tags_simultaneously(self, sample_batch, admin_headers):
+        """Test adding and removing tags in same request."""
+        batch_id = sample_batch["batch_id"]
+
+        # Add initial tags
+        client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["tag1", "tag2", "tag3"]},
+            headers=admin_headers,
+        )
+
+        # Add and remove tags simultaneously
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["tag4", "tag5"], "tags_to_remove": ["tag2"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert set(data["tags"]) == {"tag1", "tag3", "tag4", "tag5"}
+
+    def test_add_duplicate_tag(self, sample_batch, admin_headers):
+        """Test that duplicate tags are not added."""
+        batch_id = sample_batch["batch_id"]
+
+        # Add tag first time
+        client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["duplicate-tag"]},
+            headers=admin_headers,
+        )
+
+        # Try to add same tag again
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["duplicate-tag"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        # Should still have only one instance of the tag
+        assert data["tags"].count("duplicate-tag") == 1
+
+    def test_remove_nonexistent_tag(self, sample_batch, admin_headers):
+        """Test removing a tag that doesn't exist (should succeed silently)."""
+        batch_id = sample_batch["batch_id"]
+
+        # Remove tag that doesn't exist
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_remove": ["nonexistent-tag"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "nonexistent-tag" not in data["tags"]
+
+    def test_filter_batches_by_tags(self, temp_storage, admin_headers, sample_esx_file):
+        """Test filtering batches by tags."""
+        # Create batch 1 with tags
+        files1 = [
+            (
+                "files",
+                ("test1.esx", io.BytesIO(sample_esx_file.read()), "application/octet-stream"),
+            ),
+        ]
+        response1 = client.post(
+            "/api/batches/upload",
+            files=files1,
+            data={"batch_name": "Batch 1"},
+            headers=admin_headers,
+        )
+        batch1_id = response1.json()["batch_id"]
+        client.patch(
+            f"/api/batches/{batch1_id}/tags",
+            params={"tags_to_add": ["production", "customer-a"]},
+            headers=admin_headers,
+        )
+
+        # Create batch 2 with different tags
+        sample_esx_file.seek(0)  # Reset file pointer
+        files2 = [
+            (
+                "files",
+                ("test2.esx", io.BytesIO(sample_esx_file.read()), "application/octet-stream"),
+            ),
+        ]
+        response2 = client.post(
+            "/api/batches/upload",
+            files=files2,
+            data={"batch_name": "Batch 2"},
+            headers=admin_headers,
+        )
+        batch2_id = response2.json()["batch_id"]
+        client.patch(
+            f"/api/batches/{batch2_id}/tags",
+            params={"tags_to_add": ["testing", "customer-b"]},
+            headers=admin_headers,
+        )
+
+        # Filter by "production" tag
+        response = client.get("/api/batches", params={"tags": "production"})
+        assert response.status_code == 200
+        batches = response.json()
+        batch_ids = [b["batch_id"] for b in batches]
+        assert batch1_id in batch_ids
+        assert batch2_id not in batch_ids
+
+        # Filter by multiple tags (must have ALL tags)
+        response = client.get("/api/batches", params={"tags": "production,customer-a"})
+        assert response.status_code == 200
+        batches = response.json()
+        batch_ids = [b["batch_id"] for b in batches]
+        assert batch1_id in batch_ids
+        assert batch2_id not in batch_ids
+
+    def test_tags_persist_across_reload(self, sample_batch, admin_headers):
+        """Test that tags persist when batch is reloaded."""
+        batch_id = sample_batch["batch_id"]
+
+        # Add tags
+        client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["persistent-tag"]},
+            headers=admin_headers,
+        )
+
+        # Reload batch metadata
+        response = client.get(f"/api/batches/{batch_id}")
+        assert response.status_code == 200
+        batch_data = response.json()
+        assert "persistent-tag" in batch_data["tags"]
+
+    def test_tags_included_in_batch_list(self, sample_batch, admin_headers):
+        """Test that tags are included in batch list response."""
+        batch_id = sample_batch["batch_id"]
+
+        # Add tags
+        client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["list-tag"]},
+            headers=admin_headers,
+        )
+
+        # Get batch list
+        response = client.get("/api/batches")
+        assert response.status_code == 200
+        batches = response.json()
+
+        # Find our batch
+        our_batch = next((b for b in batches if b["batch_id"] == batch_id), None)
+        assert our_batch is not None
+        assert "list-tag" in our_batch["tags"]
+
+    def test_tags_are_sorted(self, sample_batch, admin_headers):
+        """Test that tags are returned in sorted order."""
+        batch_id = sample_batch["batch_id"]
+
+        # Add tags in random order
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["zebra", "apple", "mango", "banana"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        # Tags should be sorted alphabetically
+        assert data["tags"] == ["apple", "banana", "mango", "zebra"]
+
+    def test_empty_tag_ignored(self, sample_batch, admin_headers):
+        """Test that empty tags are ignored."""
+        batch_id = sample_batch["batch_id"]
+
+        # Try to add empty tag
+        response = client.patch(
+            f"/api/batches/{batch_id}/tags",
+            params={"tags_to_add": ["valid-tag", "", "  ", "another-valid-tag"]},
+            headers=admin_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "" not in data["tags"]
+        assert "  " not in data["tags"]
+        assert "valid-tag" in data["tags"]
+        assert "another-valid-tag" in data["tags"]

@@ -259,18 +259,25 @@ async def upload_batch(
 @router.get("", response_model=list[BatchListItem])
 async def list_batches(
     status: Optional[BatchStatus] = Query(None, description="Filter by status"),
+    tags: Optional[str] = Query(None, description="Filter by tags (comma-separated)"),
     limit: Optional[int] = Query(None, description="Limit number of results"),
 ) -> list[BatchListItem]:
     """List all batches.
 
     Args:
         status: Optional status filter
+        tags: Optional tags filter (comma-separated, e.g., "customer-x,production")
         limit: Optional limit on number of results
 
     Returns:
         List of batches
     """
-    batches = batch_service.list_batches(status=status, limit=limit)
+    # Parse tags if provided
+    tags_list = None
+    if tags:
+        tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
+    batches = batch_service.list_batches(status=status, tags=tags_list, limit=limit)
 
     return [
         BatchListItem(
@@ -281,6 +288,7 @@ async def list_batches(
             total_projects=batch.statistics.total_projects,
             successful_projects=batch.statistics.successful_projects,
             failed_projects=batch.statistics.failed_projects,
+            tags=batch.tags,
         )
         for batch in batches
     ]
@@ -347,6 +355,40 @@ async def get_batch(batch_id: UUID) -> BatchMetadata:
         raise HTTPException(status_code=404, detail="Batch not found")
 
     return metadata
+
+
+@router.patch("/{batch_id}/tags", dependencies=[Depends(verify_admin)])
+async def update_batch_tags(
+    batch_id: UUID,
+    tags_to_add: list[str] = Query([], description="Tags to add"),
+    tags_to_remove: list[str] = Query([], description="Tags to remove"),
+) -> dict:
+    """Add or remove tags from a batch.
+
+    Args:
+        batch_id: Batch UUID
+        tags_to_add: List of tags to add to the batch
+        tags_to_remove: List of tags to remove from the batch
+
+    Returns:
+        Updated tags list
+    """
+    metadata = batch_service.load_batch_metadata(batch_id)
+    if not metadata:
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    # Update tags using batch service method
+    updated_tags = batch_service.update_batch_tags(
+        batch_id=batch_id,
+        tags_to_add=tags_to_add,
+        tags_to_remove=tags_to_remove,
+    )
+
+    return {
+        "batch_id": str(batch_id),
+        "tags": updated_tags,
+        "message": f"Tags updated successfully. Added: {tags_to_add}, Removed: {tags_to_remove}",
+    }
 
 
 @router.post(

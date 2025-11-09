@@ -176,6 +176,11 @@ Process multiple .esx files simultaneously with comprehensive batch management:
 - **Background processing** - Configurable parallel workers (1-8) for faster completion
 - **Aggregate reports** - Combined BOM reports across all projects in batch
 - **Batch actions** - View details, monitor progress, or delete entire batches
+- **🏷️ Batch Tags** - Organize batches with custom tags (customer names, project types, etc.)
+  - Add/remove tags via UI with autocomplete
+  - Filter batches by tags in dashboard
+  - Tags shown as colored badges in list and detail views
+  - Tags persist across sessions
 
 **Usage:**
 1. Navigate to **Batch Upload** from the admin menu
@@ -183,7 +188,9 @@ Process multiple .esx files simultaneously with comprehensive batch management:
 3. Configure processing options (grouping, formats, visualizations)
 4. Set parallel workers for optimal performance
 5. Monitor progress in the **Batches** dashboard
-6. Download aggregate reports when processing completes
+6. Add tags to organize batches (e.g., "customer-x", "production", "testing")
+7. Filter batches by tags for quick access
+8. Download aggregate reports when processing completes
 
 ### Storage Backends
 

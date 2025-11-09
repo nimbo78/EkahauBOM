@@ -157,6 +157,9 @@ class BatchMetadata(BaseModel):
     created_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_by: str = "admin"  # User who created the batch
 
+    # Tags for categorization and organization
+    tags: list[str] = Field(default_factory=list)
+
     # Batch status
     status: BatchStatus = BatchStatus.PENDING
     processing_started: Optional[datetime] = None
@@ -194,6 +197,7 @@ class BatchListItem(BaseModel):
     total_projects: int
     successful_projects: int
     failed_projects: int
+    tags: list[str] = Field(default_factory=list)
 
 
 class BatchUploadRequest(BaseModel):

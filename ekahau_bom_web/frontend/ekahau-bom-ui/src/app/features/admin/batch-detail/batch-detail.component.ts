@@ -133,6 +133,56 @@ import { interval, Subscription } from 'rxjs';
           </div>
         </div>
 
+        <!-- Tags section -->
+        <div class="section tags-section">
+          <h2 class="section-title">Tags</h2>
+          <div class="tags-container">
+            <!-- Display existing tags -->
+            <div *ngIf="batch()!.tags.length > 0" class="tags-list">
+              <tui-badge
+                *ngFor="let tag of batch()!.tags"
+                [appearance]="'accent'"
+                size="m"
+                class="tag-badge"
+              >
+                {{ tag }}
+                <button
+                  class="tag-remove-btn"
+                  (click)="removeTag(tag)"
+                  title="Remove tag"
+                >
+                  ×
+                </button>
+              </tui-badge>
+            </div>
+
+            <!-- No tags message -->
+            <p *ngIf="batch()!.tags.length === 0" class="no-tags">
+              No tags assigned. Add tags to categorize and organize this batch.
+            </p>
+
+            <!-- Add tag input -->
+            <div class="add-tag-input">
+              <input
+                #tagInput
+                type="text"
+                placeholder="Add a tag (e.g., customer-x, production)..."
+                (keyup.enter)="addTag(tagInput.value); tagInput.value = ''"
+                class="tag-input"
+              />
+              <button
+                tuiButton
+                appearance="secondary"
+                size="s"
+                (click)="addTag(tagInput.value); tagInput.value = ''"
+              >
+                <tui-icon icon="@tui.plus"></tui-icon>
+                Add Tag
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Statistics section -->
         <div class="section">
           <h2 class="section-title">Statistics</h2>
@@ -381,6 +431,74 @@ import { interval, Subscription } from 'rxjs';
         font-size: 18px;
         font-weight: 600;
         color: var(--tui-text-01);
+      }
+
+      // Tags section styles
+      .tags-section {
+        .tags-container {
+          .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+
+            .tag-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              position: relative;
+
+              .tag-remove-btn {
+                background: none;
+                border: none;
+                color: currentColor;
+                font-size: 18px;
+                font-weight: bold;
+                line-height: 1;
+                padding: 0 2px;
+                cursor: pointer;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+
+                &:hover {
+                  opacity: 1;
+                }
+              }
+            }
+          }
+
+          .no-tags {
+            color: var(--tui-text-03);
+            font-style: italic;
+            margin-bottom: 16px;
+          }
+
+          .add-tag-input {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+
+            .tag-input {
+              flex: 1;
+              padding: 10px 16px;
+              border: 1px solid var(--tui-base-04);
+              border-radius: 8px;
+              background: var(--tui-base-01);
+              color: var(--tui-text-01);
+              font-size: 14px;
+              transition: border-color 0.2s;
+
+              &:focus {
+                outline: none;
+                border-color: var(--tui-primary);
+              }
+
+              &::placeholder {
+                color: var(--tui-text-03);
+              }
+            }
+          }
+        }
       }
 
       .stats-grid {
@@ -797,6 +915,68 @@ export class BatchDetailComponent implements OnInit {
         console.error('Error deleting batch:', err);
         this.errorMessageService.logError(err, 'Delete Batch');
         this.error.set(this.errorMessageService.getErrorMessage(err));
+      },
+    });
+  }
+
+  /**
+   * Add a tag to the batch
+   */
+  addTag(tag: string): void {
+    const trimmedTag = tag.trim();
+
+    // Validate tag
+    if (!trimmedTag) {
+      return; // Empty tag
+    }
+
+    const currentBatch = this.batch();
+    if (!currentBatch) {
+      return;
+    }
+
+    // Check if tag already exists
+    if (currentBatch.tags.includes(trimmedTag)) {
+      this.notificationService.showError('Tag already exists', 'This tag is already assigned to this batch.');
+      return;
+    }
+
+    // Call API to add tag
+    this.apiService.updateBatchTags(this.batchId, [trimmedTag], []).subscribe({
+      next: (response) => {
+        console.log('Tag added successfully:', response);
+        // Reload batch to get updated tags
+        this.loadBatch();
+        this.notificationService.showSuccess('Tag Added', `Tag "${trimmedTag}" has been added.`);
+      },
+      error: (err) => {
+        console.error('Error adding tag:', err);
+        this.errorMessageService.logError(err, 'Add Tag');
+        this.notificationService.showError('Failed to add tag', this.errorMessageService.getErrorMessage(err));
+      },
+    });
+  }
+
+  /**
+   * Remove a tag from the batch
+   */
+  removeTag(tag: string): void {
+    if (!confirm(`Remove tag "${tag}"?`)) {
+      return;
+    }
+
+    // Call API to remove tag
+    this.apiService.updateBatchTags(this.batchId, [], [tag]).subscribe({
+      next: (response) => {
+        console.log('Tag removed successfully:', response);
+        // Reload batch to get updated tags
+        this.loadBatch();
+        this.notificationService.showSuccess('Tag Removed', `Tag "${tag}" has been removed.`);
+      },
+      error: (err) => {
+        console.error('Error removing tag:', err);
+        this.errorMessageService.logError(err, 'Remove Tag');
+        this.notificationService.showError('Failed to remove tag', this.errorMessageService.getErrorMessage(err));
       },
     });
   }

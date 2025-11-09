@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **🏷️ Batch Tags and Categorization**
+  - Organize batches with custom tags (customer names, project types, etc.)
+  - Add/remove tags via Web UI with input field and colored badges
+  - Filter batches by tags in dashboard (`GET /api/batches?tags=tag1,tag2`)
+  - Tags display in batch list and detail views
+  - Automatic tag validation (duplicate prevention, trimming, empty rejection)
+  - Alphabetical tag sorting for consistent display
+  - Tags persist across sessions in JSON metadata
+  - Backend API: `PATCH /api/batches/{batch_id}/tags` endpoint
+  - 10 comprehensive tests covering all functionality
+
 ## [3.3.0] - 2025-11-09
 
 ### Summary
