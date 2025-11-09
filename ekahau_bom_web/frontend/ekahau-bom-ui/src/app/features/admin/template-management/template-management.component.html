@@ -180,4 +180,13 @@
       </div>
     </div>
   </div>
+
+  <!-- Template Form Dialog -->
+  <app-template-form-dialog
+    *ngIf="showDialog()"
+    [mode]="dialogMode()"
+    [template]="selectedTemplate()"
+    (saved)="onDialogSaved($event)"
+    (cancelled)="onDialogCancelled()"
+  ></app-template-form-dialog>
 </div>

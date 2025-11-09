@@ -5,6 +5,7 @@ import { TuiButton, TuiIcon, TuiHint } from '@taiga-ui/core';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import { BatchTemplate } from '../../../core/models/batch.model';
+import { TemplateFormDialogComponent } from './template-form-dialog.component';
 
 @Component({
   selector: 'app-template-management',
@@ -14,6 +15,7 @@ import { BatchTemplate } from '../../../core/models/batch.model';
     TuiButton,
     TuiIcon,
     TuiHint,
+    TemplateFormDialogComponent,
   ],
   templateUrl: './template-management.component.html',
   styleUrls: ['./template-management.component.scss'],
@@ -28,6 +30,11 @@ export class TemplateManagementComponent implements OnInit {
   searchQuery = signal('');
   showSystemTemplates = signal(true);
   showCustomTemplates = signal(true);
+
+  // Dialog state
+  showDialog = signal(false);
+  dialogMode = signal<'create' | 'edit'>('create');
+  selectedTemplate = signal<BatchTemplate | null>(null);
 
   // Computed templates based on filters
   filteredTemplates = computed(() => {
@@ -100,8 +107,9 @@ export class TemplateManagementComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    // TODO: Implement create template dialog
-    alert('Create template dialog - Coming soon!');
+    this.dialogMode.set('create');
+    this.selectedTemplate.set(null);
+    this.showDialog.set(true);
   }
 
   openEditDialog(template: BatchTemplate): void {
@@ -110,8 +118,22 @@ export class TemplateManagementComponent implements OnInit {
       return;
     }
 
-    // TODO: Implement edit template dialog
-    alert(`Edit template: ${template.name} - Coming soon!`);
+    this.dialogMode.set('edit');
+    this.selectedTemplate.set(template);
+    this.showDialog.set(true);
+  }
+
+  onDialogSaved(template: BatchTemplate): void {
+    console.log('Template saved:', template);
+    this.showDialog.set(false);
+    this.selectedTemplate.set(null);
+    // Reload templates to show the new/updated template
+    this.loadTemplates();
+  }
+
+  onDialogCancelled(): void {
+    this.showDialog.set(false);
+    this.selectedTemplate.set(null);
   }
 
   confirmDelete(template: BatchTemplate): void {
