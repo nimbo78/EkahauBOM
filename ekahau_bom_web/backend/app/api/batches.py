@@ -4,6 +4,7 @@ from __future__ import annotations
 
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from uuid import UUID
@@ -260,24 +261,79 @@ async def upload_batch(
 async def list_batches(
     status: Optional[BatchStatus] = Query(None, description="Filter by status"),
     tags: Optional[str] = Query(None, description="Filter by tags (comma-separated)"),
-    limit: Optional[int] = Query(None, description="Limit number of results"),
+    search: Optional[str] = Query(None, description="Search in batch names and project names"),
+    created_after: Optional[str] = Query(
+        None, description="Filter batches created after date (ISO format)"
+    ),
+    created_before: Optional[str] = Query(
+        None, description="Filter batches created before date (ISO format)"
+    ),
+    min_projects: Optional[int] = Query(None, description="Minimum number of projects", ge=0),
+    max_projects: Optional[int] = Query(None, description="Maximum number of projects", ge=0),
+    sort_by: str = Query(
+        "date",
+        description="Sort field: date, name, project_count, success_rate",
+        pattern="^(date|name|project_count|success_rate)$",
+    ),
+    sort_order: str = Query("desc", description="Sort order: asc or desc", pattern="^(asc|desc)$"),
+    limit: Optional[int] = Query(None, description="Limit number of results", ge=1),
 ) -> list[BatchListItem]:
-    """List all batches.
+    """List all batches with advanced filtering and sorting.
 
     Args:
         status: Optional status filter
         tags: Optional tags filter (comma-separated, e.g., "customer-x,production")
+        search: Optional text search (searches batch name and project names)
+        created_after: Optional filter for batches created after this date (ISO 8601)
+        created_before: Optional filter for batches created before this date (ISO 8601)
+        min_projects: Optional minimum number of projects
+        max_projects: Optional maximum number of projects
+        sort_by: Sort field (date, name, project_count, success_rate)
+        sort_order: Sort order (asc or desc)
         limit: Optional limit on number of results
 
     Returns:
-        List of batches
+        List of batches matching the filters
     """
     # Parse tags if provided
     tags_list = None
     if tags:
         tags_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
 
-    batches = batch_service.list_batches(status=status, tags=tags_list, limit=limit)
+    # Parse dates if provided
+    created_after_dt = None
+    created_before_dt = None
+
+    if created_after:
+        try:
+            created_after_dt = datetime.fromisoformat(created_after.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid created_after date format: {created_after}. Use ISO 8601 format.",
+            )
+
+    if created_before:
+        try:
+            created_before_dt = datetime.fromisoformat(created_before.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid created_before date format: {created_before}. Use ISO 8601 format.",
+            )
+
+    batches = batch_service.list_batches(
+        status=status,
+        tags=tags_list,
+        search_query=search,
+        created_after=created_after_dt,
+        created_before=created_before_dt,
+        min_projects=min_projects,
+        max_projects=max_projects,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        limit=limit,
+    )
 
     return [
         BatchListItem(

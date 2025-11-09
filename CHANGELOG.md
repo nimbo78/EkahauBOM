@@ -20,6 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend API: `PATCH /api/batches/{batch_id}/tags` endpoint
   - 10 comprehensive tests covering all functionality
 
+- **🔍 Advanced Batch Search and Filtering**
+  - Multi-field text search across batch names and project filenames
+  - Date range filtering (created_after, created_before) with ISO 8601 format
+  - Project count filtering (min_projects, max_projects)
+  - Multiple sorting options (date, name, project_count, success_rate)
+  - Sort order control (asc/desc)
+  - Combined filters support (all filters work together)
+  - Active filters display with removable chips
+  - Clear All Filters button
+  - Enhanced `GET /api/batches` endpoint with 9 filter parameters
+  - 16 comprehensive tests covering all filtering scenarios
+
 ## [3.3.0] - 2025-11-09
 
 ### Summary

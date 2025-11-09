@@ -277,23 +277,55 @@ export class ApiService {
   }
 
   /**
-   * List all batches with optional filters
+   * List all batches with advanced filtering and sorting
    */
-  listBatches(
-    status?: BatchStatus,
-    tags?: string[],
-    limit?: number
-  ): Observable<BatchListItem[]> {
+  listBatches(options?: {
+    status?: BatchStatus;
+    tags?: string[];
+    search?: string;
+    createdAfter?: string;
+    createdBefore?: string;
+    minProjects?: number;
+    maxProjects?: number;
+    sortBy?: 'date' | 'name' | 'project_count' | 'success_rate';
+    sortOrder?: 'asc' | 'desc';
+    limit?: number;
+  }): Observable<BatchListItem[]> {
     let params = new HttpParams();
-    if (status) {
-      params = params.set('status', status);
+
+    if (options) {
+      if (options.status) {
+        params = params.set('status', options.status);
+      }
+      if (options.tags && options.tags.length > 0) {
+        params = params.set('tags', options.tags.join(','));
+      }
+      if (options.search) {
+        params = params.set('search', options.search);
+      }
+      if (options.createdAfter) {
+        params = params.set('created_after', options.createdAfter);
+      }
+      if (options.createdBefore) {
+        params = params.set('created_before', options.createdBefore);
+      }
+      if (options.minProjects !== undefined) {
+        params = params.set('min_projects', options.minProjects.toString());
+      }
+      if (options.maxProjects !== undefined) {
+        params = params.set('max_projects', options.maxProjects.toString());
+      }
+      if (options.sortBy) {
+        params = params.set('sort_by', options.sortBy);
+      }
+      if (options.sortOrder) {
+        params = params.set('sort_order', options.sortOrder);
+      }
+      if (options.limit) {
+        params = params.set('limit', options.limit.toString());
+      }
     }
-    if (tags && tags.length > 0) {
-      params = params.set('tags', tags.join(','));
-    }
-    if (limit) {
-      params = params.set('limit', limit.toString());
-    }
+
     return this.http.get<BatchListItem[]>(`${this.apiUrl}/batches`, { params });
   }
 

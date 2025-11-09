@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import {
@@ -10,7 +11,7 @@ import {
   TuiHint,
   TuiLink,
 } from '@taiga-ui/core';
-import { TuiBadge } from '@taiga-ui/kit';
+import { TuiBadge, TuiChip } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import {
@@ -23,6 +24,7 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterLink,
     ScrollingModule,
     TuiButton,
@@ -32,6 +34,7 @@ import {
     TuiBadge,
     TuiHint,
     TuiLink,
+    TuiChip,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -47,6 +50,172 @@ import {
           <tui-icon icon="@tui.upload-cloud"></tui-icon>
           New Batch Upload
         </button>
+      </div>
+
+      <!-- Advanced Filters Section -->
+      <div class="filters-section">
+        <div class="filters-header">
+          <h3 class="filters-title">
+            <tui-icon icon="@tui.filter"></tui-icon>
+            Filters & Search
+          </h3>
+          <button
+            *ngIf="hasActiveFilters()"
+            tuiButton
+            appearance="flat"
+            size="s"
+            (click)="clearAllFilters()"
+          >
+            <tui-icon icon="@tui.x"></tui-icon>
+            Clear All
+          </button>
+        </div>
+
+        <div class="filters-grid">
+          <!-- Search -->
+          <div class="filter-group">
+            <label class="filter-label">Search</label>
+            <input
+              class="tui-input"
+              type="text"
+              [(ngModel)]="searchQuery"
+              (ngModelChange)="onFilterChange()"
+              placeholder="Batch name or project name..."
+            />
+          </div>
+
+          <!-- Tags Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Tags</label>
+            <input
+              class="tui-input"
+              type="text"
+              [(ngModel)]="tagsFilter"
+              (ngModelChange)="onFilterChange()"
+              placeholder="tag1, tag2..."
+            />
+          </div>
+
+          <!-- Date Range -->
+          <div class="filter-group">
+            <label class="filter-label">Created After</label>
+            <input
+              class="tui-input"
+              type="date"
+              [(ngModel)]="createdAfter"
+              (ngModelChange)="onFilterChange()"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Created Before</label>
+            <input
+              class="tui-input"
+              type="date"
+              [(ngModel)]="createdBefore"
+              (ngModelChange)="onFilterChange()"
+            />
+          </div>
+
+          <!-- Project Count Range -->
+          <div class="filter-group">
+            <label class="filter-label">Min Projects</label>
+            <input
+              class="tui-input"
+              type="number"
+              [(ngModel)]="minProjects"
+              (ngModelChange)="onFilterChange()"
+              min="0"
+              placeholder="Min"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Max Projects</label>
+            <input
+              class="tui-input"
+              type="number"
+              [(ngModel)]="maxProjects"
+              (ngModelChange)="onFilterChange()"
+              min="0"
+              placeholder="Max"
+            />
+          </div>
+
+          <!-- Sort Options -->
+          <div class="filter-group">
+            <label class="filter-label">Sort By</label>
+            <select
+              class="tui-select"
+              [(ngModel)]="sortBy"
+              (ngModelChange)="onFilterChange()"
+            >
+              <option value="date">Date</option>
+              <option value="name">Name</option>
+              <option value="project_count">Project Count</option>
+              <option value="success_rate">Success Rate</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Order</label>
+            <select
+              class="tui-select"
+              [(ngModel)]="sortOrder"
+              (ngModelChange)="onFilterChange()"
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Active Filters Display -->
+        <div *ngIf="hasActiveFilters()" class="active-filters">
+          <span class="active-filters-label">Active Filters:</span>
+          <tui-chip
+            *ngIf="searchQuery"
+            removable
+            (remove)="searchQuery = ''; onFilterChange()"
+          >
+            Search: {{ searchQuery }}
+          </tui-chip>
+          <tui-chip
+            *ngIf="tagsFilter"
+            removable
+            (remove)="tagsFilter = ''; onFilterChange()"
+          >
+            Tags: {{ tagsFilter }}
+          </tui-chip>
+          <tui-chip
+            *ngIf="createdAfter"
+            removable
+            (remove)="createdAfter = ''; onFilterChange()"
+          >
+            After: {{ createdAfter }}
+          </tui-chip>
+          <tui-chip
+            *ngIf="createdBefore"
+            removable
+            (remove)="createdBefore = ''; onFilterChange()"
+          >
+            Before: {{ createdBefore }}
+          </tui-chip>
+          <tui-chip
+            *ngIf="minProjects !== null"
+            removable
+            (remove)="minProjects = null; onFilterChange()"
+          >
+            Min: {{ minProjects }}
+          </tui-chip>
+          <tui-chip
+            *ngIf="maxProjects !== null"
+            removable
+            (remove)="maxProjects = null; onFilterChange()"
+          >
+            Max: {{ maxProjects }}
+          </tui-chip>
+        </div>
       </div>
 
       <!-- Statistics cards -->
@@ -121,13 +290,13 @@ import {
       <!-- Batches table -->
       <div *ngIf="!loading() && !error()" class="table-wrapper">
         <!-- Empty state -->
-        <div *ngIf="filteredBatches().length === 0" class="empty-state">
+        <div *ngIf="batches().length === 0" class="empty-state">
           <tui-icon icon="@tui.layers"></tui-icon>
           <h3>No batches found</h3>
-          <p *ngIf="statusFilter()">
+          <p *ngIf="hasActiveFilters() || statusFilter()">
             Try adjusting your filter criteria
           </p>
-          <p *ngIf="!statusFilter()">
+          <p *ngIf="!hasActiveFilters() && !statusFilter()">
             Use the "New Batch Upload" button to create your first batch
           </p>
           <button
@@ -143,7 +312,7 @@ import {
 
         <!-- Virtual scroll table -->
         <cdk-virtual-scroll-viewport
-          *ngIf="filteredBatches().length > 0"
+          *ngIf="batches().length > 0"
           [itemSize]="60"
           class="virtual-scroll-viewport"
         >
@@ -161,7 +330,7 @@ import {
               </tr>
             </thead>
             <tbody>
-              <tr *cdkVirtualFor="let batch of filteredBatches(); trackBy: trackByBatchId">
+              <tr *cdkVirtualFor="let batch of batches(); trackBy: trackByBatchId">
                 <td>
                   <a tuiLink [routerLink]="['/admin/batches', batch.batch_id]">
                     {{ batch.batch_name || 'Unnamed Batch' }}
@@ -276,6 +445,91 @@ import {
         font-size: 28px;
         font-weight: 600;
         color: var(--tui-text-01);
+      }
+
+      /* Filters Section */
+      .filters-section {
+        background: var(--tui-base-02);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+      }
+
+      .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .filters-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--tui-text-01);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .filter-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--tui-text-02);
+      }
+
+      .tui-input,
+      .tui-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--tui-base-04);
+        border-radius: 6px;
+        font-size: 14px;
+        background: var(--tui-base-01);
+        color: var(--tui-text-01);
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--tui-primary);
+          box-shadow: 0 0 0 2px rgba(82, 110, 211, 0.1);
+        }
+
+        &::placeholder {
+          color: var(--tui-text-03);
+        }
+      }
+
+      .tui-select {
+        cursor: pointer;
+      }
+
+      .active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        padding-top: 16px;
+        border-top: 1px solid var(--tui-base-04);
+      }
+
+      .active-filters-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--tui-text-02);
       }
 
       .stats-cards {
@@ -406,7 +660,7 @@ import {
       }
 
       .virtual-scroll-viewport {
-        height: calc(100vh - 400px);
+        height: calc(100vh - 650px);
         min-height: 400px;
       }
 
@@ -563,10 +817,19 @@ export class BatchListComponent implements OnInit {
 
   // Signals for reactive state
   batches = signal<BatchListItem[]>([]);
-  filteredBatches = signal<BatchListItem[]>([]);
   statusFilter = signal<BatchStatus | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
+
+  // Filter properties
+  searchQuery: string = '';
+  tagsFilter: string = '';
+  createdAfter: string = '';
+  createdBefore: string = '';
+  minProjects: number | null = null;
+  maxProjects: number | null = null;
+  sortBy: 'date' | 'name' | 'project_count' | 'success_rate' = 'date';
+  sortOrder: 'asc' | 'desc' = 'desc';
 
   ngOnInit(): void {
     this.loadBatches();
@@ -576,11 +839,38 @@ export class BatchListComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.apiService.listBatches().subscribe({
+    // Build filter options
+    const options: any = {
+      sortBy: this.sortBy,
+      sortOrder: this.sortOrder,
+    };
+
+    if (this.statusFilter()) {
+      options.status = this.statusFilter();
+    }
+    if (this.searchQuery) {
+      options.search = this.searchQuery;
+    }
+    if (this.tagsFilter) {
+      options.tags = this.tagsFilter.split(',').map(t => t.trim()).filter(t => t);
+    }
+    if (this.createdAfter) {
+      options.createdAfter = new Date(this.createdAfter).toISOString();
+    }
+    if (this.createdBefore) {
+      options.createdBefore = new Date(this.createdBefore).toISOString();
+    }
+    if (this.minProjects !== null) {
+      options.minProjects = this.minProjects;
+    }
+    if (this.maxProjects !== null) {
+      options.maxProjects = this.maxProjects;
+    }
+
+    this.apiService.listBatches(options).subscribe({
       next: (batches) => {
         console.log('Loaded batches:', batches);
         this.batches.set(batches);
-        this.applyFilters();
         this.loading.set(false);
       },
       error: (err) => {
@@ -593,21 +883,37 @@ export class BatchListComponent implements OnInit {
     });
   }
 
-  setStatusFilter(status: BatchStatus | null): void {
-    this.statusFilter.set(status);
-    this.applyFilters();
+  onFilterChange(): void {
+    this.loadBatches();
   }
 
-  applyFilters(): void {
-    let filtered = [...this.batches()];
+  setStatusFilter(status: BatchStatus | null): void {
+    this.statusFilter.set(status);
+    this.loadBatches();
+  }
 
-    // Apply status filter
-    const status = this.statusFilter();
-    if (status) {
-      filtered = filtered.filter((batch) => batch.status === status);
-    }
+  hasActiveFilters(): boolean {
+    return !!(
+      this.searchQuery ||
+      this.tagsFilter ||
+      this.createdAfter ||
+      this.createdBefore ||
+      this.minProjects !== null ||
+      this.maxProjects !== null
+    );
+  }
 
-    this.filteredBatches.set(filtered);
+  clearAllFilters(): void {
+    this.searchQuery = '';
+    this.tagsFilter = '';
+    this.createdAfter = '';
+    this.createdBefore = '';
+    this.minProjects = null;
+    this.maxProjects = null;
+    this.sortBy = 'date';
+    this.sortOrder = 'desc';
+    this.statusFilter.set(null);
+    this.loadBatches();
   }
 
   getTotalCount(): number {

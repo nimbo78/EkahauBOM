@@ -129,13 +129,27 @@ class BatchService:
         self,
         status: Optional[BatchStatus] = None,
         tags: Optional[list[str]] = None,
+        search_query: Optional[str] = None,
+        created_after: Optional[datetime] = None,
+        created_before: Optional[datetime] = None,
+        min_projects: Optional[int] = None,
+        max_projects: Optional[int] = None,
+        sort_by: str = "date",
+        sort_order: str = "desc",
         limit: Optional[int] = None,
     ) -> list[BatchMetadata]:
-        """List all batches.
+        """List all batches with advanced filtering and sorting.
 
         Args:
             status: Optional status filter
             tags: Optional tags filter (batch must have all specified tags)
+            search_query: Optional text search (searches batch name and project names)
+            created_after: Optional filter for batches created after this date
+            created_before: Optional filter for batches created before this date
+            min_projects: Optional minimum number of projects
+            max_projects: Optional maximum number of projects
+            sort_by: Sort field ("date", "name", "project_count", "success_rate")
+            sort_order: Sort order ("asc" or "desc")
             limit: Optional limit
 
         Returns:
@@ -165,13 +179,59 @@ class BatchService:
                         if not required_tags.issubset(batch_tags):
                             continue
 
+                    # Filter by date range
+                    if created_after and metadata.created_date < created_after:
+                        continue
+                    if created_before and metadata.created_date > created_before:
+                        continue
+
+                    # Filter by project count
+                    project_count = len(metadata.project_ids)
+                    if min_projects is not None and project_count < min_projects:
+                        continue
+                    if max_projects is not None and project_count > max_projects:
+                        continue
+
+                    # Filter by search query (batch name or project filenames)
+                    if search_query:
+                        query_lower = search_query.lower()
+                        batch_name_match = (
+                            metadata.batch_name and query_lower in metadata.batch_name.lower()
+                        )
+                        # Check if any project filename matches
+                        project_match = any(
+                            query_lower in ps.filename.lower() for ps in metadata.project_statuses
+                        )
+                        if not (batch_name_match or project_match):
+                            continue
+
                     batches.append(metadata)
             except (ValueError, Exception) as e:
                 logger.warning(f"Failed to load batch {batch_dir.name}: {e}")
                 continue
 
-        # Sort by created_date (newest first)
-        batches.sort(key=lambda b: b.created_date, reverse=True)
+        # Sort batches
+        reverse = sort_order == "desc"
+
+        if sort_by == "date":
+            batches.sort(key=lambda b: b.created_date, reverse=reverse)
+        elif sort_by == "name":
+            batches.sort(
+                key=lambda b: (b.batch_name or "").lower(),
+                reverse=reverse,
+            )
+        elif sort_by == "project_count":
+            batches.sort(key=lambda b: len(b.project_ids), reverse=reverse)
+        elif sort_by == "success_rate":
+            # Calculate success rate (avoid division by zero)
+            def success_rate(b: BatchMetadata) -> float:
+                total = b.statistics.total_projects
+                return b.statistics.successful_projects / total if total > 0 else 0.0
+
+            batches.sort(key=success_rate, reverse=reverse)
+        else:
+            # Default to date sorting
+            batches.sort(key=lambda b: b.created_date, reverse=reverse)
 
         if limit:
             batches = batches[:limit]
