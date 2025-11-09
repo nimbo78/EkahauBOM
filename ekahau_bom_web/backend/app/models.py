@@ -244,3 +244,55 @@ class ImportFromPathsRequest(BaseModel):
     parallel_workers: int = Field(default=1, ge=1, le=8)
     processing_options: dict | None = None  # ProcessingRequest as dict
     auto_process: bool = False
+
+
+# ============================================================================
+# Batch Template Models
+# ============================================================================
+
+
+class BatchTemplate(BaseModel):
+    """Template for batch processing configuration."""
+
+    template_id: UUID = Field(default_factory=uuid4)
+    name: str  # Template name (e.g., "CSV Only", "Full Reports")
+    description: Optional[str] = None  # Template description
+    created_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_by: str = "admin"  # User who created the template
+    last_used: Optional[datetime] = None  # Last time template was applied
+    usage_count: int = 0  # Number of times template has been used
+    is_system: bool = False  # True for predefined templates, False for user-created
+
+    # Processing configuration
+    processing_options: ProcessingRequest = Field(default_factory=lambda: ProcessingRequest())
+    parallel_workers: int = Field(default=1, ge=1, le=8)  # Default parallel workers
+
+
+class TemplateListItem(BaseModel):
+    """Template list item for UI."""
+
+    template_id: UUID
+    name: str
+    description: Optional[str]
+    created_date: datetime
+    last_used: Optional[datetime]
+    usage_count: int
+    is_system: bool
+
+
+class TemplateCreateRequest(BaseModel):
+    """Request for creating a new template."""
+
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    processing_options: ProcessingRequest = Field(default_factory=lambda: ProcessingRequest())
+    parallel_workers: int = Field(default=1, ge=1, le=8)
+
+
+class TemplateUpdateRequest(BaseModel):
+    """Request for updating an existing template."""
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    processing_options: Optional[ProcessingRequest] = None
+    parallel_workers: Optional[int] = Field(None, ge=1, le=8)

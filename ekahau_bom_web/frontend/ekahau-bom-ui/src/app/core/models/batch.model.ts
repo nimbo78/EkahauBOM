@@ -239,3 +239,44 @@ export interface VendorAnalysisResponse {
   top_vendors: VendorDistribution[];
   top_models: ModelDistribution[];
 }
+
+// ============================================================================
+// Template Models
+// ============================================================================
+
+export interface BatchTemplate {
+  template_id: string;
+  name: string;
+  description?: string;
+  created_date: string;
+  created_by: string;
+  last_used?: string;
+  usage_count: number;
+  is_system: boolean;
+  processing_options: ProcessingRequest;
+  parallel_workers: number;
+}
+
+export interface TemplateListItem {
+  template_id: string;
+  name: string;
+  description?: string;
+  created_date: string;
+  last_used?: string;
+  usage_count: number;
+  is_system: boolean;
+}
+
+export interface TemplateCreateRequest {
+  name: string;
+  description?: string;
+  processing_options: ProcessingRequest;
+  parallel_workers: number;
+}
+
+export interface TemplateUpdateRequest {
+  name?: string;
+  description?: string;
+  processing_options?: ProcessingRequest;
+  parallel_workers?: number;
+}

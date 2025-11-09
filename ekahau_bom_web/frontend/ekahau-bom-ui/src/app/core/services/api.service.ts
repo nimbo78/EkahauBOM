@@ -457,6 +457,47 @@ export class ApiService {
   }
 
   // ============================================================================
+  // Template API Methods
+  // ============================================================================
+
+  /**
+   * List all templates
+   */
+  listTemplates(includeSystem: boolean = true): Observable<any[]> {
+    let params = new HttpParams();
+    params = params.set('include_system', includeSystem.toString());
+    return this.http.get<any[]>(`${this.apiUrl}/templates`, { params });
+  }
+
+  /**
+   * Get template by ID
+   */
+  getTemplate(templateId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/templates/${templateId}`);
+  }
+
+  /**
+   * Create a new template
+   */
+  createTemplate(request: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/templates`, request);
+  }
+
+  /**
+   * Update an existing template
+   */
+  updateTemplate(templateId: string, request: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/templates/${templateId}`, request);
+  }
+
+  /**
+   * Delete a template
+   */
+  deleteTemplate(templateId: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/templates/${templateId}`);
+  }
+
+  // ============================================================================
   // Watch Mode API Methods
   // ============================================================================
 
