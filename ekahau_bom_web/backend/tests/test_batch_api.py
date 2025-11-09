@@ -22,6 +22,7 @@ client = TestClient(app)
 @pytest.fixture
 def temp_storage(tmp_path, monkeypatch):
     """Create temporary storage service and patch it in the app."""
+    from pathlib import Path
     from app.services.storage.local import LocalStorage
 
     # Create storage with temp backend
@@ -29,13 +30,22 @@ def temp_storage(tmp_path, monkeypatch):
     temp_backend = LocalStorage(base_dir=tmp_path / "projects")
     storage.backend = temp_backend
     storage.base_dir = tmp_path / "projects"
+    storage.projects_dir = Path(tmp_path / "projects")  # Ensure it's a Path object
 
-    # Patch the storage service
+    # Patch the storage service in API module
     monkeypatch.setattr("app.api.batches.storage_service", storage)
     monkeypatch.setattr("app.services.batch_service.StorageService", lambda: storage)
 
-    # Update batch_service instance
+    # Update batch_service instance (used by API endpoints)
+    original_batch_storage = batch_service.storage
     batch_service.storage = storage
+
+    # Patch batches directory to use temp path (relative, will be combined with projects_dir.parent)
+    original_batches_dir = batch_service.batches_dir
+    batch_service.batches_dir = Path("batches")  # Keep it relative
+
+    # Ensure batches directory exists
+    (tmp_path / "batches").mkdir(exist_ok=True)
 
     # Clear index
     index_service._projects = {}
@@ -43,6 +53,8 @@ def temp_storage(tmp_path, monkeypatch):
     yield storage
 
     # Cleanup
+    batch_service.storage = original_batch_storage
+    batch_service.batches_dir = original_batches_dir
     index_service._projects = {}
 
 
@@ -686,128 +698,4 @@ class TestBatchTagsEndpoints:
 # Test class for Advanced Search and Filtering
 
 
-class TestBatchAdvancedFiltering:
-    """Tests for advanced batch filtering and searching."""
-
-    def test_search_by_batch_name(self, multiple_batches, admin_headers):
-        """Test searching batches by name."""
-        response = client.get("/api/batches", params={"search": "Batch 1"}, headers=admin_headers)
-        assert response.status_code == 200
-        batches = response.json()
-        # Should find 'Batch 1' and 'Batch 11' (partial match)
-        assert len(batches) >= 1
-        assert any("Batch 1" in b["batch_name"] or b["batch_name"] is None for b in batches)
-
-    def test_date_range_filter(self, multiple_batches, admin_headers):
-        """Test filtering by date range."""
-        # Get all batches first
-        response_all = client.get("/api/batches", headers=admin_headers)
-        all_batches = response_all.json()
-
-        if len(all_batches) > 0:
-            # Use first batch date as reference
-            ref_date = all_batches[0]["created_date"]
-
-            # Test created_after filter
-            response = client.get(
-                "/api/batches", params={"created_after": ref_date}, headers=admin_headers
-            )
-            assert response.status_code == 200
-            batches = response.json()
-            assert len(batches) >= 1
-
-    def test_project_count_filter(self, multiple_batches, admin_headers):
-        """Test filtering by project count."""
-        # Filter batches with at least 1 project
-        response = client.get("/api/batches", params={"min_projects": 1}, headers=admin_headers)
-        assert response.status_code == 200
-        batches = response.json()
-        for batch in batches:
-            assert batch["total_projects"] >= 1
-
-    def test_sort_by_name(self, multiple_batches, admin_headers):
-        """Test sorting batches by name."""
-        response = client.get(
-            "/api/batches", params={"sort_by": "name", "sort_order": "asc"}, headers=admin_headers
-        )
-        assert response.status_code == 200
-        batches = response.json()
-
-        # Check that batches are sorted by name
-        if len(batches) > 1:
-            for i in range(len(batches) - 1):
-                name1 = (batches[i]["batch_name"] or "").lower()
-                name2 = (batches[i + 1]["batch_name"] or "").lower()
-                assert name1 <= name2
-
-    def test_sort_by_project_count(self, multiple_batches, admin_headers):
-        """Test sorting batches by project count."""
-        response = client.get(
-            "/api/batches",
-            params={"sort_by": "project_count", "sort_order": "desc"},
-            headers=admin_headers,
-        )
-        assert response.status_code == 200
-        batches = response.json()
-
-        # Check descending order
-        if len(batches) > 1:
-            for i in range(len(batches) - 1):
-                assert batches[i]["total_projects"] >= batches[i + 1]["total_projects"]
-
-    def test_combined_filters(self, multiple_batches, admin_headers):
-        """Test combining multiple filters."""
-        response = client.get(
-            "/api/batches",
-            params={"min_projects": 0, "sort_by": "date", "sort_order": "desc"},
-            headers=admin_headers,
-        )
-        assert response.status_code == 200
-        batches = response.json()
-        assert isinstance(batches, list)
-
-    def test_invalid_sort_by(self, admin_headers):
-        """Test invalid sort_by parameter."""
-        response = client.get(
-            "/api/batches", params={"sort_by": "invalid_field"}, headers=admin_headers
-        )
-        # Should return 422 Unprocessable Entity due to regex validation
-        assert response.status_code == 422
-
-    def test_invalid_date_format(self, admin_headers):
-        """Test invalid date format."""
-        response = client.get(
-            "/api/batches", params={"created_after": "not-a-date"}, headers=admin_headers
-        )
-        assert response.status_code == 400
-        data = response.json()
-        assert "Invalid" in data["detail"] or "date" in data["detail"].lower()
-
-    def test_tags_filter_with_search(self, admin_headers):
-        """Test combining tags filter with search."""
-        # First create a batch with tags
-        batch_response = client.post(
-            "/api/batches/upload",
-            data={"batch_name": "Tagged Batch", "parallel_workers": "1"},
-            files=[],
-            headers=admin_headers,
-        )
-        batch_id = batch_response.json()["batch_id"]
-
-        # Add tags
-        client.patch(
-            f"/api/batches/{batch_id}/tags",
-            params={"tags_to_add": ["important", "production"]},
-            headers=admin_headers,
-        )
-
-        # Search with tags filter
-        response = client.get(
-            "/api/batches", params={"tags": "important", "search": "Tagged"}, headers=admin_headers
-        )
-        assert response.status_code == 200
-        batches = response.json()
-        assert len(batches) >= 1
-
-        # Cleanup
-        client.delete(f"/api/batches/{batch_id}", headers=admin_headers)
+# NOTE: Advanced filtering tests moved to test_advanced_filtering.py for better organization

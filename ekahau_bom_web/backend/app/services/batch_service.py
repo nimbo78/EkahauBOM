@@ -263,6 +263,9 @@ class BatchService:
                 )
             )
 
+            # Recalculate statistics to update total_projects count
+            metadata.statistics = self._calculate_statistics(metadata)
+
             self._save_batch_metadata(metadata)
             logger.info(f"Added project {project_id} to batch {batch_id}")
 
