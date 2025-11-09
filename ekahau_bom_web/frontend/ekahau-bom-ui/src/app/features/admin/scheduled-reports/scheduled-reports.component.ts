@@ -1,7 +1,9 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TuiButton } from '@taiga-ui/core';
+import { NgxEchartsModule } from 'ngx-echarts';
+import type { EChartsOption } from 'echarts';
 
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
@@ -15,17 +17,19 @@ import {
 
 @Component({
   selector: 'app-scheduled-reports',
+  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     TuiButton,
+    NgxEchartsModule,
   ],
   template: `
     <div class="reports-container">
       <div class="reports-header">
-        <h2>Management Reports</h2>
+        <h2>Batch Processing Dashboard</h2>
         <p class="description">
-          Generate aggregated BOM reports and vendor analysis across all batches.
+          Analytics dashboard showing batch processing history, trends, and vendor analysis.
         </p>
       </div>
 
@@ -114,19 +118,24 @@ import {
         </div>
       </div>
 
-      <!-- Vendor Analysis -->
-      <div class="vendor-card" *ngIf="vendorAnalysis()">
-        <h3>Top Vendors</h3>
-        <div class="vendor-list">
-          <div class="vendor-item" *ngFor="let vendor of vendorAnalysis()!.top_vendors.slice(0, 10)">
-            <div class="vendor-info">
-              <span class="vendor-name">{{ vendor.vendor }}</span>
-              <span class="vendor-stats">{{ vendor.quantity }} APs ({{ vendor.percentage }}%)</span>
-            </div>
-            <div class="vendor-bar">
-              <div class="bar-fill" [style.width.%]="vendor.percentage"></div>
-            </div>
-          </div>
+      <!-- Charts -->
+      <div class="charts-grid" *ngIf="reportData()">
+        <!-- Timeline Chart -->
+        <div class="chart-card">
+          <h3>Batch Processing Timeline</h3>
+          <div echarts [options]="timelineChartOptions()" class="chart"></div>
+        </div>
+
+        <!-- Success Rate Pie Chart -->
+        <div class="chart-card">
+          <h3>Success Rate</h3>
+          <div echarts [options]="successRateChartOptions()" class="chart"></div>
+        </div>
+
+        <!-- Vendor Distribution Bar Chart -->
+        <div class="chart-card full-width" *ngIf="vendorAnalysis()">
+          <h3>Top Vendors Distribution</h3>
+          <div echarts [options]="vendorChartOptions()" class="chart-large"></div>
         </div>
       </div>
 
@@ -156,7 +165,7 @@ import {
   `,
   styles: [`
     .reports-container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 24px;
     }
@@ -176,7 +185,7 @@ import {
       }
     }
 
-    .controls-card, .summary-card, .vendor-card, .models-card {
+    .controls-card, .summary-card, .chart-card, .models-card {
       background: var(--tui-base-02);
       border: 1px solid var(--tui-base-04);
       border-radius: 12px;
@@ -239,44 +248,34 @@ import {
       }
     }
 
-    .vendor-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
     }
 
-    .vendor-item {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .chart-card {
+      h3 {
+        margin: 0 0 16px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--tui-text-01);
+      }
     }
 
-    .vendor-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
+    .chart {
+      width: 100%;
+      height: 350px;
     }
 
-    .vendor-name {
-      font-weight: 600;
-    }
-
-    .vendor-stats {
-      color: var(--tui-text-03);
-    }
-
-    .vendor-bar {
-      height: 8px;
-      background: var(--tui-base-03);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      background: var(--tui-primary);
-      transition: width 0.3s ease;
+    .chart-large {
+      width: 100%;
+      height: 450px;
     }
 
     .models-table {
@@ -308,6 +307,12 @@ import {
     tr:hover td {
       background: var(--tui-base-01);
     }
+
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   `],
 })
 export class ScheduledReportsComponent implements OnInit {
@@ -321,6 +326,172 @@ export class ScheduledReportsComponent implements OnInit {
 
   reportForm = new FormGroup({
     timeRange: new FormControl<TimeRange>('last_month', { nonNullable: true }),
+  });
+
+  // Chart options computed from data
+  timelineChartOptions = computed<EChartsOption>(() => {
+    const data = this.reportData();
+    if (!data || !data.trends) {
+      return {};
+    }
+
+    const dates = Object.keys(data.trends.batches_by_date).sort();
+    const batchCounts = dates.map(date => data.trends.batches_by_date[date]);
+    const apCounts = dates.map(date => data.trends.access_points_by_date[date] || 0);
+
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross'
+        }
+      },
+      legend: {
+        data: ['Batches', 'Access Points']
+      },
+      xAxis: {
+        type: 'category',
+        data: dates.map(d => new Date(d).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })),
+        axisLabel: {
+          rotate: 45
+        }
+      },
+      yAxis: [
+        {
+          type: 'value',
+          name: 'Batches',
+          position: 'left',
+        },
+        {
+          type: 'value',
+          name: 'Access Points',
+          position: 'right',
+        }
+      ],
+      series: [
+        {
+          name: 'Batches',
+          type: 'line',
+          data: batchCounts,
+          smooth: true,
+          itemStyle: { color: '#5b8ff9' },
+          areaStyle: { opacity: 0.3 }
+        },
+        {
+          name: 'Access Points',
+          type: 'line',
+          yAxisIndex: 1,
+          data: apCounts,
+          smooth: true,
+          itemStyle: { color: '#5ad8a6' },
+          areaStyle: { opacity: 0.3 }
+        }
+      ]
+    };
+  });
+
+  successRateChartOptions = computed<EChartsOption>(() => {
+    const data = this.reportData();
+    if (!data) {
+      return {};
+    }
+
+    const successful = data.summary.successful_projects;
+    const failed = data.summary.failed_projects;
+    const total = successful + failed;
+    const successRate = total > 0 ? ((successful / total) * 100).toFixed(1) : '0';
+
+    return {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{a} <br/>{b}: {c} ({d}%)'
+      },
+      legend: {
+        orient: 'vertical',
+        left: 'left'
+      },
+      series: [
+        {
+          name: 'Projects',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          avoidLabelOverlap: false,
+          label: {
+            show: true,
+            formatter: '{b}: {d}%'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 18,
+              fontWeight: 'bold'
+            }
+          },
+          data: [
+            { value: successful, name: 'Successful', itemStyle: { color: '#52c41a' } },
+            { value: failed, name: 'Failed', itemStyle: { color: '#ff4d4f' } }
+          ]
+        }
+      ],
+      graphic: {
+        type: 'text',
+        left: 'center',
+        top: 'center',
+        style: {
+          text: `${successRate}%`,
+          fontSize: 32,
+          fontWeight: 'bold',
+          fill: '#52c41a'
+        }
+      }
+    };
+  });
+
+  vendorChartOptions = computed<EChartsOption>(() => {
+    const analysis = this.vendorAnalysis();
+    if (!analysis) {
+      return {};
+    }
+
+    const vendors = analysis.top_vendors.slice(0, 10);
+    const names = vendors.map(v => v.vendor);
+    const quantities = vendors.map(v => v.quantity);
+
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        },
+        formatter: '{b}: {c} APs'
+      },
+      xAxis: {
+        type: 'category',
+        data: names,
+        axisLabel: {
+          rotate: 30,
+          interval: 0
+        }
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Access Points'
+      },
+      series: [
+        {
+          name: 'Access Points',
+          type: 'bar',
+          data: quantities,
+          itemStyle: {
+            color: '#1890ff'
+          },
+          label: {
+            show: true,
+            position: 'top'
+          }
+        }
+      ]
+    };
   });
 
   ngOnInit(): void {
