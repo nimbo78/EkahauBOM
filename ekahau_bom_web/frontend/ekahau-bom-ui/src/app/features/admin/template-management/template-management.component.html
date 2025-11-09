@@ -1,0 +1,183 @@
+<div class="template-management-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <tui-icon icon="@tui.layout" class="page-icon"></tui-icon>
+        <h1 tuiTitle>Template Management</h1>
+      </div>
+      <p class="subtitle">Manage batch processing templates for consistent configuration</p>
+    </div>
+    <button
+      tuiButton
+      appearance="primary"
+      size="m"
+      (click)="openCreateDialog()"
+      [tuiHint]="'Create a new custom template'"
+    >
+      <tui-icon icon="@tui.plus"></tui-icon>
+      Create New Template
+    </button>
+  </header>
+
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-box">
+      <tui-icon icon="@tui.search" class="search-icon"></tui-icon>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search templates by name or description..."
+        [value]="searchQuery()"
+        (input)="onSearchChange($any($event.target).value)"
+      />
+      <button
+        *ngIf="searchQuery()"
+        tuiButton
+        appearance="flat"
+        size="xs"
+        class="clear-search"
+        (click)="clearSearch()"
+      >
+        <tui-icon icon="@tui.x"></tui-icon>
+      </button>
+    </div>
+
+    <div class="filter-toggles">
+      <label class="filter-toggle">
+        <input
+          type="checkbox"
+          [checked]="showSystemTemplates()"
+          (change)="toggleSystemTemplates()"
+        />
+        <span>System Templates ({{ systemTemplatesCount }})</span>
+      </label>
+      <label class="filter-toggle">
+        <input
+          type="checkbox"
+          [checked]="showCustomTemplates()"
+          (change)="toggleCustomTemplates()"
+        />
+        <span>Custom Templates ({{ customTemplatesCount }})</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <tui-icon icon="@tui.loader" class="spinner"></tui-icon>
+    <p>Loading templates...</p>
+  </div>
+
+  <!-- Templates Table -->
+  <div *ngIf="!loading()" class="table-container">
+    <table class="templates-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Type</th>
+          <th>Usage</th>
+          <th>Workers</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let template of filteredTemplates()" [class.system-row]="template.is_system">
+          <td class="name-cell">
+            <tui-icon
+              [icon]="template.is_system ? '@tui.lock' : '@tui.file'"
+              class="template-icon"
+            ></tui-icon>
+            <span class="template-name">{{ template.name }}</span>
+          </td>
+          <td class="description-cell">
+            <span class="description-text">{{ template.description || '—' }}</span>
+          </td>
+          <td class="type-cell">
+            <span [class]="'badge ' + getTemplateTypeClass(template.is_system)">
+              {{ getTemplateType(template.is_system) }}
+            </span>
+          </td>
+          <td class="usage-cell">
+            <div class="usage-info">
+              <span class="usage-count">{{ template.usage_count }} uses</span>
+              <span class="last-used">Last: {{ formatDate(template.last_used) }}</span>
+            </div>
+          </td>
+          <td class="workers-cell">
+            <span class="workers-badge">{{ template.parallel_workers }}</span>
+          </td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button
+                tuiButton
+                appearance="flat"
+                size="xs"
+                (click)="openEditDialog(template)"
+                [disabled]="!canEdit(template)"
+                [tuiHint]="canEdit(template) ? 'Edit template' : 'System templates cannot be edited'"
+              >
+                <tui-icon icon="@tui.edit-2"></tui-icon>
+                Edit
+              </button>
+              <button
+                tuiButton
+                appearance="flat"
+                size="xs"
+                class="delete-btn"
+                (click)="confirmDelete(template)"
+                [disabled]="!canDelete(template)"
+                [tuiHint]="canDelete(template) ? 'Delete template' : 'System templates cannot be deleted'"
+              >
+                <tui-icon icon="@tui.trash-2"></tui-icon>
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr *ngIf="filteredTemplates().length === 0" class="empty-row">
+          <td colspan="6" class="empty-cell">
+            <div class="empty-state">
+              <tui-icon icon="@tui.search" class="empty-icon"></tui-icon>
+              <p class="empty-title">No templates found</p>
+              <p class="empty-subtitle" *ngIf="searchQuery()">
+                Try adjusting your search criteria
+              </p>
+              <p class="empty-subtitle" *ngIf="!searchQuery()">
+                Create a new template to get started
+              </p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Summary -->
+  <div *ngIf="!loading()" class="summary-section">
+    <div class="summary-card">
+      <tui-icon icon="@tui.layout" class="summary-icon"></tui-icon>
+      <div class="summary-content">
+        <span class="summary-label">Total Templates</span>
+        <span class="summary-value">{{ templates().length }}</span>
+      </div>
+    </div>
+    <div class="summary-card">
+      <tui-icon icon="@tui.lock" class="summary-icon system"></tui-icon>
+      <div class="summary-content">
+        <span class="summary-label">System Templates</span>
+        <span class="summary-value">{{ systemTemplatesCount }}</span>
+      </div>
+    </div>
+    <div class="summary-card">
+      <tui-icon icon="@tui.file" class="summary-icon custom"></tui-icon>
+      <div class="summary-content">
+        <span class="summary-label">Custom Templates</span>
+        <span class="summary-value">{{ customTemplatesCount }}</span>
+      </div>
+    </div>
+  </div>
+</div>

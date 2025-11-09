@@ -63,6 +63,14 @@ import { NotificationService } from './core/services/notification.service';
                 Batches
               </a>
               <a
+                routerLink="/admin/templates"
+                routerLinkActive="active"
+                class="nav-link"
+              >
+                <tui-icon icon="@tui.layout"></tui-icon>
+                Templates
+              </a>
+              <a
                 routerLink="/admin/watch-mode"
                 routerLinkActive="active"
                 class="nav-link"

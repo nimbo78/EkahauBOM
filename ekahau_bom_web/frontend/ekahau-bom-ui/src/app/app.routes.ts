@@ -88,6 +88,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'templates',
+        loadComponent: () =>
+          import('./features/admin/template-management/template-management.component').then(
+            (m) => m.TemplateManagementComponent
+          ),
+      },
+      {
         path: 'watch-mode',
         loadComponent: () =>
           import('./features/admin/watch-mode/watch-mode.component').then(
