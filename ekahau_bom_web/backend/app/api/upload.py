@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import zipfile
 from io import BytesIO
+from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
@@ -130,7 +131,7 @@ async def upload_file(
         project_id=project_id,
         filename=file.filename,
         file_size=file_size,
-        original_file=str(file_path.relative_to(storage_service.projects_dir.parent)),
+        original_file=str(Path(file_path).relative_to(storage_service.projects_dir.parent)),
         short_link=short_link,
         short_link_expires=short_link_expires,
         project_name=project_name,  # Use extracted project name
