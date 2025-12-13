@@ -53,7 +53,7 @@ class ProcessorService:
             include_cable_notes: Include cable routing paths on floor plan visualizations
         """
         if output_formats is None:
-            output_formats = ["csv", "excel", "html"]
+            output_formats = ["csv", "excel", "html", "json"]  # Added json for BOM aggregation
 
         # Load metadata
         metadata = self.storage.load_metadata(project_id)

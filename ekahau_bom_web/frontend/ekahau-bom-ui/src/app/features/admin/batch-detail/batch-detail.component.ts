@@ -861,7 +861,7 @@ export class BatchDetailComponent implements OnInit, OnDestroy {
         console.log('Batch processing started');
         // Reload the batch to update status
         this.loadBatch();
-        this.startPolling();
+        // WebSocket will handle real-time updates
       },
       error: (err) => {
         console.error('Error starting batch processing:', err);

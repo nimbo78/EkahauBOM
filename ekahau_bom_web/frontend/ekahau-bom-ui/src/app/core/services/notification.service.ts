@@ -100,7 +100,7 @@ export class NotificationService {
     try {
       const notification = new Notification(options.title, {
         body: options.body,
-        icon: options.icon || '/favicon.ico',
+        icon: options.icon || '/logo.svg',  // Use project logo instead of Angular favicon
         tag: options.tag,
         requireInteraction: options.requireInteraction || false,
         data: options.data

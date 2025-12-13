@@ -1,6 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TuiLoader } from '@taiga-ui/core';
 import { LoadingService } from '../services/loading.service';
 
 /**
@@ -18,14 +17,16 @@ import { LoadingService } from '../services/loading.service';
 @Component({
   selector: 'app-loading-overlay',
   standalone: true,
-  imports: [CommonModule, TuiLoader],
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (loadingService.isLoading()) {
       <div class="loading-overlay" (click)="$event.stopPropagation()">
         <div class="loading-backdrop"></div>
         <div class="loading-content">
-          <tui-loader size="xxl" [showLoader]="true"></tui-loader>
+          <div class="spinner-container">
+            <div class="css-spinner"></div>
+          </div>
 
           @if (loadingService.message()) {
             <p class="loading-message">{{ loadingService.message() }}</p>
@@ -66,8 +67,9 @@ import { LoadingService } from '../services/loading.service';
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
+      background: rgba(248, 249, 250, 0.92);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
       animation: fadeIn 0.2s ease-in-out;
     }
 
@@ -77,22 +79,47 @@ import { LoadingService } from '../services/loading.service';
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.5rem;
-      background: var(--tui-base-01);
-      padding: 3rem 4rem;
-      border-radius: 1rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      gap: 1rem;
+      background: white;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e5e7eb;
       animation: scaleIn 0.3s ease-out;
-      min-width: 300px;
+      min-width: 240px;
+    }
+
+    .spinner-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 50px;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Simple CSS spinner */
+    .css-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .loading-message {
       margin: 0;
-      font-size: 1.125rem;
+      font-size: 0.95rem;
       font-weight: 500;
-      color: var(--tui-text-01);
+      color: #4b5563;
       text-align: center;
-      max-width: 400px;
+      max-width: 300px;
     }
 
     .progress-container {
@@ -105,41 +132,25 @@ import { LoadingService } from '../services/loading.service';
 
     .progress-bar {
       width: 100%;
-      height: 8px;
-      background: var(--tui-base-03);
-      border-radius: 4px;
+      height: 6px;
+      background: #f3f4f6;
+      border-radius: 6px;
       overflow: hidden;
       position: relative;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--tui-primary), var(--tui-primary-hover));
-      border-radius: 4px;
+      background: #3b82f6;
+      border-radius: 6px;
       transition: width 0.3s ease-out;
       position: relative;
-
-      &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.3),
-          transparent
-        );
-        animation: shimmer 1.5s infinite;
-      }
     }
 
     .progress-text {
       font-size: 0.875rem;
       font-weight: 600;
-      color: var(--tui-text-02);
+      color: #6b7280;
       font-variant-numeric: tabular-nums;
     }
 
@@ -154,32 +165,12 @@ import { LoadingService } from '../services/loading.service';
 
     @keyframes scaleIn {
       from {
-        transform: scale(0.9);
+        transform: scale(0.95);
         opacity: 0;
       }
       to {
         transform: scale(1);
         opacity: 1;
-      }
-    }
-
-    @keyframes shimmer {
-      0% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(100%);
-      }
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-      .loading-backdrop {
-        background: rgba(0, 0, 0, 0.7);
-      }
-
-      .loading-content {
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       }
     }
   `],

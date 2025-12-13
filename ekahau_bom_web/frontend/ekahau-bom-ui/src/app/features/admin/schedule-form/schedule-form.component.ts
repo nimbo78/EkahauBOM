@@ -10,7 +10,7 @@ import {
   TuiTextfield,
   TuiLabel,
 } from '@taiga-ui/core';
-import { TuiSwitch, TuiCheckbox, TuiInputModule, TuiTextareaModule } from '@taiga-ui/kit';
+import { TuiCheckbox, TuiTextarea } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import {
@@ -33,12 +33,10 @@ import {
     TuiIcon,
     TuiNotification,
     TuiLoader,
-    TuiSwitch,
     TuiCheckbox,
     TuiTextfield,
     TuiLabel,
-    TuiInputModule,
-    TuiTextareaModule,
+    TuiTextarea,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

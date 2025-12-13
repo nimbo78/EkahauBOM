@@ -45,13 +45,13 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   // Increment active requests
   activeRequests++;
 
-  // Debounce loading - only show if request takes > 500ms
+  // Debounce loading - only show if request takes > 1000ms
   if (activeRequests === 1) {
     loadingTimeout = setTimeout(() => {
       if (activeRequests > 0) {
-        loadingService.show('Loading...', 'default');
+        loadingService.show('Loading data...', 'default');
       }
-    }, 500);
+    }, 1000);
   }
 
   return next(req).pipe(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 
+import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -62,6 +63,7 @@ async def upload_batch(
     processing_options: Optional[str] = Form(None, description="Processing options as JSON"),
     auto_process: bool = Form(False, description="Automatically start processing after upload"),
     file_actions: Optional[str] = Form(None, description="Per-file actions as JSON"),
+    template_id: Optional[str] = Form(None, description="Template ID if using a template"),
 ) -> BatchUploadResponse:
     """Upload multiple .esx files for batch processing.
 
@@ -93,12 +95,23 @@ async def upload_batch(
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Invalid processing_options: {e}")
 
-    # Create batch
+    # Create batch (with optional template_id for tracking)
     batch_metadata = batch_service.create_batch(
         batch_name=batch_name,
         processing_options=proc_options,
         parallel_workers=parallel_workers,
+        template_id=template_id,  # Pass template_id to store with batch
     )
+
+    # Increment template usage count if template was used
+    if template_id:
+        from app.api.templates import template_service
+
+        try:
+            template_service.increment_usage_count(template_id)
+            logger.info(f"Incremented usage count for template {template_id}")
+        except Exception as e:
+            logger.warning(f"Failed to increment template usage count: {e}")
 
     # Parse file actions if provided
     actions_map = {}
@@ -247,10 +260,7 @@ async def upload_batch(
 
     # Schedule batch processing in background if auto_process is True
     if files_uploaded and auto_process and proc_options:
-        background_tasks.add_task(
-            batch_service.process_batch,
-            batch_metadata.batch_id,
-        )
+        asyncio.create_task(batch_service.process_batch(batch_metadata.batch_id))
 
     return BatchUploadResponse(
         batch_id=batch_metadata.batch_id,
@@ -456,13 +466,11 @@ async def update_batch_tags(
 )
 async def process_batch(
     batch_id: UUID,
-    background_tasks: BackgroundTasks,
 ) -> BatchMetadata:
     """Start processing a batch.
 
     Args:
         batch_id: Batch UUID
-        background_tasks: FastAPI background tasks
 
     Returns:
         Updated batch metadata
@@ -480,8 +488,9 @@ async def process_batch(
             detail="Batch already processed. Create a new batch to reprocess.",
         )
 
-    # Schedule processing in background
-    background_tasks.add_task(batch_service.process_batch, batch_id)
+    # Schedule processing in background using asyncio.create_task()
+    # This ensures the async function runs properly and WebSocket updates are sent
+    asyncio.create_task(batch_service.process_batch(batch_id))
 
     return metadata
 
@@ -759,10 +768,7 @@ async def import_from_paths(
 
     # Schedule batch processing in background if auto_process is True
     if files_uploaded and import_request.auto_process and proc_options:
-        background_tasks.add_task(
-            batch_service.process_batch,
-            batch_metadata.batch_id,
-        )
+        asyncio.create_task(batch_service.process_batch(batch_metadata.batch_id))
 
     return BatchUploadResponse(
         batch_id=batch_metadata.batch_id,

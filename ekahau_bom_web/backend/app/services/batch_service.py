@@ -66,6 +66,7 @@ class BatchService:
         batch_name: Optional[str] = None,
         processing_options: Optional[ProcessingRequest] = None,
         parallel_workers: int = 1,
+        template_id: Optional[str] = None,
     ) -> BatchMetadata:
         """Create a new batch.
 
@@ -73,6 +74,7 @@ class BatchService:
             batch_name: Optional batch name
             processing_options: Processing options to use for all projects
             parallel_workers: Number of parallel workers
+            template_id: Optional template ID if using a template
 
         Returns:
             Created batch metadata
@@ -81,6 +83,7 @@ class BatchService:
             batch_name=batch_name or f"Batch {datetime.now(UTC).strftime('%Y-%m-%d %H:%M')}",
             processing_options=processing_options or ProcessingRequest(),
             parallel_workers=parallel_workers,
+            template_id=template_id,
             batch_dir=str(self.batches_dir / "{batch_id}"),
         )
 
@@ -538,9 +541,14 @@ class BatchService:
         Returns:
             Calculated statistics
         """
-        stats = BatchStatistics()
+        from collections import defaultdict
 
+        stats = BatchStatistics()
         stats.total_projects = len(metadata.project_statuses)
+
+        # Temporary dictionaries for aggregation
+        ap_by_vendor_model = defaultdict(int)
+        antenna_by_model = defaultdict(int)
 
         for project_status in metadata.project_statuses:
             if project_status.status == ProcessingStatus.COMPLETED:
@@ -555,8 +563,85 @@ class BatchService:
                 if project_status.antennas_count:
                     stats.total_antennas += project_status.antennas_count
 
+                # Load project BOM data and aggregate by vendor/model
+                try:
+                    project_dir = self.storage.projects_dir / str(project_status.project_id)
+                    reports_dir = project_dir / "reports"
+
+                    if not reports_dir.exists():
+                        continue
+
+                    # Try JSON first (new projects with JSON format)
+                    json_report_path = reports_dir / "bom_report.json"
+                    if json_report_path.exists():
+                        import json
+
+                        with open(json_report_path, "r", encoding="utf-8") as f:
+                            bom_data = json.load(f)
+
+                        # Aggregate access points by vendor|model
+                        for ap in bom_data.get("access_points", []):
+                            vendor = ap.get("vendor", "Unknown")
+                            model = ap.get("model", "Unknown")
+                            quantity = ap.get("quantity", 1)
+                            vendor_model = f"{vendor}|{model}"
+                            ap_by_vendor_model[vendor_model] += quantity
+
+                        # Aggregate antennas by model
+                        for antenna in bom_data.get("antennas", []):
+                            model = antenna.get("model", "Unknown")
+                            quantity = antenna.get("quantity", 1)
+                            antenna_by_model[model] += quantity
+
+                    else:
+                        # Fallback to CSV (old projects without JSON)
+                        import csv
+
+                        # Find access points CSV file (format: projectname_access_points.csv)
+                        csv_files = list(reports_dir.glob("*_access_points.csv"))
+
+                        if csv_files:
+                            csv_path = csv_files[0]  # Use first match
+
+                            with open(csv_path, "r", encoding="utf-8") as f:
+                                # Skip comment lines starting with #
+                                lines = [line for line in f if not line.startswith("#")]
+                                reader = csv.DictReader(lines)
+
+                                for row in reader:
+                                    vendor = row.get("Vendor", "Unknown").strip('"')
+                                    model = row.get("Model", "Unknown").strip('"')
+                                    quantity = int(row.get("Quantity", "1").strip('"'))
+                                    vendor_model = f"{vendor}|{model}"
+                                    ap_by_vendor_model[vendor_model] += quantity
+
+                        # Find antennas CSV file (format: projectname_antennas.csv)
+                        antenna_csv_files = list(reports_dir.glob("*_antennas.csv"))
+
+                        if antenna_csv_files:
+                            antenna_csv_path = antenna_csv_files[0]
+
+                            with open(antenna_csv_path, "r", encoding="utf-8") as f:
+                                # Skip comment lines
+                                lines = [line for line in f if not line.startswith("#")]
+                                reader = csv.DictReader(lines)
+
+                                for row in reader:
+                                    model = row.get("Model", "Unknown").strip('"')
+                                    quantity = int(row.get("Quantity", "1").strip('"'))
+                                    antenna_by_model[model] += quantity
+
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to load BOM data for project {project_status.project_id}: {e}"
+                    )
+
             elif project_status.status == ProcessingStatus.FAILED:
                 stats.failed_projects += 1
+
+        # Convert defaultdict to regular dict for Pydantic model
+        stats.ap_by_vendor_model = dict(ap_by_vendor_model)
+        stats.antenna_by_model = dict(antenna_by_model)
 
         return stats
 

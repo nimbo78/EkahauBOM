@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import {
   TuiButton,
   TuiIcon,
@@ -9,7 +9,7 @@ import {
   TuiLoader,
   TuiHint,
 } from '@taiga-ui/core';
-import { TuiBadge, TuiSwitch } from '@taiga-ui/kit';
+import { TuiBadge } from '@taiga-ui/kit';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorMessageService } from '../../../shared/services/error-message.service';
 import {
@@ -27,14 +27,12 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     TuiButton,
     TuiIcon,
     TuiNotification,
     TuiLoader,
     TuiBadge,
     TuiHint,
-    TuiSwitch,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -186,7 +184,7 @@ import {
               </td>
               <td>
                 <div class="trigger-info">
-                  <tui-badge [size]="'m'" [value]="getTriggerTypeLabel(schedule.trigger_type)"></tui-badge>
+                  <tui-badge size="m">{{ getTriggerTypeLabel(schedule.trigger_type) }}</tui-badge>
                   <span class="cron-text" *ngIf="schedule.trigger_type === TriggerType.Cron">
                     {{ parseCronExpression(schedule.cron_expression) }}
                   </span>
@@ -203,10 +201,11 @@ import {
               <td>
                 <div *ngIf="schedule.last_run_status" class="last-run-info">
                   <tui-badge
-                    [size]="'m'"
-                    [status]="getStatusColor(schedule.last_run_status)"
-                    [value]="schedule.last_run_status"
-                  ></tui-badge>
+                    size="m"
+                    [appearance]="getStatusColor(schedule.last_run_status)"
+                  >
+                    {{ schedule.last_run_status }}
+                  </tui-badge>
                   <span class="last-run-time" *ngIf="schedule.last_run_time">
                     {{ formatDate(schedule.last_run_time) }}
                   </span>

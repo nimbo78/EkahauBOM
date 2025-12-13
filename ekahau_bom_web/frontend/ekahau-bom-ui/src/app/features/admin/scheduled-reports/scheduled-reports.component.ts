@@ -146,14 +146,16 @@ import {
           <table>
             <thead>
               <tr>
-                <th>Vendor | Model</th>
+                <th>Vendor</th>
+                <th>Model</th>
                 <th>Quantity</th>
                 <th>Percentage</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let model of vendorAnalysis()!.top_models.slice(0, 15)">
-                <td>{{ model.vendor_model }}</td>
+                <td>{{ model.vendor_model.split('|')[0] }}</td>
+                <td>{{ model.vendor_model.split('|')[1] || model.vendor_model }}</td>
                 <td>{{ model.quantity }}</td>
                 <td>{{ model.percentage }}%</td>
               </tr>

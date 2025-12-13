@@ -52,7 +52,7 @@ app.include_router(notes.router, prefix=settings.api_prefix)
 app.include_router(batches.router, prefix=settings.api_prefix)
 app.include_router(templates.router, prefix=settings.api_prefix)
 app.include_router(schedules.router, prefix=settings.api_prefix)
-app.include_router(websocket.router)  # WebSocket at /ws (no /api prefix)
+app.include_router(websocket.router, prefix=settings.api_prefix)  # WebSocket at /api/ws
 
 
 @app.get("/")

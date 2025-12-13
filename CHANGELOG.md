@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to EkahauBOM will be documented in this file.
 
@@ -9,18 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet! All Phase 4 features shipped in v3.4.0 🎉
+- Nothing yet! All Phase 4 features shipped in v3.4.0 рџЋ‰
 
 ## [3.4.0] - 2025-11-09
 
 ### Summary
-🎯 **MAJOR RELEASE - Phase 4 Complete**: Advanced workflow automation with 8 new features including scheduled processing, real-time updates, batch templates, and S3 storage. Reduces manual work by 80%, enables hands-free operations, and provides enterprise-grade automation capabilities.
+рџЋЇ **MAJOR RELEASE - Phase 4 Complete**: Advanced workflow automation with 8 new features including scheduled processing, real-time updates, batch templates, and S3 storage. Reduces manual work by 80%, enables hands-free operations, and provides enterprise-grade automation capabilities.
 
-**Total Impact**: 4,160+ lines of code, 70+ new tests, 587 total tests passing, all pre-push checks green ✅
+**Total Impact**: 4,160+ lines of code, 70+ new tests, 587 total tests passing, all pre-push checks green вњ…
 
 ### Added
 
-#### 🤖 Scheduled Batch Processing (Automation & Integration)
+#### рџ¤– Scheduled Batch Processing (Automation & Integration)
 **The Game Changer** - Set it and forget it!
 
 - **APScheduler Integration**: Cron-based automation with async support
@@ -59,21 +59,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `test_schedule_api.py` - 370 lines (API endpoints, validation)
 
 **Profit**:
-- ✅ **80% reduction in manual work** - No more clicking "Upload" every day
-- ✅ **Zero missed processing windows** - Runs on schedule, even at 2 AM
-- ✅ **Team visibility** - Slack notifications keep everyone informed
-- ✅ **Consistent workflows** - Same processing options every time
-- ✅ **Enterprise integration** - Webhooks connect to existing pipelines
+- вњ… **80% reduction in manual work** - No more clicking "Upload" every day
+- вњ… **Zero missed processing windows** - Runs on schedule, even at 2 AM
+- вњ… **Team visibility** - Slack notifications keep everyone informed
+- вњ… **Consistent workflows** - Same processing options every time
+- вњ… **Enterprise integration** - Webhooks connect to existing pipelines
 
 **Use Cases**:
-- 🌙 Nightly processing: "Process //fileserver/ekahau/*.esx at 02:00 daily"
-- 📊 Weekly reports: "Generate summary every Monday at 9 AM"
-- 🔗 Pipeline automation: "POST webhook to Jira when batch completes"
-- 👥 Team notifications: "Alert #wifi-team channel on Slack"
+- рџЊ™ Nightly processing: "Process //fileserver/ekahau/*.esx at 02:00 daily"
+- рџ“Љ Weekly reports: "Generate summary every Monday at 9 AM"
+- рџ”— Pipeline automation: "POST webhook to Jira when batch completes"
+- рџ‘Ґ Team notifications: "Alert #wifi-team channel on Slack"
 
 ---
 
-#### ⚡ WebSocket Real-Time Updates (Performance & UX)
+#### вљЎ WebSocket Real-Time Updates (Performance & UX)
 **90% less polling, instant feedback**
 
 - **WebSocket Server**: FastAPI WebSocket endpoint with connection management
@@ -85,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Client Integration**: Angular WebSocketService
   - Automatic subscription to batch events
   - Component-level integration (batch-detail, batch-list)
-  - Real-time status updates (processing → completed)
+  - Real-time status updates (processing в†’ completed)
   - Instant stats refresh without page reload
 
 - **Backend (470 lines)**:
@@ -98,14 +98,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Component subscriptions with RxJS observables
 
 **Profit**:
-- ✅ **90% reduction in API calls** - No more polling every 2 seconds
-- ✅ **Instant feedback** - Users see status changes immediately
-- ✅ **Better UX** - Feels responsive and "live"
-- ✅ **Lower server load** - Single WebSocket vs. 30 REST calls/minute
+- вњ… **90% reduction in API calls** - No more polling every 2 seconds
+- вњ… **Instant feedback** - Users see status changes immediately
+- вњ… **Better UX** - Feels responsive and "live"
+- вњ… **Lower server load** - Single WebSocket vs. 30 REST calls/minute
 
 ---
 
-#### 📋 Batch Templates (Workflow Standardization)
+#### рџ“‹ Batch Templates (Workflow Standardization)
 **Reusable processing configurations**
 
 - **Template Management**: CRUD operations for batch processing presets
@@ -131,14 +131,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Create/edit dialogs with form validation
 
 **Profit**:
-- ✅ **50% faster batch creation** - No manual checkbox clicking
-- ✅ **Consistency** - Same settings every time for standard workflows
-- ✅ **Onboarding** - New users follow proven configurations
-- ✅ **Best practices** - Encode expert knowledge in templates
+- вњ… **50% faster batch creation** - No manual checkbox clicking
+- вњ… **Consistency** - Same settings every time for standard workflows
+- вњ… **Onboarding** - New users follow proven configurations
+- вњ… **Best practices** - Encode expert knowledge in templates
 
 ---
 
-#### 📊 Batch Processing Dashboard (Analytics & Insights)
+#### рџ“Љ Batch Processing Dashboard (Analytics & Insights)
 **Data-driven decision making**
 
 - **Interactive Charts**: Powered by ngx-echarts
@@ -161,14 +161,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tooltips and interactive legends
 
 **Profit**:
-- ✅ **Spot trends** - See processing volume over time
-- ✅ **Identify issues** - High failure rate? Investigate!
-- ✅ **Vendor insights** - Which vendors dominate your projects?
-- ✅ **Management reports** - Export data for stakeholders
+- вњ… **Spot trends** - See processing volume over time
+- вњ… **Identify issues** - High failure rate? Investigate!
+- вњ… **Vendor insights** - Which vendors dominate your projects?
+- вњ… **Management reports** - Export data for stakeholders
 
 ---
 
-#### 🏷️ Batch Tags & Categorization (Organization)
+#### рџЏ·пёЏ Batch Tags & Categorization (Organization)
 **Find batches 10x faster**
 
 - **Tagging System**: Flexible organization
@@ -186,13 +186,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests**: 10 test cases covering validation and persistence
 
 **Profit**:
-- ✅ **Instant search** - Find "Customer: Acme Corp" in 1 second
-- ✅ **Group batches** - See all "Q4 2024" projects together
-- ✅ **Multi-dimensional** - Tag by customer, location, priority, etc.
+- вњ… **Instant search** - Find "Customer: Acme Corp" in 1 second
+- вњ… **Group batches** - See all "Q4 2024" projects together
+- вњ… **Multi-dimensional** - Tag by customer, location, priority, etc.
 
 ---
 
-#### 🔍 Advanced Search & Filtering (Powerful Queries)
+#### рџ”Ќ Advanced Search & Filtering (Powerful Queries)
 **Find exactly what you need**
 
 - **Multi-Field Search**: Text search across batch names and project filenames
@@ -210,13 +210,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests**: 16 test cases covering all filtering scenarios
 
 **Profit**:
-- ✅ **80% faster batch discovery** - No more scrolling through 100 batches
-- ✅ **Precise queries** - "Batches with 10-20 projects, created last week"
-- ✅ **Reduced cognitive load** - Filter UI shows what's active
+- вњ… **80% faster batch discovery** - No more scrolling through 100 batches
+- вњ… **Precise queries** - "Batches with 10-20 projects, created last week"
+- вњ… **Reduced cognitive load** - Filter UI shows what's active
 
 ---
 
-#### 💾 S3 Storage Backend (Scalability & Redundancy)
+#### рџ’ѕ S3 Storage Backend (Scalability & Redundancy)
 **Enterprise-grade storage abstraction**
 
 - **Storage Abstraction Layer**:
@@ -229,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Boto3 integration with S3-compatible services
   - Automatic path management (per-project directories)
   - Support for AWS S3, MinIO, Dell EMC ECS, IBM Cloud, and more
-  - Migration tool for local → S3 transfers
+  - Migration tool for local в†’ S3 transfers
 
 - **Configuration** (.env):
   ```
@@ -247,11 +247,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Error handling tests
 
 **Profit**:
-- ✅ **Unlimited scalability** - No disk space limits
-- ✅ **Built-in redundancy** - S3 replication prevents data loss
-- ✅ **Cost-effective** - Pay per use, cheaper than provisioned storage
-- ✅ **Multi-server deployments** - Shared storage across instances
-- ✅ **Cloud-native** - Compatible with all major providers
+- вњ… **Unlimited scalability** - No disk space limits
+- вњ… **Built-in redundancy** - S3 replication prevents data loss
+- вњ… **Cost-effective** - Pay per use, cheaper than provisioned storage
+- вњ… **Multi-server deployments** - Shared storage across instances
+- вњ… **Cloud-native** - Compatible with all major providers
 
 **Supported Services**:
 - AWS S3 (industry standard)
@@ -329,11 +329,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.3.0] - 2025-11-09
 
 ### Summary
-🚀 **Major Release**: Complete batch processing system with CLI and Web UI support, comprehensive testing suite (595 tests, 85% coverage), and excellent performance metrics.
+рџљЂ **Major Release**: Complete batch processing system with CLI and Web UI support, comprehensive testing suite (595 tests, 85% coverage), and excellent performance metrics.
 
 ### Added
 
-- **🔄 Batch Processing System** (Complete Implementation!)
+- **рџ”„ Batch Processing System** (Complete Implementation!)
   - **CLI Batch Processing**:
     - Process multiple .esx files with single command (`--batch` flag)
     - Parallel execution with configurable workers (`--parallel 1-8`)
@@ -364,7 +364,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `ekahau_bom_web/backend/app/services/report_schedule_service.py` - Scheduled reports
     - `ekahau_bom_web/frontend/.../batch-*` - Angular batch UI components
 
-- **✅ Comprehensive Testing Suite**:
+- **вњ… Comprehensive Testing Suite**:
   - **595 total tests passing** (16.65s execution time)
   - **85% code coverage** (4183 statements, 638 missed)
   - Coverage HTML report: `htmlcov/index.html`
@@ -378,10 +378,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - File filtering with glob patterns
 
   - **Web UI Load Tests** (6 tests, 2.08s):
-    - Large batch uploads: 50 files in 0.43s (9ms per file) ⚡
-    - Concurrent uploads: 5 batches in 0.10s 🚄
-    - Large file handling: 3×1MB files in 0.04s 💪
-    - API performance: List batches 8ms, Detail 2ms 🎯
+    - Large batch uploads: 50 files in 0.43s (9ms per file) вљЎ
+    - Concurrent uploads: 5 batches in 0.10s рџљ„
+    - Large file handling: 3Г—1MB files in 0.04s рџ’Є
+    - API performance: List batches 8ms, Detail 2ms рџЋЇ
 
   - **E2E Validation**:
     - 12 batches tested successfully
@@ -400,7 +400,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Excellent performance metrics**:
   - 50 files upload: 0.43s (9ms per file)
   - 5 concurrent batches: 0.10s total
-  - Large files (3×1MB): 0.04s
+  - Large files (3Г—1MB): 0.04s
   - API List endpoint: 8ms
   - API Detail endpoint: 2ms
 
@@ -452,7 +452,7 @@ Major release with PDF floor plan visualizations, Web UI enhancements (keyboard 
   - **Archive Behavior**:
     - Local storage: Automatic archiving to tar.gz (60-70% space savings)
     - S3 storage: Archiving skipped (use S3 lifecycle policies instead)
-  - **Testing**: 124 comprehensive tests (all passing ✅)
+  - **Testing**: 124 comprehensive tests (all passing вњ…)
     - 38 unit tests (LocalStorage + S3Storage + StorageService + Factory)
     - 36 integration tests (behavioral consistency between backends)
     - 30 performance tests (upload, download, list operations)
@@ -469,7 +469,7 @@ Major release with PDF floor plan visualizations, Web UI enhancements (keyboard 
 
 - **CLI - PDF Export - Floor Plan Visualizations**
   - Floor plan visualizations now embedded in PDF reports as base64-encoded images
-  - Floors automatically sorted by floor number (basement → ground → upper floors)
+  - Floors automatically sorted by floor number (basement в†’ ground в†’ upper floors)
   - Images sized at 90% width for optimal viewing on both portrait and landscape
   - Multiple floors displayed in ascending order
   - Added `floor_number` field to Floor model (0=ground, -1=basement, 1=first floor above, etc.)
@@ -482,7 +482,7 @@ Major release with PDF floor plan visualizations, Web UI enhancements (keyboard 
     - `Ctrl+K` or `/` - Focus search input (projects list)
     - `Escape` - Clear search or unfocus input
   - Project Details shortcuts:
-    - `←` / `→` - Navigate between tabs
+    - `в†ђ` / `в†’` - Navigate between tabs
     - `1-4` - Jump to specific tab (Overview, Reports, Visualizations, Notes)
   - KeyboardService for centralized shortcut management
   - Styled `<kbd>` UI hints for better UX
@@ -511,7 +511,7 @@ Major release with PDF floor plan visualizations, Web UI enhancements (keyboard 
 
 ### Fixed
 
-- **All Exporters**: Fixed project name display to use correct priority (CLI arg → title → name → filename)
+- **All Exporters**: Fixed project name display to use correct priority (CLI arg в†’ title в†’ name в†’ filename)
   - PDF Exporter: Consistent project name handling
   - Excel Exporter: Project name in metadata
   - HTML Exporter: Project name in header
@@ -553,7 +553,7 @@ Enhanced Web UI with complete report viewer implementation for all formats (HTML
 
 ### Added
 
-- **Web UI - Phase 5: Report Viewers** (Complete ✅)
+- **Web UI - Phase 5: Report Viewers** (Complete вњ…)
   - **HTML Viewer**: Direct browser rendering with full CSS/JS support including Chart.js
   - **CSV Viewer**: PapaParse integration (~45KB) with multi-section analytics support
   - **Excel Viewer**: SheetJS (xlsx) integration (~150KB) with multi-sheet tabs and table rendering
@@ -564,7 +564,7 @@ Enhanced Web UI with complete report viewer implementation for all formats (HTML
   - Loading states and error handling for all viewers
   - Playwright tested for all formats
 
-- **Web UI - Phase 6: Performance & UX Plan** (Planned 📋)
+- **Web UI - Phase 6: Performance & UX Plan** (Planned рџ“‹)
   - **Performance Optimization Plan**:
     - Frontend: Bundle size optimization, lazy loading, virtual scrolling
     - Backend: Response caching, HTTP compression, background job queue
@@ -606,7 +606,7 @@ Major release introducing **Web UI** for centralized Ekahau BOM registry. Comple
     - 13 REST API endpoints (upload, projects, reports, stats)
     - JSON-based storage with in-memory indexing (no database)
     - Short link generation for easy project sharing
-    - Project lifecycle: PENDING → PROCESSING → COMPLETED/FAILED
+    - Project lifecycle: PENDING в†’ PROCESSING в†’ COMPLETED/FAILED
     - Integration with EkahauBOM CLI for processing
     - 46 backend tests passing (100% API coverage)
 
@@ -649,8 +649,8 @@ Major release introducing **Web UI** for centralized Ekahau BOM registry. Comple
 Major release with comprehensive documentation overhaul, testing improvements (86% code coverage, 545 tests), pre-commit hooks, and multiple HTML export enhancements. This release brings EkahauBOM to production-ready quality with extensive user and developer documentation, automated code quality checks, and improved export accuracy.
 
 ### Statistics
-- **Tests**: 367 → 545 (+178 tests, +48%)
-- **Code Coverage**: 63% → 86% (+23%)
+- **Tests**: 367 в†’ 545 (+178 tests, +48%)
+- **Code Coverage**: 63% в†’ 86% (+23%)
 - **Documentation**: 2,000+ lines of new documentation
 - **Pre-commit Hooks**: Automated code formatting
 - **Bug Fixes**: 10+ critical fixes for antenna BOM, HTML charts, visualizations
@@ -731,8 +731,8 @@ Major release with comprehensive documentation overhaul, testing improvements (8
 
 - **Integration Tests** (Phase 9.2)
   - Added comprehensive end-to-end integration tests
-  - Total: 25 new integration tests (520 → 545 tests)
-  - All tests passing: 545/545 ✅
+  - Total: 25 new integration tests (520 в†’ 545 tests)
+  - All tests passing: 545/545 вњ…
 
   **New test file:**
   - `tests/test_integration.py` - Complete E2E workflow validation
@@ -761,18 +761,18 @@ Major release with comprehensive documentation overhaul, testing improvements (8
   - Error handling validation
 
 - **Unit Tests Coverage Improvements** (Phase 9.1 continued - NEW!)
-  - Added 115 new unit tests (405 → 520, +28% increase)
-  - All tests now passing: 520/520 ✅
-  - Overall code coverage: 76% → 86% (+10%)
-  - **Goal of 80% coverage achieved!** 🎉
+  - Added 115 new unit tests (405 в†’ 520, +28% increase)
+  - All tests now passing: 520/520 вњ…
+  - Overall code coverage: 76% в†’ 86% (+10%)
+  - **Goal of 80% coverage achieved!** рџЋ‰
 
   **New tests:**
-  - `tests/test_main.py` - Entry point testing (4 tests, 0% → 100% coverage)
+  - `tests/test_main.py` - Entry point testing (4 tests, 0% в†’ 100% coverage)
     - Module import validation
     - `__name__ == '__main__'` guard verification
     - Subprocess integration tests (--help, --version)
 
-  - `tests/test_pdf_exporter.py` - PDF export testing (+6 tests, 5% → 99% coverage)
+  - `tests/test_pdf_exporter.py` - PDF export testing (+6 tests, 5% в†’ 99% coverage)
     - Full metadata export validation
     - Empty table handling
     - Wi-Fi standards section (802.11ax/ac/n)
@@ -780,13 +780,13 @@ Major release with comprehensive documentation overhaul, testing improvements (8
     - **Requires:** WeasyPrint + GTK3 Runtime on Windows
 
   **Module coverage improvements:**
-  - `__main__.py`: 0% → 100% (entry point)
-  - `pdf_exporter.py`: 5% → 99% (+94%, 20 tests total)
-  - `parser.py`: 99% → 100%
+  - `__main__.py`: 0% в†’ 100% (entry point)
+  - `pdf_exporter.py`: 5% в†’ 99% (+94%, 20 tests total)
+  - `parser.py`: 99% в†’ 100%
   - All processors: 100% coverage
   - All exporters: 99-100% coverage
-  - `visualizers/floor_plan.py`: 84% → 99%
-  - `config.py`: 92% → 100%
+  - `visualizers/floor_plan.py`: 84% в†’ 99%
+  - `config.py`: 92% в†’ 100%
   - `analytics.py`: 100%
   - `cable_analytics.py`: 100%
 
@@ -816,14 +816,14 @@ Major release with comprehensive documentation overhaul, testing improvements (8
     - Improves visual consistency with Ekahau Planner and floor plan visualizations
 
   - **Radio & Wi-Fi Analytics Charts** - Fixed rendering issues
-    - Fixed JavaScript syntax (double braces → single braces)
+    - Fixed JavaScript syntax (double braces в†’ single braces)
     - Added frequency band fallback for radios without explicit band data
     - Improved chart data interpolation for better display
     - Charts now render correctly with data
 
 - **Floor Plan Visualization Improvements**
   - **Azimuth Arrow Enhancements**
-    - Fixed arrow scaling to match AP marker sizes (arrow length = 2 × ap_circle_radius)
+    - Fixed arrow scaling to match AP marker sizes (arrow length = 2 Г— ap_circle_radius)
     - Improved arrow color detection for Wi-Fi 6/6E APs (Huawei AirEngine support)
     - Smart color selection based on actual radio Wi-Fi standard (not just AP model name)
     - Better visual contrast on various background colors
@@ -878,13 +878,13 @@ Major release with comprehensive documentation overhaul, testing improvements (8
   - Added 29 new unit tests (+9% increase)
   - Fixed 16 failing tests (all tests now passing: 367/367)
   - Installed pytest-cov for code coverage measurement
-  - Overall code coverage: 60% → 63%
+  - Overall code coverage: 60% в†’ 63%
   - New test file: `tests/test_network_settings_processor.py` (15 tests)
   - Module coverage improvements:
-    - network_settings.py: 24% → 100% (+76%)
-    - json_exporter.py: 74% → 100% (+26%)
-    - parser.py: 80% → 99% (+19%)
-    - access_points.py: 80% → 95% (+15%)
+    - network_settings.py: 24% в†’ 100% (+76%)
+    - json_exporter.py: 74% в†’ 100% (+26%)
+    - parser.py: 80% в†’ 99% (+19%)
+    - access_points.py: 80% в†’ 95% (+15%)
   - Tests for:
     - Network capacity settings processing
     - JSON export with metadata, radios, cable notes
@@ -899,10 +899,10 @@ Major release with comprehensive documentation overhaul, testing improvements (8
     - Dark gray arrows for light solid colors
     - Yellow arrows for dark solid colors
   - Arrow properties:
-    - Length: 2 × ap_circle_radius (default 30px)
+    - Length: 2 Г— ap_circle_radius (default 30px)
     - Arrow head: filled triangle
     - Line width: 2px
-  - Only shows arrows when azimuth ≠ 0° (has meaningful direction data)
+  - Only shows arrows when azimuth в‰  0В° (has meaningful direction data)
   - Works with all mounting types (CEILING, WALL, FLOOR)
   - Mathematical implementation with proper coordinate system adjustment
   - Fully backward compatible - arrows disabled by default
@@ -937,14 +937,14 @@ Major release with comprehensive documentation overhaul, testing improvements (8
     - data_rates: mandatory/disabled rates summary per band
     - bands: detailed configuration for each frequency band with all data rates
   - Support for RTS/CTS settings
-  - Frequency band mapping: TWO→2.4GHz, FIVE→5GHz, SIX→6GHz
+  - Frequency band mapping: TWOв†’2.4GHz, FIVEв†’5GHz, SIXв†’6GHz
   - 802.11 data rates (R1, R2, R5.5, R6, R9, R11, R12, R18, R24, R36, R48, R54)
 
 ### Improved
 - **Floor Plan Visualization Enhancements**
   - Enhanced color name support in floor plan visualizer
     - Now supports standard color names (Red, Blue, Green, Yellow, Orange, Purple, Pink, etc.)
-    - Automatic typo correction for duplicate characters (RReedd → Red)
+    - Automatic typo correction for duplicate characters (RReedd в†’ Red)
     - Case-insensitive color matching with exact match priority
     - Extended Ekahau color palette (lightblue, darkblue, lightgreen, etc.)
   - Added automatic color legend to all floor plan visualizations
@@ -1011,7 +1011,7 @@ Major release with comprehensive documentation overhaul, testing improvements (8
   - Cables grouped by floor with length totals
   - Cable BOM generation:
     - Cat6A UTP cable (in meters, rounded up)
-    - RJ45 connectors (quantity = cables × 2)
+    - RJ45 connectors (quantity = cables Г— 2)
     - Cable routes/runs (logical count)
   - Cost estimation with customizable prices:
     - Cable material cost with overage factor (default 1.2x = 20%)
@@ -1119,7 +1119,7 @@ Major release with comprehensive documentation overhaul, testing improvements (8
   - Created radio lookup dictionary for O(1) access by accessPointId
   - Proper extraction of antennaTilt, antennaDirection, antennaHeight
   - Backward compatibility with old format maintained
-  - Verified with real projects (maga.esx: 4/7 APs with tilt = -10.0°)
+  - Verified with real projects (maga.esx: 4/7 APs with tilt = -10.0В°)
 
 - **Windows Filename Sanitization** (Platform-specific)
   - Fixed OSError on Windows with special characters in project names
@@ -1132,7 +1132,7 @@ Major release with comprehensive documentation overhaul, testing improvements (8
 - **Test Compatibility Fixes**
   - test_excel_exporter.py: Updated for new Summary sheet structure
   - test_imports.py: Version updated to 2.5.0
-  - test_json_exporter.py: Fixed project_name → file_name
+  - test_json_exporter.py: Fixed project_name в†’ file_name
   - test_processors.py: Updated _determine_wifi_standard() signature
 
 - **Testing & Quality** (Phase 1 - Iteration 5)
@@ -1176,7 +1176,7 @@ Major release with comprehensive documentation overhaul, testing improvements (8
   - Integration into Excel export (Cost Breakdown sheet)
 
 - **Coverage Analytics** (Part 2)
-  - AP density calculations (APs per 1000 m²)
+  - AP density calculations (APs per 1000 mВІ)
   - Coverage area per AP estimations
   - Measured areas support from Ekahau
   - Floor-level density metrics

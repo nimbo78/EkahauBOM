@@ -250,7 +250,8 @@ export class ApiService {
     batchName?: string,
     parallelWorkers: number = 1,
     processingOptions?: ProcessingRequest,
-    autoProcess: boolean = false
+    autoProcess: boolean = false,
+    templateId?: string
   ): Observable<HttpEvent<BatchUploadResponse>> {
     const formData = new FormData();
 
@@ -273,6 +274,11 @@ export class ApiService {
     }
 
     formData.append('auto_process', autoProcess.toString());
+
+    // Add template_id if provided (for usage tracking)
+    if (templateId) {
+      formData.append('template_id', templateId);
+    }
 
     return this.http.post<BatchUploadResponse>(
       `${this.apiUrl}/batches/upload`,

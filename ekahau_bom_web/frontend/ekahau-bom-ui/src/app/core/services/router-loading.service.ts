@@ -29,10 +29,10 @@ export class RouterLoadingService {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationStart))
       .subscribe(() => {
-        // Debounce - only show if navigation takes > 300ms
+        // Debounce - only show if navigation takes > 1000ms
         this.loadingTimeout = setTimeout(() => {
           this.loadingService.show('Loading page...', 'router');
-        }, 300);
+        }, 1000);
       });
 
     // Hide loading on navigation end/cancel/error

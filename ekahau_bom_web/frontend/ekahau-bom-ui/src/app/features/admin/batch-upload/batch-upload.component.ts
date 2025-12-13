@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -1472,6 +1472,7 @@ export class BatchUploadComponent implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
   private errorMessageService = inject(ErrorMessageService);
   private loadingService = inject(LoadingService);
+  private cdr = inject(ChangeDetectorRef);
   private subscription?: Subscription;
 
   // Form controls
@@ -1669,6 +1670,10 @@ export class BatchUploadComponent implements OnInit, OnDestroy {
       short_link_days: this.batchForm.value.shortLinkExpireDays ?? 7,
     };
 
+    // Add template_id if selected (for usage tracking)
+    const selectedTemplate = this.selectedTemplateId();
+    const templateId = selectedTemplate && selectedTemplate !== '' ? selectedTemplate : undefined;
+
     // Get files and their actions from configs
     const files = configs.map(c => c.file);
     const fileActions = configs.map(c => ({
@@ -1678,7 +1683,7 @@ export class BatchUploadComponent implements OnInit, OnDestroy {
     }));
 
     this.apiService
-      .uploadBatchWithActions(files, fileActions, batchName, parallelWorkers, processingOptions, autoProcess)
+      .uploadBatchWithActions(files, fileActions, batchName, parallelWorkers, processingOptions, autoProcess, templateId)
       .pipe(
         finalize(() => {
           console.log('Batch upload finalized');
@@ -2089,39 +2094,39 @@ export class BatchUploadComponent implements OnInit, OnDestroy {
     // Apply processing options from template
     const options = template.processing_options;
 
-    // Group by
-    if (options.group_by) {
-      this.batchForm.patchValue({ groupBy: options.group_by });
-    }
-
-    // Visualization options
+    // Apply all settings at once using a single patchValue
     this.batchForm.patchValue({
-      visualizeFloorPlans: options.visualize_floor_plans ?? true,
-      showAzimuthArrows: options.show_azimuth_arrows ?? false,
+      // Group by
+      groupBy: options.group_by || 'model',
+
+      // Visualization options
+      visualizeFloorPlans: options.visualize_floor_plans !== false,
+      showAzimuthArrows: options.show_azimuth_arrows === true,
       apOpacity: options.ap_opacity ? Math.round(options.ap_opacity * 100) : 60,
-    });
 
-    // Notes options
-    this.batchForm.patchValue({
-      includeTextNotes: options.include_text_notes ?? false,
-      includePictureNotes: options.include_picture_notes ?? false,
-      includeCableNotes: options.include_cable_notes ?? false,
-    });
+      // Notes options - use correct field names from template
+      includeTextNotes: options.include_text_notes === true,
+      includePictureNotes: options.include_picture_notes === true,
+      includeCableNotes: options.include_cable_notes === true,
 
-    // Output formats
-    const formats = options.output_formats || [];
-    this.batchForm.patchValue({
-      formatCsv: formats.includes('csv'),
-      formatExcel: formats.includes('excel'),
-      formatHtml: formats.includes('html'),
-      formatPdf: formats.includes('pdf'),
-      formatJson: formats.includes('json'),
-    });
+      // Output formats
+      formatCsv: options.output_formats?.includes('csv') ?? true,
+      formatExcel: options.output_formats?.includes('excel') ?? true,
+      formatHtml: options.output_formats?.includes('html') ?? true,
+      formatPdf: options.output_formats?.includes('pdf') ?? false,
+      formatJson: options.output_formats?.includes('json') ?? false,
 
-    // Parallel workers
-    this.batchForm.patchValue({
+      // Parallel workers
       parallelWorkers: template.parallel_workers || 1,
     });
+
+    // Mark form as touched to trigger validation display
+    this.batchForm.markAllAsTouched();
+
+    // Force change detection
+    this.cdr.markForCheck();
+
+    console.log('Template applied. Form values:', this.batchForm.value);
 
     // Short link options (keep defaults, template doesn't control this)
     // User can still change these if needed

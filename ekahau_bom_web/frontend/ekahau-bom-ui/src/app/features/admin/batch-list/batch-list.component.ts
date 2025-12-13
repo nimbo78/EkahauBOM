@@ -57,10 +57,17 @@ import { Subscription } from 'rxjs';
       <!-- Advanced Filters Section -->
       <div class="filters-section">
         <div class="filters-header">
-          <h3 class="filters-title">
-            <tui-icon icon="@tui.filter"></tui-icon>
-            Filters & Search
-          </h3>
+          <button
+            tuiButton
+            appearance="flat"
+            size="m"
+            (click)="toggleFilters()"
+            class="toggle-filters-btn"
+          >
+            <tui-icon [icon]="filtersExpanded() ? '@tui.chevron-up' : '@tui.chevron-down'"></tui-icon>
+            {{ filtersExpanded() ? 'Hide' : 'Show' }} Filters
+            <span *ngIf="hasActiveFilters()" class="active-filters-count">({{ getActiveFiltersCount() }})</span>
+          </button>
           <button
             *ngIf="hasActiveFilters()"
             tuiButton
@@ -73,7 +80,7 @@ import { Subscription } from 'rxjs';
           </button>
         </div>
 
-        <div class="filters-grid">
+        <div *ngIf="filtersExpanded()" class="filters-grid">
           <!-- Search -->
           <div class="filter-group">
             <label class="filter-label">Search</label>
@@ -173,7 +180,7 @@ import { Subscription } from 'rxjs';
         </div>
 
         <!-- Active Filters Display -->
-        <div *ngIf="hasActiveFilters()" class="active-filters">
+        <div *ngIf="filtersExpanded() && hasActiveFilters()" class="active-filters">
           <span class="active-filters-label">Active Filters:</span>
           <tui-chip
             *ngIf="searchQuery"
@@ -312,13 +319,10 @@ import { Subscription } from 'rxjs';
           </button>
         </div>
 
-        <!-- Virtual scroll table -->
-        <cdk-virtual-scroll-viewport
-          *ngIf="batches().length > 0"
-          [itemSize]="60"
-          class="virtual-scroll-viewport"
-        >
-          <table class="batches-table">
+        <!-- Table with fixed header and virtual scrolling body -->
+        <div *ngIf="batches().length > 0" class="table-container">
+          <!-- Fixed header -->
+          <table class="batches-table batches-table-header">
             <thead>
               <tr>
                 <th>Batch Name</th>
@@ -331,79 +335,88 @@ import { Subscription } from 'rxjs';
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr *cdkVirtualFor="let batch of batches(); trackBy: trackByBatchId">
-                <td>
-                  <a tuiLink [routerLink]="['/admin/batches', batch.batch_id]">
-                    {{ batch.batch_name || 'Unnamed Batch' }}
-                  </a>
-                </td>
-                <td>
-                  <div class="tags-cell" *ngIf="batch.tags && batch.tags.length > 0">
-                    <tui-badge
-                      *ngFor="let tag of batch.tags"
-                      [appearance]="'accent'"
-                      size="s"
-                      class="tag-badge-small"
-                    >
-                      {{ tag }}
-                    </tui-badge>
-                  </div>
-                  <span *ngIf="!batch.tags || batch.tags.length === 0" class="no-tags-text">—</span>
-                </td>
-                <td>{{ formatDate(batch.created_date) }}</td>
-                <td>
-                  <tui-badge
-                    [appearance]="getStatusAppearance(batch.status)"
-                    [class]="'status-badge-' + batch.status.toLowerCase()"
-                  >
-                    {{ batch.status }}
-                  </tui-badge>
-                </td>
-                <td>{{ batch.total_projects }}</td>
-                <td class="success-count">{{ batch.successful_projects }}</td>
-                <td class="failed-count" [class.has-failures]="batch.failed_projects > 0">
-                  {{ batch.failed_projects }}
-                </td>
-                <td>
-                  <div class="actions">
-                    <button
-                      tuiButton
-                      appearance="flat"
-                      size="s"
-                      [routerLink]="['/admin/batches', batch.batch_id]"
-                      [tuiHint]="viewHint"
-                      style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
-                    >
-                      <tui-icon icon="@tui.eye"></tui-icon>
-                    </button>
-                    <button
-                      *ngIf="batch.status === BatchStatus.PENDING"
-                      tuiButton
-                      appearance="flat"
-                      size="s"
-                      (click)="startProcessing(batch.batch_id)"
-                      [tuiHint]="processHint"
-                      style="background-color: #e8f5e9; color: #4caf50; min-width: 36px; padding: 8px; border: 1px solid #4caf50; border-radius: 4px; margin-right: 4px;"
-                    >
-                      <tui-icon icon="@tui.play"></tui-icon>
-                    </button>
-                    <button
-                      tuiButton
-                      appearance="flat"
-                      size="s"
-                      (click)="confirmDelete(batch)"
-                      [tuiHint]="deleteHint"
-                      style="background-color: #fce8e6; color: #e01f19; min-width: 36px; padding: 8px; border: 1px solid #e01f19; border-radius: 4px;"
-                    >
-                      <tui-icon icon="@tui.trash-2"></tui-icon>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
           </table>
-        </cdk-virtual-scroll-viewport>
+
+          <!-- Virtual scroll body -->
+          <cdk-virtual-scroll-viewport
+            [itemSize]="60"
+            class="virtual-scroll-viewport"
+          >
+            <table class="batches-table batches-table-body">
+              <tbody>
+                <tr *cdkVirtualFor="let batch of batches(); trackBy: trackByBatchId">
+                  <td>
+                    <a tuiLink [routerLink]="['/admin/batches', batch.batch_id]">
+                      {{ batch.batch_name || 'Unnamed Batch' }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="tags-cell" *ngIf="batch.tags && batch.tags.length > 0">
+                      <tui-badge
+                        *ngFor="let tag of batch.tags"
+                        [appearance]="'accent'"
+                        size="s"
+                        class="tag-badge-small"
+                      >
+                        {{ tag }}
+                      </tui-badge>
+                    </div>
+                    <span *ngIf="!batch.tags || batch.tags.length === 0" class="no-tags-text">—</span>
+                  </td>
+                  <td>{{ formatDate(batch.created_date) }}</td>
+                  <td>
+                    <tui-badge
+                      [appearance]="getStatusAppearance(batch.status)"
+                      [class]="'status-badge-' + batch.status.toLowerCase()"
+                    >
+                      {{ batch.status }}
+                    </tui-badge>
+                  </td>
+                  <td>{{ batch.total_projects }}</td>
+                  <td class="success-count">{{ batch.successful_projects }}</td>
+                  <td class="failed-count" [class.has-failures]="batch.failed_projects > 0">
+                    {{ batch.failed_projects }}
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button
+                        tuiButton
+                        appearance="flat"
+                        size="s"
+                        [routerLink]="['/admin/batches', batch.batch_id]"
+                        [tuiHint]="viewHint"
+                        style="background-color: #e8eef7; color: #526ed3; min-width: 36px; padding: 8px; border: 1px solid #526ed3; border-radius: 4px; margin-right: 4px;"
+                      >
+                        <tui-icon icon="@tui.eye"></tui-icon>
+                      </button>
+                      <button
+                        *ngIf="batch.status === BatchStatus.PENDING"
+                        tuiButton
+                        appearance="flat"
+                        size="s"
+                        (click)="startProcessing(batch.batch_id)"
+                        [tuiHint]="processHint"
+                        style="background-color: #e8f5e9; color: #4caf50; min-width: 36px; padding: 8px; border: 1px solid #4caf50; border-radius: 4px; margin-right: 4px;"
+                      >
+                        <tui-icon icon="@tui.play"></tui-icon>
+                      </button>
+                      <button
+                        tuiButton
+                        appearance="flat"
+                        size="s"
+                        (click)="confirmDelete(batch)"
+                        [tuiHint]="deleteHint"
+                        style="background-color: #fce8e6; color: #e01f19; min-width: 36px; padding: 8px; border: 1px solid #e01f19; border-radius: 4px;"
+                      >
+                        <tui-icon icon="@tui.trash-2"></tui-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </cdk-virtual-scroll-viewport>
+        </div>
       </div>
 
       <!-- Hint templates -->
@@ -439,7 +452,7 @@ import { Subscription } from 'rxjs';
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
       }
 
       .page-title {
@@ -461,7 +474,20 @@ import { Subscription } from 'rxjs';
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 0;
+      }
+
+      .toggle-filters-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+      }
+
+      .active-filters-count {
+        color: var(--tui-primary);
+        font-weight: 600;
+        margin-left: 4px;
       }
 
       .filters-title {
@@ -478,6 +504,7 @@ import { Subscription } from 'rxjs';
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 16px;
+        margin-top: 16px;
         margin-bottom: 16px;
       }
 
@@ -661,6 +688,11 @@ import { Subscription } from 'rxjs';
         }
       }
 
+      .table-container {
+        display: flex;
+        flex-direction: column;
+      }
+
       .virtual-scroll-viewport {
         height: calc(100vh - 650px);
         min-height: 400px;
@@ -669,12 +701,20 @@ import { Subscription } from 'rxjs';
       .batches-table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
+
+        // Define fixed column widths for alignment
+        th:nth-child(1), td:nth-child(1) { width: 20%; } // Batch Name
+        th:nth-child(2), td:nth-child(2) { width: 15%; } // Tags
+        th:nth-child(3), td:nth-child(3) { width: 12%; } // Created Date
+        th:nth-child(4), td:nth-child(4) { width: 10%; } // Status
+        th:nth-child(5), td:nth-child(5) { width: 10%; } // Total Projects
+        th:nth-child(6), td:nth-child(6) { width: 9%; }  // Successful
+        th:nth-child(7), td:nth-child(7) { width: 8%; }  // Failed
+        th:nth-child(8), td:nth-child(8) { width: 16%; } // Actions
 
         thead {
-          position: sticky;
-          top: 0;
           background: var(--tui-base-03);
-          z-index: 1;
 
           th {
             padding: 16px 20px;
@@ -682,7 +722,7 @@ import { Subscription } from 'rxjs';
             font-weight: 600;
             font-size: 14px;
             color: var(--tui-text-02);
-            border-bottom: 1px solid var(--tui-base-04);
+            border-bottom: 2px solid var(--tui-base-04);
           }
         }
 
@@ -699,8 +739,43 @@ import { Subscription } from 'rxjs';
               font-size: 14px;
               color: var(--tui-text-01);
               border-bottom: 1px solid var(--tui-base-04);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
             }
           }
+        }
+      }
+
+      .batches-table-header {
+        // Fixed header table - no scroll
+        display: block;
+
+        thead {
+          display: block;
+          width: 100%;
+        }
+
+        tr {
+          display: table;
+          width: 100%;
+          table-layout: fixed;
+        }
+      }
+
+      .batches-table-body {
+        // Body table inside virtual scroll
+        display: block;
+
+        tbody {
+          display: block;
+          width: 100%;
+        }
+
+        tr {
+          display: table;
+          width: 100%;
+          table-layout: fixed;
         }
       }
 
@@ -728,11 +803,17 @@ import { Subscription } from 'rxjs';
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        max-width: 250px;
+        max-width: 100%;
+        white-space: normal !important;
 
         .tag-badge-small {
           font-size: 11px;
         }
+      }
+
+      // Allow tags column to wrap
+      td:nth-child(2) {
+        white-space: normal !important;
       }
 
       .no-tags-text {
@@ -823,6 +904,7 @@ export class BatchListComponent implements OnInit, OnDestroy {
   statusFilter = signal<BatchStatus | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
+  filtersExpanded = signal(false); // Filters collapsed by default
 
   // Filter properties
   searchQuery: string = '';
@@ -945,6 +1027,21 @@ export class BatchListComponent implements OnInit, OnDestroy {
       this.minProjects !== null ||
       this.maxProjects !== null
     );
+  }
+
+  toggleFilters(): void {
+    this.filtersExpanded.set(!this.filtersExpanded());
+  }
+
+  getActiveFiltersCount(): number {
+    let count = 0;
+    if (this.searchQuery) count++;
+    if (this.tagsFilter) count++;
+    if (this.createdAfter) count++;
+    if (this.createdBefore) count++;
+    if (this.minProjects !== null) count++;
+    if (this.maxProjects !== null) count++;
+    return count;
   }
 
   clearAllFilters(): void {

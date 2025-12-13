@@ -114,7 +114,7 @@
 
 // Notification Permission Banner
 .notification-banner {
-  background: linear-gradient(135deg, var(--tui-primary) 0%, #4285F4 100%);
+  background: linear-gradient(135deg, #526ed3 0%, #4285F4 100%);
   color: white;
   padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -175,7 +175,8 @@
 
   .btn-enable {
     background: white;
-    color: var(--tui-primary);
+    color: #526ed3;
+    font-weight: 600;
 
     &:hover {
       background: rgba(255, 255, 255, 0.9);

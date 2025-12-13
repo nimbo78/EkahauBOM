@@ -172,6 +172,9 @@ class BatchMetadata(BaseModel):
     # Processing options (inherited by all projects)
     processing_options: ProcessingRequest = Field(default_factory=lambda: ProcessingRequest())
 
+    # Template tracking (if a template was used)
+    template_id: Optional[str] = None
+
     # Parallel processing
     parallel_workers: int = 1
 
