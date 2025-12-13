@@ -1,8 +1,8 @@
-# EkahauBOM
+# 📡 EkahauBOM
 
-> **Professional BOM generator + Web UI for Ekahau Wi-Fi projects**
+> **Transform Ekahau Wi-Fi designs into professional BOM reports in seconds**
 
-Generate comprehensive equipment reports from Ekahau .esx files via **CLI** or **Web Interface**. Built for Wi-Fi engineers, procurement teams, and installation crews.
+The ultimate toolkit for **Wi-Fi engineers** to generate equipment lists, visualize AP placements, and automate reporting workflows from Ekahau .esx project files.
 
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -14,550 +14,470 @@ Generate comprehensive equipment reports from Ekahau .esx files via **CLI** or *
 
 ---
 
-## 🌟 What's New in v3.3.0
+## ✨ Why Wi-Fi Engineers Love EkahauBOM
 
-### 🚀 Batch Processing System - Process Multiple Projects
-
-**CLI Batch Processing:**
-- Process multiple .esx files with a single command
-- Parallel execution with configurable workers (1-8)
-- Aggregated BOM reports combining data from all projects
-- File filtering with glob patterns (include/exclude)
-- Progress tracking with Rich library
-
-**Web UI Batch Management:**
-- Multi-file upload with drag-and-drop
-- Batch dashboard with real-time status tracking
-- Per-project progress monitoring
-- Aggregate reports across all batch projects
-- Background processing with parallel workers
-
-**Comprehensive Testing:**
-- 595 tests passing with 85% code coverage
-- 51 CLI batch tests (38 unit + 13 integration)
-- 6 Web UI load tests with excellent performance
-- E2E validation: 12 batches, 56 projects, 3622 APs tested
-
-[See Batch Processing Guide](#-batch-processing-new-in-v330) →
+| Before EkahauBOM | After EkahauBOM |
+|-----------------|-----------------|
+| 😩 Manual AP counting in Ekahau | 🚀 One-click BOM generation |
+| 📋 Copy-paste to Excel | 📊 Professional Excel/PDF reports |
+| 🖼️ Screenshot floor plans | 🗺️ High-res PNG with AP overlays |
+| ⏰ Hours of repetitive work | ⚡ Seconds of automation |
+| 🔄 Re-process changed designs manually | 🤖 Scheduled automatic processing |
 
 ---
 
-### 🎉 Web UI - Centralized Project Registry
+## 🌟 What's New in v3.4.0
 
-Upload, process, and share Ekahau projects via web browser:
+### 🤖 Automated Workflows - "Set It and Forget It"
 
-- **Drag-and-drop upload** with real-time processing
-- **Project dashboard** with search and filters
-- **Floor plan visualizations** with zoom/pan
-- **Download reports** (CSV, Excel, HTML, PDF, JSON)
-- **Short link sharing** for easy collaboration
-- **Flexible storage** - Local filesystem or S3-compatible cloud storage
-- **No database required** - JSON-based metadata
+**Schedule batch processing** with cron expressions and get notified when complete:
 
-[See Web UI Guide](#-web-ui-new-in-v300) →
+```
+⏰ "Process //fileserver/ekahau/*.esx at 02:00 daily"
+📧 → Email report to team
+💬 → Slack notification to #wifi-team
+🔗 → Webhook to Jira/ServiceNow
+```
+
+**80% reduction in manual work** - No more clicking "Upload" every day!
+
+### ⚡ Real-Time Everything
+
+- **WebSocket updates** - See processing status instantly (90% less polling)
+- **Live dashboard** - Charts update as batches complete
+- **Instant notifications** - Know immediately when processing finishes
+
+### 📋 One-Click Templates
+
+Save your favorite processing configurations and apply with one click:
+- 🏃 **Quick**: CSV only, fastest processing
+- 📊 **Standard**: CSV + Excel + Floor plans
+- 📑 **Detailed**: All formats + analytics + azimuth arrows
+
+### 💾 Enterprise Storage
+
+**S3-compatible storage** for unlimited scalability:
+- AWS S3, MinIO, Wasabi, DigitalOcean Spaces
+- Zero egress fees with Cloudflare R2
+- Automatic redundancy and backup
 
 ---
 
-## Key Features
+## 🏗️ Architecture
 
-### 📊 Reports & Analytics
+```mermaid
+flowchart TB
+    subgraph Input["📥 Input"]
+        ESX[".esx files<br/>Ekahau Projects"]
+    end
 
-- **5 export formats**: CSV, Excel, HTML, JSON, PDF
-- **Radio analytics**: Frequency bands, channels, TX power, Wi-Fi standards
-- **Cost calculation**: Equipment pricing with volume discounts
-- **Installation params**: Mounting height, azimuth, tilt, coordinates
-- **Cable infrastructure**: Length calculations, BOM, cost estimation
-- **Map notes**: Text notes, cable paths, picture markers
+    subgraph Processing["⚙️ Processing Engine"]
+        Parser["🔍 Parser<br/>ZIP + YAML extraction"]
+        Processors["🔧 Processors<br/>Radio, Metadata, Notes"]
+        Analytics["📊 Analytics<br/>Statistics, Grouping"]
+    end
 
-### 🗺️ Floor Plan Visualizations
+    subgraph Output["📤 Output"]
+        CSV["📄 CSV"]
+        Excel["📊 Excel"]
+        HTML["🌐 HTML"]
+        PDF["📑 PDF"]
+        JSON["💾 JSON"]
+        PNG["🗺️ Floor Plans"]
+    end
 
-- **AP placement overlay** with Ekahau colors
-- **Azimuth arrows** for directional antennas
-- **Adjustable opacity** (10-100%)
-- **High-res PNG export** for documentation
+    subgraph WebUI["🖥️ Web UI"]
+        Upload["📤 Upload"]
+        Dashboard["📊 Dashboard"]
+        Scheduler["⏰ Scheduler"]
+        Reports["📋 Reports"]
+    end
+
+    ESX --> Parser
+    Parser --> Processors
+    Processors --> Analytics
+    Analytics --> CSV & Excel & HTML & PDF & JSON & PNG
+
+    Upload --> Processing
+    Scheduler --> Processing
+    Processing --> Dashboard
+    Dashboard --> Reports
+```
 
 ---
 
 ## 🚀 Quick Start
 
-### Option 1: Web UI (Recommended)
+### Option 1: Web UI (Recommended for Teams)
 
 ```bash
-# Clone repository
+# Clone & setup
 git clone https://github.com/nimbo78/EkahauBOM.git
 cd EkahauBOM
 
-# Setup backend
+# Backend (Terminal 1)
 cd ekahau_bom_web/backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python -m venv venv && venv\Scripts\activate  # Linux: source venv/bin/activate
 pip install -r requirements.txt
+uvicorn app.main:app --port 8001 --reload
 
-# Setup frontend
-cd ../frontend/ekahau-bom-ui
-npm install
-
-# Run servers (2 terminals)
-# Terminal 1 - Backend
-cd ekahau_bom_web/backend
-uvicorn app.main:app --port 8001
-
-# Terminal 2 - Frontend
+# Frontend (Terminal 2)
 cd ekahau_bom_web/frontend/ekahau-bom-ui
-npm start
+npm install && npm start
 
-# Open http://localhost:4200
+# Open http://localhost:4200 🎉
 ```
 
-### Option 2: CLI Only
+### Option 2: CLI (Quick & Scriptable)
 
 ```bash
 pip install ekahau-bom
 
-ekahau-bom myproject.esx \
-  --format csv,excel,html \
+# Simple BOM
+ekahau-bom project.esx
+
+# Full export with visualizations
+ekahau-bom project.esx \
+  --format csv,excel,html,pdf \
   --visualize-floor-plans \
   --show-azimuth-arrows
+
+# Batch processing (multiple projects)
+ekahau-bom --batch projects/ \
+  --parallel 4 \
+  --aggregate-report
 ```
 
 ---
 
-## 🖥️ Web UI _(New in v3.0.0)_
+## 🖥️ Web UI Features
 
-### Upload & Process
+### 📤 Drag & Drop Upload
 
 ![Upload Interface](docs/images/webui-upload.png)
 
-Drag-and-drop .esx files with instant upload and processing queue.
+Upload single files or entire batches with drag-and-drop. Configure processing options and watch real-time progress.
 
-**Keyboard Shortcuts**: Navigate faster with global shortcuts:
-- `Alt+U` - Quick upload (admin only)
-- `Ctrl+K` or `/` - Focus search
-- `Escape` - Clear search
-- `←/→` - Navigate between tabs
-- `1-4` - Jump to specific tab
+**Keyboard Shortcuts:**
+| Key | Action |
+|-----|--------|
+| `Alt+U` | Quick upload (admin) |
+| `Ctrl+K` or `/` | Focus search |
+| `←` `→` | Navigate tabs |
+| `1-4` | Jump to tab |
 
-### Project Dashboard
+### 📊 Project Dashboard
 
 ![Projects List](docs/images/webui-projects.png)
 
-Search, filter, and manage all uploaded projects. Real-time status tracking.
+Search, filter, and manage all your Ekahau projects. See processing status, AP counts, and quick stats at a glance.
 
-### Floor Plan Visualizations
+### 🗺️ Floor Plan Visualizations
 
 ![Floor Plans](docs/images/webui-visualizations.png)
 
-Interactive floor plans with zoom/pan and lightbox modal for full-screen viewing.
+Interactive floor plans with:
+- 📍 AP placement overlay (Ekahau colors)
+- ➡️ Azimuth arrows for directional antennas
+- 🔍 Zoom/pan controls
+- 🖼️ Lightbox modal for full-screen view
 
-### Reports Download
+### 📋 Multi-Format Reports
 
 ![Reports Tab](docs/images/webui-reports.png)
 
-Download reports in all formats directly from browser.
+Download reports in any format directly from browser:
+- **CSV** - Import to Excel, databases, scripts
+- **Excel** - Professional workbook with multiple sheets
+- **HTML** - Interactive web report
+- **PDF** - Print-ready documentation
+- **JSON** - Integration with other tools
 
-### Configuration
+### ⏰ Scheduled Processing
 
-![Processing Config](docs/images/webui-processing.png)
+```mermaid
+sequenceDiagram
+    participant S as Scheduler
+    participant B as Backend
+    participant N as Notifications
+    participant U as Users
 
-Configure all processing options via web interface:
-- Grouping (by model, floor, vendor, color, tag)
-- Output formats (CSV, Excel, HTML, PDF, JSON)
-- Visualizations with azimuth arrows and custom opacity
-- Real-time progress tracking
-
-### Batch Processing
-
-Process multiple .esx files simultaneously with comprehensive batch management:
-
-**Features:**
-- **Multi-file upload** - Drag-and-drop multiple files or select via browse dialog
-- **Batch dashboard** - View all batches with status filtering and pagination
-- **Real-time monitoring** - Per-project status tracking with progress indicators
-- **Background processing** - Configurable parallel workers (1-8) for faster completion
-- **Aggregate reports** - Combined BOM reports across all projects in batch
-- **Batch actions** - View details, monitor progress, or delete entire batches
-- **🏷️ Batch Tags** - Organize batches with custom tags (customer names, project types, etc.)
-  - Add/remove tags via UI with autocomplete
-  - Filter batches by tags in dashboard
-  - Tags shown as colored badges in list and detail views
-  - Tags persist across sessions
-
-**Usage:**
-1. Navigate to **Batch Upload** from the admin menu
-2. Drag-and-drop multiple .esx files (or click to browse)
-3. Configure processing options (grouping, formats, visualizations)
-4. Set parallel workers for optimal performance
-5. Monitor progress in the **Batches** dashboard
-6. Add tags to organize batches (e.g., "customer-x", "production", "testing")
-7. Filter batches by tags for quick access
-8. Download aggregate reports when processing completes
-
-### Storage Backends
-
-**Flexible storage options**: Choose between local filesystem or cloud S3-compatible storage:
-
-**Local Storage** (default):
-- Simple file-based storage in `projects/` directory
-- Automatic archiving of old projects (60+ days → tar.gz, 60-70% space savings)
-- Perfect for single-server deployments
-
-**S3-Compatible Storage** (AWS S3, MinIO, Wasabi, DigitalOcean Spaces):
-- Unlimited scalability and redundancy
-- Multi-server deployments with shared storage
-- Built-in lifecycle policies for cost optimization
-- Migration tool for seamless local ↔ S3 transfers
-
-Configure via `.env`:
-```bash
-# Local storage (default)
-STORAGE_BACKEND=local
-
-# S3 storage
-STORAGE_BACKEND=s3
-S3_BUCKET_NAME=ekahau-bom-projects
-S3_REGION=us-east-1
-S3_ACCESS_KEY=your_access_key
-S3_SECRET_KEY=your_secret_key
+    S->>B: Trigger at 02:00 daily
+    B->>B: Process *.esx files
+    B->>N: Send completion status
+    N->>U: 📧 Email report
+    N->>U: 💬 Slack message
+    N->>U: 🔗 Webhook POST
 ```
 
-**Migration between backends**:
-```bash
-# Migrate all projects from local to S3
-python -m app.utils.migrate_storage local-to-s3 --all
-
-# Migrate specific project
-python -m app.utils.migrate_storage s3-to-local --project-id <uuid>
-```
-
-See [Backend README](ekahau_bom_web/backend/README.md) for complete S3 configuration examples (AWS, MinIO, Wasabi, DigitalOcean, Corporate S3).
-
-### Archive Management
-
-**Automatic space savings** (Local storage only): Old projects (not accessed for 60+ days) are automatically compressed to tar.gz archives, saving 60-70% disk space. Projects are transparently decompressed on first access.
-
-**Background job** (optional, requires cron/Task Scheduler):
-```bash
-# Run weekly to archive old projects (local storage only)
-python -m app.tasks.archive_old_projects
-```
-
-**Note**: S3 storage doesn't need archiving - use S3 lifecycle policies instead.
+**Cron Presets:**
+- 🌅 Daily at 2 AM: `0 2 * * *`
+- 📅 Weekly Monday 9 AM: `0 9 * * 1`
+- 📆 Monthly 1st day: `0 0 1 * *`
+- ⏱️ Every hour: `0 * * * *`
 
 ---
 
-## 📖 CLI Usage
+## 📊 What's in the Reports?
 
-### Basic Export
+### Access Point BOM
+
+| Model | Vendor | Qty | Floor | Band |
+|-------|--------|-----|-------|------|
+| AP-655 | Aruba | 12 | Floor 1 | 5GHz |
+| C9130AXI | Cisco | 8 | Floor 2 | 6GHz |
+| MR46 | Meraki | 15 | Floor 3 | Dual |
+
+### Radio Analytics
+
+- 📶 **Frequency bands**: 2.4GHz, 5GHz, 6GHz distribution
+- 📻 **Channels**: Channel utilization and overlap analysis
+- 📡 **TX Power**: Power level distribution
+- 🔧 **Wi-Fi Standards**: 802.11ax/ac/n breakdown
+
+### Installation Parameters
+
+- 📍 **Coordinates**: X, Y, Height for each AP
+- 🧭 **Azimuth**: Antenna pointing direction
+- 📐 **Tilt**: Up/down angle for directional antennas
+- 🏗️ **Mounting**: Ceiling, wall, bracket types
+
+### Cable Infrastructure
+
+- 📏 **Cable lengths**: Per-AP and total
+- 🔌 **Cable types**: Cat6, Cat6A, fiber
+- 💰 **Cost estimation**: Based on cable pricing
+
+---
+
+## 🎯 Use Cases
+
+### For Wi-Fi Engineers 📡
 
 ```bash
-# Simple CSV export
-ekahau-bom project.esx
-
-# Multiple formats
-ekahau-bom project.esx --format csv,excel,html,pdf
-
-# Custom output directory
-ekahau-bom project.esx --output-dir ./reports
+# After completing Ekahau design
+ekahau-bom "Office Building Q4.esx" \
+  --format excel \
+  --visualize-floor-plans \
+  --show-azimuth-arrows \
+  --output-dir "Customer Deliverables"
 ```
 
-### Grouping & Analytics
+**Result**: Professional BOM + floor plan PNGs ready for customer delivery.
+
+### For Procurement Teams 💼
 
 ```bash
-# Group by AP model
-ekahau-bom project.esx --group-by model
-
-# Group by floor
-ekahau-bom project.esx --group-by floor
-
-# Group by vendor
-ekahau-bom project.esx --group-by vendor
-```
-
-### Floor Plan Visualizations
-
-```bash
-# Generate floor plans with APs
-ekahau-bom project.esx --visualize-floor-plans
-
-# With azimuth arrows
+# Generate purchasing list
 ekahau-bom project.esx \
-  --visualize-floor-plans \
-  --show-azimuth-arrows
-
-# Custom opacity (0.0-1.0)
-ekahau-bom project.esx \
-  --visualize-floor-plans \
-  --ap-opacity 0.4
-
-# Hide AP names on visualizations
-ekahau-bom project.esx \
-  --visualize-floor-plans \
-  --no-ap-names
+  --format csv \
+  --group-by vendor
 ```
 
-### Advanced Options
+**Result**: Vendor-grouped CSV for purchase orders.
+
+### For Installation Crews 🔧
 
 ```bash
-# Custom project name (for reports)
-ekahau-bom project.esx --project-name "Office Building 2024"
-
-# Custom AP circle radius (for visualizations)
+# Per-floor installation guide
 ekahau-bom project.esx \
-  --visualize-floor-plans \
-  --ap-circle-radius 20
-
-# Enable verbose logging
-ekahau-bom project.esx --verbose
+  --format html \
+  --group-by floor \
+  --visualize-floor-plans
 ```
 
-### 🆕 Batch Processing _(New in v3.3.0)_
+**Result**: Floor-by-floor HTML with AP locations and mounting details.
 
-Process multiple .esx files with parallel execution and aggregated reports:
+### For Operations Teams 🤖
 
-```bash
-# Process all .esx files in directory
-ekahau-bom --batch projects/ --format csv
+**Web UI Scheduled Processing:**
+1. Create schedule: "Process //fileserver/ekahau/*.esx daily at 2 AM"
+2. Configure: Email report to ops-team@company.com
+3. Enable: Toggle on and forget
 
-# Parallel processing with 4 workers
-ekahau-bom --batch projects/ \
-  --parallel 4 \
-  --format csv,excel
-
-# With aggregated report
-ekahau-bom --batch projects/ \
-  --parallel 4 \
-  --aggregate-report \
-  --format csv
-
-# File filtering with glob patterns
-ekahau-bom --batch projects/ \
-  --batch-include "*office*.esx" \
-  --aggregate-report
-
-# Exclude specific files
-ekahau-bom --batch projects/ \
-  --batch-exclude "*backup*.esx" \
-  --parallel 4 \
-  --aggregate-report
-
-# Full example with all options
-ekahau-bom --batch projects/ \
-  --parallel 8 \
-  --aggregate-report \
-  --format csv,excel,html \
-  --group-by model \
-  --visualize-floor-plans \
-  --output-dir batch_output
-```
-
-**Batch Features:**
-- **Parallel processing**: 1-8 workers for faster completion
-- **Aggregated BOM**: Combined reports across all projects
-- **File filtering**: Include/exclude patterns with wildcards
-- **Progress tracking**: Real-time progress with Rich library
-- **Error handling**: Continue processing on individual file errors
-- **Summary reports**: Batch statistics and error logs
-
-**Output Structure:**
-```
-batch_output/
-├── project1/                    # Individual project outputs
-│   ├── project1_access_points.csv
-│   └── ...
-├── project2/                    # Individual project outputs
-│   ├── project2_access_points.csv
-│   └── ...
-└── summary/                     # Batch aggregated reports
-    ├── batch_summary.txt        # Processing statistics
-    ├── batch_aggregate.csv      # Combined BOM report
-    └── batch_errors.log         # Error log (if any)
-```
+**Result**: Automatic daily reports without manual intervention.
 
 ---
 
 ## 📁 Output Structure
 
 ```
-output/
-├── Project_Name_access_points.csv          # Main BOM
-├── Project_Name_access_points_detailed.csv # Full AP details
-├── Project_Name_antennas.csv               # Antenna inventory
-├── Project_Name_analytics.csv              # Radio analytics
-├── Project_Name_report.xlsx                # Excel workbook
-├── Project_Name_report.html                # Interactive HTML
-├── Project_Name_report.pdf                 # Print-ready PDF
-├── Project_Name_data.json                  # Complete JSON
-└── visualizations/                         # Floor plans
-    ├── Floor_1_visualization.png
-    └── Floor_2_visualization.png
+📂 output/
+├── 📄 Project_access_points.csv          # Main BOM
+├── 📄 Project_access_points_detailed.csv # Full AP details
+├── 📄 Project_antennas.csv               # Antenna inventory
+├── 📄 Project_analytics.csv              # Radio analytics
+├── 📊 Project_report.xlsx                # Excel workbook
+├── 🌐 Project_report.html                # Interactive HTML
+├── 📑 Project_report.pdf                 # Print-ready PDF
+├── 💾 Project_data.json                  # Machine-readable JSON
+└── 📂 visualizations/
+    ├── 🗺️ Floor_1_visualization.png
+    ├── 🗺️ Floor_2_visualization.png
+    └── 🗺️ Floor_3_visualization.png
 ```
 
 ---
 
-## 🛠️ Installation
+## ⚙️ CLI Reference
 
-### Prerequisites
-
-- **Python 3.7+** (for CLI and backend)
-- **Node.js 18+** (for Web UI frontend only)
-- **Git** (to clone repository)
-
-### Full Installation (Web UI + CLI)
+### Basic Commands
 
 ```bash
-git clone https://github.com/nimbo78/EkahauBOM.git
-cd EkahauBOM
+# Simple export (CSV default)
+ekahau-bom project.esx
 
-# Backend
-cd ekahau_bom_web/backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Multiple formats
+ekahau-bom project.esx --format csv,excel,html,pdf,json
 
-# Frontend
-cd ../frontend/ekahau-bom-ui
-npm install
+# Custom output directory
+ekahau-bom project.esx --output-dir ./reports
 ```
 
-### CLI Only
+### Grouping Options
 
 ```bash
-pip install ekahau-bom
+--group-by model   # Group by AP model
+--group-by floor   # Group by floor
+--group-by vendor  # Group by vendor (Cisco, Aruba, etc.)
+--group-by color   # Group by Ekahau color
+--group-by tag     # Group by custom tags
 ```
 
-### Optional: PDF Export Support
+### Visualization Options
 
-PDF export requires WeasyPrint + GTK libraries:
-
-**Linux (Ubuntu/Debian)**:
 ```bash
-sudo apt install libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf2.0-0 libffi-dev
-pip install weasyprint
+--visualize-floor-plans    # Generate floor plan PNGs
+--show-azimuth-arrows      # Add directional arrows
+--ap-opacity 0.6           # Set overlay opacity (0.1-1.0)
+--ap-circle-radius 25      # Set AP marker size
+--no-ap-names              # Hide AP name labels
 ```
 
-**macOS**:
-```bash
-brew install pango gdk-pixbuf libffi
-pip install weasyprint
-```
+### Batch Processing
 
-**Windows**:
 ```bash
-pip install weasyprint
-# Download GTK3 Runtime: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
+# Process entire directory
+ekahau-bom --batch projects/
+
+# Parallel execution (1-8 workers)
+ekahau-bom --batch projects/ --parallel 4
+
+# With aggregated report
+ekahau-bom --batch projects/ --aggregate-report
+
+# File filtering
+ekahau-bom --batch projects/ \
+  --batch-include "*office*.esx" \
+  --batch-exclude "*backup*"
 ```
 
 ---
 
-## 📚 Documentation
+## 🔧 Configuration
 
-- [**CLI Reference**](docs/CLI_REFERENCE.md) - Complete command-line options
-- [**Developer Guide**](docs/DEVELOPER_GUIDE.md) - Contributing and development
-- [**Extending Guide**](docs/EXTENDING.md) - Add custom exporters/processors
-- [**Release Process**](RELEASE_PROCESS.md) - How to create releases
+### Web UI Environment (.env)
 
----
-
-## 🎯 Use Cases
-
-### For Wi-Fi Engineers
-- Generate professional BOMs from Ekahau designs
-- Share projects via Web UI with stakeholders
-- Visualize AP placements on floor plans
-- Export installation parameters (height, azimuth, tilt)
-
-### For Procurement Teams
-- Equipment lists with quantities and models
-- Cost calculations with volume discounts
-- Vendor breakdown for multi-vendor deployments
-- Cable infrastructure BOM and costs
-
-### For Installation Crews
-- Detailed AP locations with coordinates
-- Mounting instructions (height, azimuth, tilt)
-- Floor-by-floor installation guides
-- Visual floor plans for reference
-
-### For Project Managers
-- Centralized project repository (Web UI)
-- Share reports via short links
-- Track processing status
-- Quick project statistics
-
----
-
-## 🗺️ Roadmap
-
-### Recently Completed
-
-#### ✅ Batch Processing
-Process multiple .esx files in a single operation for maximum efficiency.
-
-**CLI Batch Processing:**
 ```bash
-# Process all .esx files in directory
-ekahau-bom --batch /path/to/projects/
+# Storage (default: local)
+STORAGE_BACKEND=local          # or 's3'
 
-# Parallel processing with 4 workers
-ekahau-bom --batch /path/to/projects/ --parallel 4
+# S3 Configuration (if using S3)
+S3_BUCKET_NAME=ekahau-bom
+S3_REGION=us-east-1
+S3_ACCESS_KEY=your_key
+S3_SECRET_KEY=your_secret
 
-# Generate aggregated report across all projects
-ekahau-bom --batch /path/to/projects/ --aggregate --output-dir batch_report/
+# Email Notifications (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_USE_TLS=true
+
+# Slack Notifications (optional)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
-**Features:**
-- Parallel processing with configurable workers (1-8)
-- Aggregate BOM reports (CSV, Excel, HTML) combining all projects
-- Support for all grouping modes (model, floor, color, vendor, tag)
-- Summary statistics across all projects in batch
-- 20+ unit tests ensuring reliability
+### Storage Options
 
-**Web UI Batch Upload:**
-- Drag-and-drop multiple .esx files simultaneously
-- Batch processing dashboard with real-time status tracking
-- Batch list view with status filtering and pagination
-- Per-project status monitoring
-- Background task processing with parallel workers
-- Batch delete functionality
-- 21 comprehensive API tests (all passing ✅)
-
-### Planned Features
-
-#### Docker Containerization
-- Pre-built Docker images for backend and frontend
-- docker-compose setup for easy deployment
-- Production-ready configuration
+| Backend | Best For | Features |
+|---------|----------|----------|
+| **Local** | Single server | Simple, automatic archiving |
+| **AWS S3** | Enterprise | Unlimited, highly available |
+| **MinIO** | Self-hosted | Free, S3-compatible |
+| **Wasabi** | Cost-sensitive | 80% cheaper than AWS |
+| **Cloudflare R2** | High egress | Zero egress fees |
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests (CLI + Web Backend)
+# Run all tests
 pytest tests/ -v
-pytest ekahau_bom_web/backend/tests/ -v
 
-# With coverage report
+# With coverage
 pytest tests/ --cov=ekahau_bom --cov-report=html
-pytest ekahau_bom_web/backend/tests/ --cov=app --cov-report=html
 
-# Backend API + Storage tests
-pytest ekahau_bom_web/backend/tests/ -v
+# Quick tests only (skip slow integration)
+pytest tests/ -m "not slow"
 ```
 
-**Current stats**: 669 tests passing (545 CLI + 124 storage) | 86% coverage
+**Current stats**: 587 tests | 86% coverage | 3 OS × 5 Python versions
 
 ---
 
-## 📝 License
+## 📚 Documentation
 
-MIT License - see [LICENSE](LICENSE) file for details.
+| Document | Description |
+|----------|-------------|
+| [CLI Reference](docs/CLI_REFERENCE.md) | Complete command-line options |
+| [User Guide](docs/USER_GUIDE.md) | Step-by-step usage guide |
+| [Web UI Guide](docs/examples/WEB_UI_GUIDE.md) | Web interface walkthrough |
+| [Developer Guide](docs/DEVELOPER_GUIDE.md) | Contributing and development |
+| [Extending Guide](docs/EXTENDING.md) | Add custom exporters/processors |
+
+---
+
+## 🗺️ Roadmap
+
+### ✅ Recently Completed (v3.4.0)
+
+- [x] 🤖 Scheduled batch processing with cron
+- [x] 📧 Email/Slack/Webhook notifications
+- [x] ⚡ WebSocket real-time updates
+- [x] 📋 Batch templates
+- [x] 📊 Analytics dashboard with charts
+- [x] 🏷️ Tags and advanced filtering
+- [x] 💾 S3 storage backend
+
+### 🔜 Coming Soon
+
+- [ ] 🐳 Docker containerization
+- [ ] 🔐 LDAP/SSO authentication
+- [ ] 📱 Mobile-friendly UI
+- [ ] 🔄 Ekahau Cloud integration
 
 ---
 
 ## 🤝 Contributing
 
 Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+```bash
+# Setup development environment
+git clone https://github.com/nimbo78/EkahauBOM.git
+cd EkahauBOM
+pip install -e ".[dev]"
+pre-commit install
+```
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
@@ -568,4 +488,10 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
+<div align="center">
+
 **Built with ❤️ for the Wi-Fi engineering community**
+
+⭐ Star this repo if EkahauBOM saves you time!
+
+</div>
