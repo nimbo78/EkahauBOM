@@ -91,3 +91,7 @@ ekahau_bom_web/frontend/ekahau-bom-ui/dist/
 # Windows artifacts (nul device redirection creates files)
 nul
 **/nul
+
+# Pip install artifacts (from incorrect `pip install pkg=version` commands)
+=*
+**/=*
