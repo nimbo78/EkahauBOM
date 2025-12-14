@@ -1,0 +1,46 @@
+# EkahauBOM Web Application with Keycloak SSO
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up --build
+
+services:
+  # Keycloak Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: ekahau-keycloak
+    command: start-dev --import-realm
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      - KC_HTTP_PORT=8080
+      - KC_HEALTH_ENABLED=true
+    ports:
+      - "${KEYCLOAK_PORT:-8180}:8080"
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+      # Mount realm config for import (optional)
+      # - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+    networks:
+      - ekahau-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Override backend settings for OAuth2
+  backend:
+    environment:
+      - AUTH_BACKEND=oauth2
+      - OAUTH2_ISSUER=http://keycloak:8080/realms/ekahau
+      - OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID:-ekahau-bom-web}
+      - OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET:-your-client-secret}
+      - OAUTH2_REDIRECT_URI=http://localhost:${FRONTEND_PORT:-8080}/auth/callback
+      - OAUTH2_ADMIN_ROLE=ekahau-admin
+      - OAUTH2_USER_ROLE=ekahau-user
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+volumes:
+  keycloak-data:
+    driver: local
