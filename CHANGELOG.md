@@ -9,7 +9,171 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet! All Phase 4 features shipped in v3.4.0 рџЋ‰
+- Nothing yet! All features shipped in v3.5.0 🎉
+
+## [3.5.0] - 2025-12-15
+
+### Summary
+🚀 **MAJOR RELEASE - All Planned Features Complete**: Docker containerization, OAuth2/Keycloak SSO authentication, and mobile-friendly responsive UI. This release completes the full EkahauBOM platform with enterprise-grade deployment and authentication capabilities.
+
+**Total Impact**: Production-ready Docker deployment, enterprise SSO integration, mobile-friendly UI for all devices.
+
+### Added
+
+#### 🐳 Docker Containerization
+**One-command deployment for the entire stack**
+
+- **Multi-stage Dockerfiles**:
+  - Backend: Python 3.11 with WeasyPrint, non-root user, health checks
+  - Frontend: Node.js build + Nginx runtime with optimized config
+  - Minimal image sizes with efficient layer caching
+
+- **Docker Compose Configuration**:
+  - `docker-compose.yml`: Backend + Frontend services
+  - `docker-compose.keycloak.yml`: Optional SSO overlay
+  - Health checks for all services
+  - Volume mounts for persistent data
+
+- **Nginx Configuration**:
+  - API proxy to backend (/api/*)
+  - WebSocket support (/ws/*)
+  - SPA routing with fallback to index.html
+  - Security headers and CORS configuration
+  - Large file upload support (500MB)
+
+- **Environment Configuration**:
+  - `.env.example` with all configuration options
+  - Flexible auth backend selection (simple/oauth2)
+  - Storage backend configuration (local/s3)
+  - Keycloak integration settings
+
+**Quick Start**:
+```bash
+docker-compose up --build
+# Open http://localhost:8080
+```
+
+**With Keycloak SSO**:
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up --build
+# Keycloak: http://localhost:8180 (admin/admin)
+# App: http://localhost:8080
+```
+
+---
+
+#### 🔐 OAuth2/Keycloak SSO Authentication
+**Enterprise-grade authentication with any OIDC provider**
+
+- **Pluggable Auth Backend**:
+  - Simple JWT authentication (default, unchanged)
+  - OAuth2/OIDC authentication via Authlib
+  - Configuration via AUTH_BACKEND environment variable
+
+- **Supported Providers**:
+  - Keycloak (recommended, fully tested)
+  - Azure AD / Entra ID
+  - Okta
+  - Google Workspace
+  - Any OIDC-compliant provider
+
+- **Backend Implementation**:
+  - `app/auth/oauth2.py`: OAuth2 client with OIDC discovery
+  - `app/api/auth_oauth2.py`: OAuth2 endpoints (/login, /callback, /userinfo)
+  - Role extraction from OIDC claims (realm_access.roles)
+  - JWT token generation after OAuth2 flow
+
+- **Frontend Integration**:
+  - SSO button on login page (shown when OAuth2 enabled)
+  - OAuth2 configuration endpoint for dynamic UI
+  - Seamless redirect flow with PKCE support
+  - Role-based access control (admin, user)
+
+- **Security Features**:
+  - PKCE (Proof Key for Code Exchange)
+  - State parameter validation
+  - Secure token storage
+  - Role-based authorization
+
+---
+
+#### 📱 Mobile-Friendly Responsive UI
+**Full mobile and tablet support with adaptive layouts**
+
+- **Responsive Breakpoints**:
+  - Desktop: > 1024px (full layout)
+  - Tablet: 768px - 1024px (adjusted spacing)
+  - Mobile: < 768px (card-based layout)
+  - Small: < 480px (compact view)
+
+- **Mobile Navigation**:
+  - Hamburger menu with slide-out drawer
+  - Touch-friendly 44px minimum tap targets
+  - Horizontal scrolling tabs
+  - Mobile-optimized header
+
+- **Layout Adaptations**:
+  - Card-based project list on mobile (instead of tables)
+  - Stacked form layouts
+  - Full-width buttons and inputs
+  - Simplified navigation
+
+- **CSS Implementation**:
+  - `responsive.component.scss`: Global responsive styles
+  - Media queries for all breakpoints
+  - Touch-friendly interactive elements
+  - Accessible font sizes (16px minimum)
+
+- **Components Updated**:
+  - Login page: Mobile-friendly form
+  - Projects list: Card view on mobile
+  - Project details: Tab scrolling
+  - Navigation: Hamburger menu
+
+### Changed
+
+- **Version**: 3.4.0 → 3.5.0
+- **Documentation**: Updated all Russian docs to v3.5.0
+- **README**: Added Docker, OAuth2, Mobile features to roadmap (completed)
+
+### Technical Details
+
+**New Files**:
+- `docker-compose.yml` - Container orchestration
+- `docker-compose.keycloak.yml` - Keycloak SSO overlay
+- `.env.example` - Environment configuration template
+- `.dockerignore` - Docker build exclusions
+- `ekahau_bom_web/backend/Dockerfile` - Backend container
+- `ekahau_bom_web/frontend/ekahau-bom-ui/Dockerfile` - Frontend container
+- `ekahau_bom_web/frontend/ekahau-bom-ui/nginx.conf` - Nginx configuration
+- `ekahau_bom_web/backend/app/auth/oauth2.py` - OAuth2 client
+- `ekahau_bom_web/backend/app/api/auth_oauth2.py` - OAuth2 endpoints
+- `ekahau_bom_web/frontend/.../responsive.component.scss` - Mobile styles
+
+**Dependencies Added**:
+- `authlib>=1.3.0` - OAuth2/OIDC client library
+- `httpx>=0.27.0` - Async HTTP client for OAuth2
+
+### Migration Guide
+
+**For Docker Deployment**:
+1. Copy `.env.example` to `.env`
+2. Configure authentication settings
+3. Run `docker-compose up --build`
+4. Access at http://localhost:8080
+
+**For OAuth2/SSO**:
+1. Set `AUTH_BACKEND=oauth2` in `.env`
+2. Configure `OAUTH2_ISSUER`, `OAUTH2_CLIENT_ID`, `OAUTH2_CLIENT_SECRET`
+3. Register callback URL in your IdP: `http://your-app/api/auth/oauth2/callback`
+
+**For Mobile Support**:
+- No configuration needed - responsive styles apply automatically
+- Test with browser dev tools or real devices
+
+### Breaking Changes
+
+- None! All new features are opt-in and backward compatible
 
 ## [3.4.0] - 2025-11-09
 
@@ -1325,7 +1489,13 @@ Major release with comprehensive documentation overhaul, testing improvements (8
 
 | Version | Date | Key Features |
 |---------|------|-------------|
-| **2.5.0** | 2025-01-25 | Production Ready: PDF Export, Interactive CLI, Batch Processing |
+| **3.5.0** | 2025-12-15 | Docker, OAuth2/SSO, Mobile UI - All Planned Features Complete |
+| **3.4.0** | 2025-11-09 | Scheduled Processing, WebSocket, Templates, S3 Storage |
+| **3.3.0** | 2025-11-09 | Batch Processing CLI + Web UI, 595 tests |
+| **3.2.0** | 2025-11-07 | PDF Floor Plans, Keyboard Shortcuts, Archive System |
+| **3.0.0** | 2025-11-03 | Web UI (FastAPI + Angular + Taiga UI) |
+| **2.8.0** | 2025-10-30 | Documentation, Testing (86% coverage), Pre-commit |
+| **2.5.0** | 2025-10-26 | Production Ready: PDF Export, Interactive CLI, Batch Processing |
 | **2.4.0** | 2024 | Radio Analytics, Installation Export, Cost Calculation |
 | **2.3.0** | 2024 | HTML & JSON Export |
 | **2.2.0** | 2024 | Excel Export with Charts |
