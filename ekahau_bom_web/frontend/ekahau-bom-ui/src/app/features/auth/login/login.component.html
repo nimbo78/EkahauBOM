@@ -7,56 +7,95 @@
       </h1>
     </header>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-      <!-- Username Field -->
-      <tui-textfield>
-        <label tuiLabel>Username</label>
-        <input
-          tuiTextfield
-          type="text"
-          formControlName="username"
-          placeholder="Enter username"
-          [invalid]="!!(loginForm.get('username')?.invalid && loginForm.get('username')?.touched)"
-        />
-        <tui-icon icon="@tui.user" />
-      </tui-textfield>
+    <!-- Loading Auth Info -->
+    @if (authInfoLoading()) {
+      <div class="auth-loading">
+        <tui-loader [showLoader]="true" size="m"></tui-loader>
+      </div>
+    } @else {
+      <!-- OAuth2/SSO Login -->
+      @if (authService.authBackend() === 'oauth2') {
+        <div class="sso-login">
+          <tui-loader [showLoader]="loading()" [inheritColor]="false" [overlay]="false">
+            <button
+              tuiButton
+              appearance="primary"
+              size="l"
+              [disabled]="loading()"
+              (click)="loginWithSSO()"
+              class="sso-button"
+            >
+              <tui-icon icon="@tui.log-in" />
+              {{ loading() ? 'Redirecting...' : 'Sign in with SSO' }}
+            </button>
+          </tui-loader>
+          <p class="sso-hint">You will be redirected to your organization's login page</p>
+        </div>
+      } @else {
+        <!-- Simple Username/Password Login -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <!-- Username Field -->
+          <tui-textfield>
+            <label tuiLabel>Username</label>
+            <input
+              tuiTextfield
+              type="text"
+              formControlName="username"
+              placeholder="Enter username"
+              [invalid]="!!(loginForm.get('username')?.invalid && loginForm.get('username')?.touched)"
+            />
+            <tui-icon icon="@tui.user" />
+          </tui-textfield>
 
-      <!-- Password Field -->
-      <tui-textfield>
-        <label tuiLabel>Password</label>
-        <input
-          tuiTextfield
-          type="password"
-          formControlName="password"
-          placeholder="Enter password"
-          [invalid]="!!(loginForm.get('password')?.invalid && loginForm.get('password')?.touched)"
-        />
-        <tui-icon tuiPassword />
-      </tui-textfield>
+          <!-- Password Field -->
+          <tui-textfield>
+            <label tuiLabel>Password</label>
+            <input
+              tuiTextfield
+              type="password"
+              formControlName="password"
+              placeholder="Enter password"
+              [invalid]="!!(loginForm.get('password')?.invalid && loginForm.get('password')?.touched)"
+            />
+            <tui-icon tuiPassword />
+          </tui-textfield>
 
-      <!-- Error Notification -->
-      <tui-notification
-        *ngIf="error()"
-        appearance="negative"
-        size="m"
-        class="error-notification"
-      >
-        {{ error() }}
-      </tui-notification>
+          <!-- Error Notification -->
+          <tui-notification
+            *ngIf="error()"
+            appearance="negative"
+            size="m"
+            class="error-notification"
+          >
+            {{ error() }}
+          </tui-notification>
 
-      <!-- Submit Button with Loader -->
-      <tui-loader [showLoader]="loading()" [inheritColor]="false" [overlay]="false">
-        <button
-          tuiButton
-          type="submit"
-          appearance="primary"
-          size="l"
-          [disabled]="loginForm.invalid || loading()"
-          class="login-button"
+          <!-- Submit Button with Loader -->
+          <tui-loader [showLoader]="loading()" [inheritColor]="false" [overlay]="false">
+            <button
+              tuiButton
+              type="submit"
+              appearance="primary"
+              size="l"
+              [disabled]="loginForm.invalid || loading()"
+              class="login-button"
+            >
+              {{ loading() ? 'Signing in...' : 'Sign In' }}
+            </button>
+          </tui-loader>
+        </form>
+      }
+
+      <!-- Error for OAuth2 -->
+      @if (error() && authService.authBackend() === 'oauth2') {
+        <tui-notification
+          appearance="negative"
+          size="m"
+          class="error-notification"
         >
-          {{ loading() ? 'Signing in...' : 'Sign In' }}
-        </button>
-      </tui-loader>
-    </form>
+          {{ error() }}
+        </tui-notification>
+      }
+    }
   </div>
 </div>

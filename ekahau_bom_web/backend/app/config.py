@@ -46,14 +46,27 @@ class Settings(BaseSettings):
     short_link_length: int = 8
     short_link_expiry_days: int = 30
 
-    # Authentication (JWT)
+    # Authentication Backend
+    # Options: "simple" (username/password + JWT) or "oauth2" (Keycloak/OIDC)
+    auth_backend: Literal["simple", "oauth2"] = "simple"
+
+    # JWT Settings (used by both simple and oauth2 backends)
     jwt_secret_key: str = "CHANGE_ME_IN_PRODUCTION_USE_ENV_VARIABLE"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 480  # 8 hours
 
-    # Admin credentials (в production использовать БД с хешированием)
+    # Simple Auth: Admin credentials (used when auth_backend=simple)
     admin_username: str = "admin"
     admin_password: str = "EkahauAdmin"
+
+    # OAuth2/OIDC Settings (used when auth_backend=oauth2)
+    # Works with Keycloak, Azure AD, Okta, Google Workspace
+    oauth2_issuer: str = ""  # e.g., https://keycloak.example.com/realms/ekahau
+    oauth2_client_id: str = ""
+    oauth2_client_secret: str = ""
+    oauth2_redirect_uri: str = "http://localhost:4200/auth/callback"
+    oauth2_admin_role: str = "ekahau-admin"  # Role name for admin access
+    oauth2_user_role: str = "ekahau-user"  # Role name for user access
 
     # SMTP Settings (for email notifications)
     smtp_host: str = ""  # e.g., "smtp.gmail.com"
