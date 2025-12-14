@@ -11,6 +11,9 @@
 - [Форматы экспорта](#форматы-экспорта)
 - [Метаданные проекта](#метаданные-проекта-новое-в-v250) _(Новое в v2.5.0)_
 - [Расчет стоимости](#расчет-стоимости)
+- [Пакетная обработка](#пакетная-обработка-новое-в-v300) _(Новое в v3.0.0)_
+- [Веб-интерфейс](#веб-интерфейс-новое-в-v340) _(Новое в v3.4.0)_
+- [Docker](#docker-новое-в-v350) _(Новое в v3.5.0)_
 - [Расширенное использование](#расширенное-использование)
 - [Устранение неполадок](#устранение-неполадок)
 
@@ -378,6 +381,137 @@ volume_discounts:
 
 ---
 
+## Пакетная обработка _(Новое в v3.0.0)_
+
+### Обработка нескольких проектов
+
+Обработка всех .esx файлов в директории:
+
+```bash
+# Базовая пакетная обработка
+ekahau-bom --batch projects/
+
+# Параллельное выполнение (быстрее)
+ekahau-bom --batch projects/ --parallel 4
+
+# С агрегированным отчётом
+ekahau-bom --batch projects/ --aggregate-report
+```
+
+### Фильтрация файлов
+
+```bash
+# Включить только определённые файлы
+ekahau-bom --batch projects/ --batch-include "*office*.esx"
+
+# Исключить файлы
+ekahau-bom --batch projects/ --batch-exclude "*backup*"
+```
+
+### Результат пакетной обработки
+
+При использовании `--aggregate-report` создаётся объединённый BOM со всех проектов.
+
+---
+
+## Веб-интерфейс _(Новое в v3.4.0)_
+
+EkahauBOM включает веб-интерфейс для удобной работы с проектами.
+
+### Возможности
+
+- **Загрузка перетаскиванием** - Drag & drop .esx файлов
+- **Обзор проектов** - Список всех проектов со статусом
+- **Отчёты онлайн** - Скачивание CSV, Excel, HTML, PDF, JSON
+- **Визуализации** - Интерактивные планы этажей
+- **Планировщик** - Автоматическая обработка по расписанию
+- **Уведомления** - Email, Slack, Webhooks
+
+### Запуск веб-интерфейса
+
+```bash
+# Терминал 1: Backend
+cd ekahau_bom_web/backend
+./venv/Scripts/activate  # Windows
+uvicorn app.main:app --port 8001 --reload
+
+# Терминал 2: Frontend
+cd ekahau_bom_web/frontend/ekahau-bom-ui
+npm start
+
+# Открыть http://localhost:4200
+```
+
+### Аутентификация
+
+**Простой режим (по умолчанию):**
+- Логин: `admin`
+- Пароль: `admin123`
+
+**OAuth2/SSO (v3.5.0):**
+- Поддержка Keycloak, Azure AD, Okta
+- Единый вход (SSO)
+- Ролевой доступ
+
+### Горячие клавиши
+
+| Клавиша | Действие |
+|---------|----------|
+| `Alt+U` | Загрузка (админ) |
+| `Ctrl+K` или `/` | Поиск |
+| `←` `→` | Навигация вкладок |
+| `1-4` | Переход к вкладке |
+
+Подробнее: [WEB_UI_GUIDE.ru.md](examples/WEB_UI_GUIDE.ru.md)
+
+---
+
+## Docker _(Новое в v3.5.0)_
+
+### Быстрый запуск
+
+```bash
+# Клонировать репозиторий
+git clone https://github.com/htechno/EkahauBOM.git
+cd EkahauBOM
+
+# Скопировать конфигурацию
+cp .env.example .env
+
+# Запустить
+docker-compose up --build
+
+# Открыть http://localhost:8080
+```
+
+### С Keycloak SSO
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up --build
+
+# Keycloak: http://localhost:8180 (admin/admin)
+# Приложение: http://localhost:8080
+```
+
+### Переменные окружения
+
+```bash
+# .env
+AUTH_BACKEND=simple           # или "oauth2"
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+JWT_SECRET_KEY=your-secret
+
+# OAuth2 (если AUTH_BACKEND=oauth2)
+OAUTH2_ISSUER=http://localhost:8180/realms/ekahau
+OAUTH2_CLIENT_ID=ekahau-bom-web
+
+# Порт приложения
+FRONTEND_PORT=8080
+```
+
+---
+
 ## Расширенное использование
 
 ### Пользовательская конфигурация цветов
@@ -559,7 +693,7 @@ ekahau-bom project.esx \
 
 ---
 
-**Версия**: 2.4.0
-**Последнее обновление**: 2024
+**Версия**: 3.5.0
+**Последнее обновление**: 2025-12-15
 
 **Автор**: Pavel Semenischev @htechno

@@ -6,6 +6,8 @@
 
 - [Начало работы](#начало-работы)
 - [Архитектура проекта](#архитектура-проекта)
+- [Веб-приложение](#веб-приложение) _(Новое в v3.4.0)_
+- [Docker](#docker) _(Новое в v3.5.0)_
 - [Настройка разработки](#настройка-разработки)
 - [Стиль кода](#стиль-кода)
 - [Тестирование](#тестирование)
@@ -96,6 +98,135 @@ ekahau_bom/
 - Функции группировки
 - Статистические вычисления
 - Многомерный анализ
+
+---
+
+## Веб-приложение
+
+### Архитектура
+
+```
+ekahau_bom_web/
+├── backend/                 # FastAPI (Python)
+│   ├── app/
+│   │   ├── api/            # REST endpoints
+│   │   │   ├── upload.py   # Загрузка файлов
+│   │   │   ├── projects.py # CRUD проектов
+│   │   │   ├── reports.py  # Скачивание отчётов
+│   │   │   ├── notes.py    # API заметок
+│   │   │   └── schedules.py # Планировщик
+│   │   ├── services/       # Бизнес-логика
+│   │   │   ├── processing.py
+│   │   │   ├── scheduler_service.py
+│   │   │   └── notification_service.py
+│   │   └── main.py         # Точка входа
+│   ├── data/               # Хранилище данных
+│   └── requirements.txt
+│
+└── frontend/               # Angular + Taiga UI
+    └── ekahau-bom-ui/
+        ├── src/app/
+        │   ├── core/       # Сервисы, модели
+        │   ├── features/   # Компоненты страниц
+        │   └── shared/     # Общие компоненты
+        └── angular.json
+```
+
+### Backend (FastAPI)
+
+**Порт**: 8001
+
+**Ключевые компоненты**:
+- 20+ REST API endpoints
+- JWT + OAuth2/Keycloak аутентификация
+- WebSocket для real-time обновлений
+- APScheduler для планировщика
+
+**Запуск**:
+```bash
+cd ekahau_bom_web/backend
+./venv/Scripts/activate
+uvicorn app.main:app --port 8001 --reload
+```
+
+### Frontend (Angular)
+
+**Порт**: 4200
+
+**Стек**:
+- Angular 20
+- Taiga UI v4.60.0
+- TypeScript 5.x
+
+**Запуск**:
+```bash
+cd ekahau_bom_web/frontend/ekahau-bom-ui
+npm install
+npm start
+```
+
+### API Proxy
+
+Frontend проксирует `/api/*` запросы на backend:8001.
+
+Конфигурация: `proxy.conf.json`
+
+---
+
+## Docker
+
+### Структура
+
+```
+docker-compose.yml           # Основная конфигурация
+docker-compose.keycloak.yml  # Keycloak overlay
+.env.example                 # Шаблон переменных
+├── ekahau_bom_web/
+│   ├── backend/
+│   │   └── Dockerfile      # Multi-stage Python build
+│   └── frontend/
+│       └── ekahau-bom-ui/
+│           ├── Dockerfile  # Node.js + Nginx
+│           └── nginx.conf  # Reverse proxy config
+```
+
+### Сборка и запуск
+
+```bash
+# Простой режим
+docker-compose up --build
+
+# С Keycloak SSO
+docker-compose -f docker-compose.yml \
+  -f docker-compose.keycloak.yml up --build
+```
+
+### Backend Dockerfile
+
+Multi-stage сборка:
+1. **Builder stage**: pip install зависимостей
+2. **Runtime stage**: минимальный образ с WeasyPrint
+
+Healthcheck: `/health` endpoint
+
+### Frontend Dockerfile
+
+Multi-stage сборка:
+1. **Builder stage**: npm build Angular приложения
+2. **Runtime stage**: Nginx с SPA конфигурацией
+
+Nginx обрабатывает:
+- `/api/*` → proxy к backend
+- `/ws/*` → WebSocket proxy
+- `/*` → Angular SPA
+
+### Переменные окружения
+
+См. `.env.example` для полного списка:
+- `AUTH_BACKEND`: simple или oauth2
+- `OAUTH2_*`: настройки OAuth2
+- `STORAGE_BACKEND`: local или s3
+- `S3_*`: настройки S3
 
 ---
 
@@ -397,7 +528,7 @@ Closes #42
 
 ---
 
-**Версия**: 2.4.0
-**Последнее обновление**: 2024
+**Версия**: 3.5.0
+**Последнее обновление**: 2025-12-15
 
 **Автор**: Pavel Semenischev @htechno
