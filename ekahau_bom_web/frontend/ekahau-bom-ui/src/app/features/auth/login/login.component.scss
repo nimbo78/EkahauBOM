@@ -95,3 +95,42 @@
     font-weight: 600 !important;
   }
 }
+
+// Responsive Design - Mobile
+@media (max-width: 480px) {
+  .login-container {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 3rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+  }
+
+  :host ::ng-deep {
+    .login-card header h1 {
+      font-size: 24px;
+    }
+
+    .login-card header span[tuiSubtitle] {
+      font-size: 14px;
+    }
+  }
+
+  .login-form {
+    gap: 1rem;
+    padding-top: 1rem;
+  }
+
+  .login-button,
+  .sso-button {
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .sso-hint {
+    font-size: 13px;
+  }
+}

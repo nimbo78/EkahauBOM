@@ -648,6 +648,233 @@ import { Subscription } from 'rxjs';
         background-color: rgba(244, 67, 54, 0.1);
         color: #f44336;
       }
+
+      /* Responsive Design - Tablet */
+      @media (max-width: 1024px) {
+        .batch-detail-container {
+          padding: 16px;
+        }
+
+        .info-cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .projects-table table {
+          th:nth-child(4),
+          td:nth-child(4),
+          th:nth-child(5),
+          td:nth-child(5) {
+            display: none; /* Hide Processing Time & APs on tablet */
+          }
+        }
+      }
+
+      /* Responsive Design - Mobile */
+      @media (max-width: 768px) {
+        .batch-detail-container {
+          padding: 12px;
+        }
+
+        .page-header {
+          flex-direction: column;
+          gap: 16px;
+          align-items: stretch;
+        }
+
+        .header-actions {
+          flex-direction: column;
+          gap: 8px;
+
+          button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        .batch-header {
+          flex-direction: column;
+          gap: 12px;
+          align-items: flex-start;
+
+          h1 {
+            font-size: 24px;
+          }
+        }
+
+        .info-cards {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .info-card {
+          padding: 16px;
+        }
+
+        .section {
+          padding: 16px;
+          margin-bottom: 16px;
+        }
+
+        .section-title {
+          font-size: 16px;
+          margin-bottom: 16px;
+        }
+
+        .tags-section {
+          .add-tag-input {
+            flex-direction: column;
+            gap: 8px;
+
+            .tag-input {
+              width: 100%;
+            }
+
+            button {
+              width: 100%;
+            }
+          }
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+
+        .stat-item {
+          padding: 12px;
+        }
+
+        .stat-value {
+          font-size: 20px;
+        }
+
+        /* Mobile card layout for projects table */
+        .projects-table {
+          overflow-x: visible;
+
+          table {
+            display: block;
+
+            thead {
+              display: none;
+            }
+
+            tbody {
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            }
+
+            tr {
+              display: block;
+              background: var(--tui-base-01);
+              border-radius: 8px;
+              padding: 12px;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            td {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 8px 0;
+              border-bottom: 1px solid var(--tui-base-03);
+
+              &:last-child {
+                border-bottom: none;
+                padding-top: 12px;
+                justify-content: flex-start;
+                gap: 8px;
+              }
+
+              &:before {
+                content: attr(data-label);
+                font-weight: 600;
+                font-size: 11px;
+                color: var(--tui-text-03);
+                text-transform: uppercase;
+              }
+
+              /* Hide certain columns on mobile */
+              &:nth-child(1) { display: none; } /* # */
+              &:nth-child(4),
+              &:nth-child(5),
+              &:nth-child(6) { display: none; } /* Processing Time, APs, Antennas */
+            }
+          }
+        }
+
+        .processing-options {
+          padding: 12px;
+        }
+
+        .option-row {
+          flex-direction: column;
+          gap: 4px;
+          align-items: flex-start;
+        }
+      }
+
+      /* Very small screens */
+      @media (max-width: 480px) {
+        .batch-detail-container {
+          padding: 8px;
+        }
+
+        .batch-header h1 {
+          font-size: 20px;
+        }
+
+        .info-card {
+          padding: 12px;
+        }
+
+        .info-label {
+          font-size: 11px;
+        }
+
+        .info-value {
+          font-size: 14px;
+
+          &.monospace {
+            font-size: 12px;
+            word-break: break-all;
+          }
+        }
+
+        .section {
+          padding: 12px;
+        }
+
+        .section-title {
+          font-size: 15px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .stat-item {
+          padding: 10px;
+        }
+
+        .stat-label {
+          font-size: 10px;
+        }
+
+        .stat-value {
+          font-size: 18px;
+        }
+
+        .tags-section .tags-list .tag-badge {
+          font-size: 12px;
+        }
+      }
     `,
   ],
 })

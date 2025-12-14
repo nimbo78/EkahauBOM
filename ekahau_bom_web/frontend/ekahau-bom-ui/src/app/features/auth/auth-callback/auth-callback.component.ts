@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TuiLoader, TuiNotification, TuiButton } from '@taiga-ui/core';
-import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
+import { TuiCardLarge } from '@taiga-ui/layout';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -14,7 +14,6 @@ import { AuthService } from '../../../core/services/auth.service';
     TuiNotification,
     TuiButton,
     TuiCardLarge,
-    TuiHeader,
   ],
   template: `
     <div class="callback-container">

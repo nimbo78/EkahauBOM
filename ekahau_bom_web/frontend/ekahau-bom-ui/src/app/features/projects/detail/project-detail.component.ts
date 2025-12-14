@@ -1484,6 +1484,317 @@ import { NotesData } from '../../../core/models/notes.model';
         color: #ffffff;
       }
     }
+
+    /* Responsive Design - Tablet */
+    @media (max-width: 1024px) {
+      .project-detail-container {
+        padding: 1.5rem;
+      }
+
+      .project-content {
+        padding: 1.5rem;
+      }
+
+      .info-cards {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      }
+
+      .visualizations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .lightbox-nav {
+        width: 3rem;
+        height: 3rem;
+      }
+
+      .lightbox-nav-prev {
+        left: 1rem;
+      }
+
+      .lightbox-nav-next {
+        right: 1rem;
+      }
+    }
+
+    /* Responsive Design - Mobile */
+    @media (max-width: 768px) {
+      .project-detail-container {
+        padding: 1rem;
+      }
+
+      .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        width: 100%;
+        flex-direction: column;
+
+        button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      .project-content {
+        padding: 1rem;
+      }
+
+      .project-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .project-meta {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .project-meta span:nth-child(even) {
+        display: none; /* Hide bullet separators */
+      }
+
+      .tab-buttons {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 0.75rem;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .tab-card {
+        flex: 0 0 auto;
+        min-width: 100px;
+        scroll-snap-align: start;
+        padding: 1rem;
+      }
+
+      .tab-icon {
+        font-size: 1.5rem;
+      }
+
+      .tab-label {
+        font-size: 0.875rem;
+      }
+
+      .keyboard-shortcuts-hint {
+        display: none; /* Hide on mobile */
+      }
+
+      .info-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .info-card {
+        padding: 1rem;
+      }
+
+      .info-item {
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-start;
+      }
+
+      .info-item .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .badges-container {
+        justify-content: flex-start;
+      }
+
+      .reports-list {
+        gap: 0.75rem;
+      }
+
+      .report-item {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .report-info {
+        width: 100%;
+      }
+
+      .report-actions {
+        width: 100%;
+
+        button {
+          flex: 1;
+        }
+      }
+
+      .visualizations-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .viz-preview {
+        height: 180px;
+      }
+
+      .viz-info {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+
+        button {
+          width: 100%;
+        }
+      }
+
+      .notes-summary {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .summary-card {
+        padding: 1rem;
+      }
+
+      .summary-icon {
+        font-size: 2rem;
+      }
+
+      .summary-count {
+        font-size: 1.5rem;
+      }
+
+      .note-item {
+        padding: 1rem;
+      }
+
+      /* Lightbox mobile */
+      .lightbox-content {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .lightbox-close {
+        top: 0.75rem;
+        right: 0.75rem;
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      .lightbox-nav {
+        display: none; /* Use swipe on mobile instead */
+      }
+
+      .lightbox-footer {
+        flex-direction: column;
+        padding: 0.75rem;
+        gap: 0.75rem;
+      }
+
+      .zoom-controls {
+        order: 2;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .image-counter {
+        order: 1;
+      }
+
+      .lightbox-filename {
+        order: 3;
+        min-width: unset;
+        text-align: center;
+        font-size: 0.875rem;
+      }
+
+      .lightbox-footer button[tuiButton] {
+        order: 4;
+        width: 100%;
+      }
+
+      .empty-state {
+        padding: 2rem 1rem;
+      }
+
+      .empty-state tui-icon {
+        font-size: 2.5rem;
+      }
+    }
+
+    /* Very small screens */
+    @media (max-width: 480px) {
+      .project-detail-container {
+        padding: 0.75rem;
+      }
+
+      .project-content {
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+      }
+
+      .project-header h1 {
+        font-size: 1.25rem;
+      }
+
+      .project-meta {
+        font-size: 0.75rem;
+      }
+
+      .tab-card {
+        min-width: 85px;
+        padding: 0.75rem;
+        gap: 0.5rem;
+      }
+
+      .tab-icon {
+        font-size: 1.25rem;
+      }
+
+      .tab-label {
+        font-size: 0.75rem;
+      }
+
+      .info-card h3 {
+        font-size: 1rem;
+      }
+
+      .report-name {
+        font-size: 0.875rem;
+        word-break: break-all;
+      }
+
+      .viz-preview {
+        height: 150px;
+      }
+
+      .summary-card {
+        padding: 0.75rem;
+        gap: 0.75rem;
+      }
+
+      .summary-icon {
+        font-size: 1.5rem;
+      }
+
+      .summary-count {
+        font-size: 1.25rem;
+      }
+
+      .summary-label {
+        font-size: 0.75rem;
+      }
+
+      .notes-section h3 {
+        font-size: 1rem;
+      }
+    }
   `]
 })
 export class ProjectDetailComponent implements OnInit {

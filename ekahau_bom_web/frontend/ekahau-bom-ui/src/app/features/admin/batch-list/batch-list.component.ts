@@ -417,6 +417,82 @@ import { Subscription } from 'rxjs';
             </table>
           </cdk-virtual-scroll-viewport>
         </div>
+
+        <!-- Mobile Cards View -->
+        <div *ngIf="batches().length > 0" class="mobile-cards">
+          <div *ngFor="let batch of batches(); trackBy: trackByBatchId" class="batch-card">
+            <div class="batch-card-header">
+              <a tuiLink [routerLink]="['/admin/batches', batch.batch_id]" class="batch-name">
+                {{ batch.batch_name || 'Unnamed Batch' }}
+              </a>
+              <tui-badge
+                [appearance]="getStatusAppearance(batch.status)"
+                [class]="'status-badge-' + batch.status.toLowerCase()"
+              >
+                {{ batch.status }}
+              </tui-badge>
+            </div>
+            <div class="batch-card-meta">
+              <span class="meta-item">
+                <tui-icon icon="@tui.calendar"></tui-icon>
+                {{ formatDate(batch.created_date) }}
+              </span>
+            </div>
+            <div class="batch-card-stats">
+              <div class="stat-item">
+                <span class="stat-label">Total</span>
+                <span class="stat-value">{{ batch.total_projects }}</span>
+              </div>
+              <div class="stat-item success">
+                <span class="stat-label">Success</span>
+                <span class="stat-value">{{ batch.successful_projects }}</span>
+              </div>
+              <div class="stat-item" [class.error]="batch.failed_projects > 0">
+                <span class="stat-label">Failed</span>
+                <span class="stat-value">{{ batch.failed_projects }}</span>
+              </div>
+            </div>
+            <div *ngIf="batch.tags && batch.tags.length > 0" class="batch-card-tags">
+              <tui-badge
+                *ngFor="let tag of batch.tags"
+                [appearance]="'accent'"
+                size="s"
+              >
+                {{ tag }}
+              </tui-badge>
+            </div>
+            <div class="batch-card-actions">
+              <button
+                tuiButton
+                appearance="primary"
+                size="s"
+                [routerLink]="['/admin/batches', batch.batch_id]"
+              >
+                <tui-icon icon="@tui.eye"></tui-icon>
+                View
+              </button>
+              <button
+                *ngIf="batch.status === BatchStatus.PENDING"
+                tuiButton
+                appearance="secondary"
+                size="s"
+                (click)="startProcessing(batch.batch_id)"
+              >
+                <tui-icon icon="@tui.play"></tui-icon>
+                Process
+              </button>
+              <button
+                tuiButton
+                appearance="flat"
+                size="s"
+                (click)="confirmDelete(batch)"
+                class="delete-btn"
+              >
+                <tui-icon icon="@tui.trash-2"></tui-icon>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Hint templates -->
@@ -886,6 +962,270 @@ import { Subscription } from 'rxjs';
       .status-badge-failed {
         background-color: rgba(244, 67, 54, 0.1);
         color: #f44336;
+      }
+
+      /* Mobile Cards - Hidden by default on desktop */
+      .mobile-cards {
+        display: none;
+      }
+
+      /* Responsive Design - Tablet */
+      @media (max-width: 1024px) {
+        .batches-container {
+          padding: 16px;
+        }
+
+        .filters-grid {
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .stats-cards {
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+          gap: 12px;
+        }
+
+        .stat-card {
+          padding: 16px;
+        }
+
+        .stat-value {
+          font-size: 28px;
+        }
+
+        .batches-table {
+          th:nth-child(2), td:nth-child(2) { display: none; } // Hide Tags
+        }
+      }
+
+      /* Responsive Design - Mobile */
+      @media (max-width: 768px) {
+        .batches-container {
+          padding: 12px;
+        }
+
+        .page-header {
+          flex-direction: column;
+          gap: 16px;
+          align-items: stretch;
+
+          button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        .page-title {
+          font-size: 22px;
+        }
+
+        .filters-section {
+          padding: 16px;
+          margin-bottom: 16px;
+        }
+
+        .filters-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .active-filters {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .stats-cards {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+
+        .stat-card {
+          padding: 12px;
+          border-radius: 8px;
+        }
+
+        .stat-value {
+          font-size: 22px;
+          margin-bottom: 4px;
+        }
+
+        .stat-label {
+          font-size: 12px;
+        }
+
+        /* Hide table, show cards */
+        .table-container {
+          display: none;
+        }
+
+        .table-wrapper {
+          background: transparent;
+          border-radius: 0;
+          overflow: visible;
+        }
+
+        /* Mobile card layout */
+        .batches-table-header {
+          display: none;
+        }
+
+        .virtual-scroll-viewport {
+          height: auto;
+          min-height: auto;
+        }
+
+        .batches-table-body {
+          display: none;
+        }
+
+        .empty-state {
+          padding: 32px 16px;
+
+          tui-icon {
+            font-size: 48px;
+          }
+        }
+
+        /* Mobile cards visible on mobile */
+        .mobile-cards {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .batch-card {
+          background: var(--tui-base-02);
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .batch-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .batch-name {
+          font-weight: 600;
+          font-size: 16px;
+          line-height: 1.3;
+          flex: 1;
+          word-break: break-word;
+        }
+
+        .batch-card-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 13px;
+          color: var(--tui-text-02);
+
+          tui-icon {
+            font-size: 14px;
+          }
+        }
+
+        .batch-card-stats {
+          display: flex;
+          gap: 16px;
+          padding: 12px 0;
+          border-top: 1px solid var(--tui-base-04);
+          border-bottom: 1px solid var(--tui-base-04);
+        }
+
+        .batch-card-stats .stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex: 1;
+
+          .stat-label {
+            font-size: 11px;
+            color: var(--tui-text-03);
+            text-transform: uppercase;
+          }
+
+          .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--tui-text-01);
+          }
+
+          &.success .stat-value {
+            color: var(--tui-positive);
+          }
+
+          &.error .stat-value {
+            color: var(--tui-negative);
+          }
+        }
+
+        .batch-card-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .batch-card-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 4px;
+
+          button {
+            flex: 1;
+            min-height: 44px;
+          }
+
+          .delete-btn {
+            flex: 0 0 44px;
+            background-color: #fce8e6;
+            color: #e01f19;
+            border: 1px solid #e01f19;
+            border-radius: 8px;
+          }
+        }
+      }
+
+      /* Very small screens */
+      @media (max-width: 480px) {
+        .batches-container {
+          padding: 8px;
+        }
+
+        .page-title {
+          font-size: 20px;
+        }
+
+        .filters-section {
+          padding: 12px;
+        }
+
+        .stats-cards {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+        }
+
+        .stat-card {
+          padding: 10px;
+        }
+
+        .stat-value {
+          font-size: 20px;
+        }
+
+        .stat-label {
+          font-size: 11px;
+        }
       }
     `,
   ],
