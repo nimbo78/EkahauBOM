@@ -1,17 +1,20 @@
 """Scheduler service for automated batch processing."""
 
+import asyncio
 import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.jobstores.memory import MemoryJobStore
 
 from app.models import (
+    ProcessingRequest,
     Schedule,
     ScheduleCreateRequest,
     ScheduleListItem,
@@ -21,18 +24,24 @@ from app.models import (
     TriggerType,
 )
 
+if TYPE_CHECKING:
+    from app.services.batch_service import BatchService
+    from app.services.storage_service import StorageService
+    from app.services.notification_service import NotificationService
+
 logger = logging.getLogger(__name__)
 
 
 class SchedulerService:
     """Service for managing scheduled batch processing jobs using APScheduler."""
 
-    def __init__(self, storage_dir: str = "data/schedules"):
+    def __init__(self, storage_dir: str = "data/schedules", use_background: bool = False):
         """
         Initialize the scheduler service.
 
         Args:
             storage_dir: Directory for storing schedule metadata and history
+            use_background: Use BackgroundScheduler instead of AsyncIOScheduler (for tests)
         """
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -41,15 +50,59 @@ class SchedulerService:
         self.history_dir = self.storage_dir / "history"
         self.history_dir.mkdir(exist_ok=True)
 
-        # Initialize APScheduler
-        jobstores = {"default": MemoryJobStore()}
-        self.scheduler = AsyncIOScheduler(jobstores=jobstores, timezone="UTC")
-        self.scheduler.start()
+        # Services will be injected later via set_services()
+        self._batch_service: Optional["BatchService"] = None
+        self._storage_service: Optional["StorageService"] = None
+        self._notification_service: Optional["NotificationService"] = None
 
-        # Load existing schedules
+        # In-memory cache of schedules
+        self._schedules: dict[UUID, Schedule] = {}
+
+        # Initialize APScheduler (but don't start yet - no event loop for AsyncIO)
+        jobstores = {"default": MemoryJobStore()}
+        self._use_background = use_background
+        if use_background:
+            self.scheduler = BackgroundScheduler(jobstores=jobstores, timezone="UTC")
+        else:
+            self.scheduler = AsyncIOScheduler(jobstores=jobstores, timezone="UTC")
+        self._started = False
+
+        logger.info(
+            f"SchedulerService initialized (not started yet, "
+            f"scheduler_type={'Background' if use_background else 'AsyncIO'})"
+        )
+
+    def start(self) -> None:
+        """Start the scheduler. Call this after event loop is running (for AsyncIO)."""
+        if self._started:
+            return
+
+        self.scheduler.start()
+        self._started = True
+
+        # Load existing schedules and add to scheduler
         self._load_schedules()
 
-        logger.info("SchedulerService initialized")
+        logger.info("Scheduler started")
+
+    def set_services(
+        self,
+        batch_service: "BatchService",
+        storage_service: "StorageService",
+        notification_service: "NotificationService",
+    ) -> None:
+        """
+        Inject required services for batch processing.
+
+        Args:
+            batch_service: Service for batch operations
+            storage_service: Service for file storage
+            notification_service: Service for notifications
+        """
+        self._batch_service = batch_service
+        self._storage_service = storage_service
+        self._notification_service = notification_service
+        logger.info("SchedulerService: Services injected")
 
     def _load_schedules(self) -> None:
         """Load existing schedules from disk and add them to the scheduler."""
@@ -61,11 +114,14 @@ class SchedulerService:
             with open(self.schedules_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            schedules = [Schedule(**s) for s in data.get("schedules", [])]
-            logger.info(f"Loaded {len(schedules)} schedules from disk")
+            for s in data.get("schedules", []):
+                schedule = Schedule(**s)
+                self._schedules[schedule.schedule_id] = schedule
+
+            logger.info(f"Loaded {len(self._schedules)} schedules from disk")
 
             # Add enabled schedules to APScheduler
-            for schedule in schedules:
+            for schedule in self._schedules.values():
                 if schedule.enabled:
                     self._add_job_to_scheduler(schedule)
 
@@ -75,37 +131,22 @@ class SchedulerService:
     def _save_schedules(self) -> None:
         """Save all schedules to disk."""
         try:
-            schedules = list(self._get_all_schedules().values())
             data = {
-                "schedules": [s.model_dump(mode="json") for s in schedules],
+                "schedules": [s.model_dump(mode="json") for s in self._schedules.values()],
                 "updated_at": datetime.now(UTC).isoformat(),
             }
 
             with open(self.schedules_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
-            logger.debug(f"Saved {len(schedules)} schedules to disk")
+            logger.debug(f"Saved {len(self._schedules)} schedules to disk")
 
         except Exception as e:
             logger.error(f"Failed to save schedules: {e}")
 
     def _get_all_schedules(self) -> dict[UUID, Schedule]:
-        """Get all schedules from memory."""
-        # In production, this would load from database
-        # For now, we load from file each time
-        if not self.schedules_file.exists():
-            return {}
-
-        try:
-            with open(self.schedules_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            schedules = {UUID(s["schedule_id"]): Schedule(**s) for s in data.get("schedules", [])}
-            return schedules
-
-        except Exception as e:
-            logger.error(f"Failed to load schedules: {e}")
-            return {}
+        """Get all schedules from in-memory cache."""
+        return self._schedules
 
     def _add_job_to_scheduler(self, schedule: Schedule) -> None:
         """
@@ -128,10 +169,13 @@ class SchedulerService:
                 replace_existing=True,
             )
 
-            # Update next run time
+            # Update next run time (handle different APScheduler versions)
             job = self.scheduler.get_job(str(schedule.schedule_id))
-            if job and job.next_run_time:
-                schedule.next_run_time = job.next_run_time
+            if job:
+                # APScheduler 3.x uses next_run_time attribute
+                next_run = getattr(job, "next_run_time", None)
+                if next_run:
+                    schedule.next_run_time = next_run
 
             logger.info(
                 f"Added job for schedule '{schedule.name}' (ID: {schedule.schedule_id}), "
@@ -157,7 +201,7 @@ class SchedulerService:
 
     async def _execute_schedule(self, schedule_id: UUID) -> None:
         """
-        Execute a scheduled job.
+        Execute a scheduled job - scan directory, create batch, and process files.
 
         Args:
             schedule_id: Schedule ID to execute
@@ -171,6 +215,11 @@ class SchedulerService:
 
         logger.info(f"Executing schedule '{schedule.name}' (ID: {schedule_id})")
 
+        # Check if services are available
+        if not self._batch_service or not self._storage_service:
+            logger.error("SchedulerService: Services not injected, cannot execute schedule")
+            return
+
         # Record execution start
         run_start = datetime.now(UTC)
         run = ScheduleRun(
@@ -179,51 +228,162 @@ class SchedulerService:
             status=ScheduleStatus.RUNNING,
         )
 
+        batch_metadata = None
+
         try:
-            # TODO: Implement actual batch processing execution
-            # For now, just log the execution
+            # Step 1: Scan directory for .esx files
+            trigger_config = schedule.trigger_config
+            directory = trigger_config.directory
+
+            if not directory:
+                raise ValueError("No directory configured in trigger_config")
+
+            dir_path = Path(directory)
+            if not dir_path.exists():
+                raise FileNotFoundError(f"Directory not found: {directory}")
+
+            # Find matching files
+            pattern = trigger_config.pattern or "*.esx"
+            if trigger_config.recursive:
+                matching_files = list(dir_path.rglob(pattern))
+            else:
+                matching_files = list(dir_path.glob(pattern))
+
+            run.files_found = len(matching_files)
             logger.info(
-                f"Schedule execution for '{schedule.name}' - TODO: implement batch processing"
+                f"Schedule '{schedule.name}': Found {len(matching_files)} files matching '{pattern}'"
             )
 
-            # Update run status
-            run.status = ScheduleStatus.SUCCESS
+            if not matching_files:
+                logger.info(f"Schedule '{schedule.name}': No files found, nothing to process")
+                run.status = ScheduleStatus.SUCCESS
+                run.duration_seconds = (datetime.now(UTC) - run_start).total_seconds()
+                self._save_schedule_run(run)
+                return
+
+            # Step 2: Get processing options from template or defaults
+            processing_options = None
+            if trigger_config.batch_template_id:
+                # Load template and use its processing options
+                from app.services.template_service import template_service
+
+                template = await template_service.get_template(trigger_config.batch_template_id)
+                if template:
+                    processing_options = template.processing_options
+                    logger.info(f"Using template '{template.name}' for processing")
+
+            if not processing_options:
+                # Use default processing options
+                processing_options = ProcessingRequest(
+                    output_formats=["csv", "excel", "html", "json"],
+                    visualize_floor_plans=True,
+                    show_azimuth_arrows=True,
+                    ap_opacity=0.6,
+                )
+
+            # Step 3: Create batch
+            batch_name = f"Scheduled: {schedule.name} - {run_start.strftime('%Y-%m-%d %H:%M')}"
+            batch_metadata = self._batch_service.create_batch(
+                batch_name=batch_name,
+                processing_options=processing_options,
+                parallel_workers=1,
+            )
+            run.batch_id = batch_metadata.batch_id
+            schedule.last_batch_id = batch_metadata.batch_id
+
+            logger.info(f"Schedule '{schedule.name}': Created batch {batch_metadata.batch_id}")
+
+            # Step 4: Add files to batch
+            files_added = 0
+            for file_path in matching_files:
+                try:
+                    with open(file_path, "rb") as f:
+                        file_content = f.read()
+
+                    project_metadata = self._storage_service.save_uploaded_file(
+                        filename=file_path.name,
+                        file_content=file_content,
+                        project_name=file_path.stem,
+                        short_link_days=(
+                            processing_options.short_link_days
+                            if processing_options.create_short_link
+                            else None
+                        ),
+                    )
+
+                    self._batch_service.add_project_to_batch(
+                        batch_metadata.batch_id, project_metadata.project_id
+                    )
+                    files_added += 1
+                    logger.debug(f"Added file to batch: {file_path.name}")
+
+                except Exception as e:
+                    logger.error(f"Error adding file {file_path}: {e}")
+                    continue
+
+            run.files_processed = files_added
+            logger.info(f"Schedule '{schedule.name}': Added {files_added} files to batch")
+
+            if files_added == 0:
+                raise ValueError("No files could be added to batch")
+
+            # Step 5: Process batch
+            logger.info(f"Schedule '{schedule.name}': Starting batch processing")
+            batch_metadata = await self._batch_service.process_batch(batch_metadata.batch_id)
+
+            # Step 6: Update run statistics from batch results
+            run.projects_processed = batch_metadata.statistics.total_projects
+            run.projects_succeeded = batch_metadata.statistics.successful_projects
+            run.projects_failed = batch_metadata.statistics.failed_projects
+
+            # Determine final status
+            if run.projects_failed == 0:
+                run.status = ScheduleStatus.SUCCESS
+            elif run.projects_succeeded == 0:
+                run.status = ScheduleStatus.FAILED
+            else:
+                run.status = ScheduleStatus.PARTIAL
+
             run.duration_seconds = (datetime.now(UTC) - run_start).total_seconds()
 
             # Update schedule metadata
             schedule.last_run_time = run_start
-            schedule.last_run_status = ScheduleStatus.SUCCESS
+            schedule.last_run_status = run.status
             schedule.execution_count += 1
 
-            # Save schedule history
-            self._save_schedule_run(run)
-
-            # Save updated schedule
-            schedules[schedule_id] = schedule
-            self._save_schedules()
-
             logger.info(
-                f"Schedule '{schedule.name}' executed successfully in {run.duration_seconds:.2f}s"
+                f"Schedule '{schedule.name}' completed: {run.projects_succeeded}/{run.projects_processed} "
+                f"projects succeeded in {run.duration_seconds:.2f}s"
             )
 
         except Exception as e:
-            logger.error(f"Schedule execution failed for '{schedule.name}': {e}")
+            logger.error(f"Schedule execution failed for '{schedule.name}': {e}", exc_info=True)
 
-            # Update run status
             run.status = ScheduleStatus.FAILED
             run.error_message = str(e)
             run.duration_seconds = (datetime.now(UTC) - run_start).total_seconds()
 
-            # Update schedule metadata
             schedule.last_run_time = run_start
             schedule.last_run_status = ScheduleStatus.FAILED
 
+        finally:
             # Save schedule history
             self._save_schedule_run(run)
 
             # Save updated schedule
             schedules[schedule_id] = schedule
             self._save_schedules()
+
+            # Step 7: Send notifications
+            if self._notification_service:
+                try:
+                    await self._notification_service.notify_schedule_completed(
+                        schedule=schedule,
+                        run=run,
+                        batch=batch_metadata,
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send notifications: {e}")
 
     def _save_schedule_run(self, run: ScheduleRun) -> None:
         """
@@ -337,8 +497,10 @@ class SchedulerService:
             # Update next run time from scheduler
             if schedule.enabled:
                 job = self.scheduler.get_job(str(schedule.schedule_id))
-                if job and job.next_run_time:
-                    schedule.next_run_time = job.next_run_time
+                if job:
+                    next_run = getattr(job, "next_run_time", None)
+                    if next_run:
+                        schedule.next_run_time = next_run
 
             filtered.append(
                 ScheduleListItem(

@@ -509,6 +509,140 @@ interface FileUploadItem {
       .remove-btn {
         flex-shrink: 0;
       }
+
+      /* Responsive Design - Tablet */
+      @media (max-width: 1024px) {
+        .upload-content {
+          padding: 32px;
+        }
+
+        .file-info {
+          flex: 0 0 180px;
+        }
+
+        .file-actions {
+          gap: 12px;
+        }
+
+        .radio-option {
+          font-size: 13px;
+        }
+      }
+
+      /* Responsive Design - Mobile */
+      @media (max-width: 768px) {
+        .upload-content {
+          padding: 24px;
+          min-height: 300px;
+        }
+
+        .upload-area {
+          padding: 32px 16px;
+        }
+
+        .upload-icon {
+          font-size: 40px;
+        }
+
+        h3 {
+          font-size: 16px;
+        }
+
+        .upload-hint {
+          font-size: 13px;
+        }
+
+        .file-item {
+          flex-direction: column;
+          gap: 12px;
+          align-items: stretch;
+        }
+
+        .file-info {
+          flex: unset;
+          width: 100%;
+        }
+
+        .file-actions {
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .radio-option {
+          padding: 8px 0;
+        }
+
+        .remove-btn {
+          align-self: flex-end;
+        }
+
+        .action-buttons {
+          flex-direction: column;
+          gap: 12px;
+
+          button {
+            width: 100%;
+          }
+        }
+
+        .notification {
+          ul {
+            padding-left: 20px;
+            margin: 8px 0;
+          }
+
+          li {
+            margin-bottom: 4px;
+            font-size: 13px;
+          }
+        }
+      }
+
+      /* Very small screens */
+      @media (max-width: 480px) {
+        .page-title {
+          font-size: 20px;
+        }
+
+        .page-description {
+          font-size: 13px;
+        }
+
+        .upload-content {
+          padding: 16px;
+          border-radius: 8px;
+        }
+
+        .upload-area {
+          padding: 24px 12px;
+        }
+
+        .upload-icon {
+          font-size: 36px;
+        }
+
+        h3 {
+          font-size: 15px;
+        }
+
+        .file-item {
+          padding: 12px;
+        }
+
+        .file-name {
+          font-size: 14px;
+        }
+
+        .section-header h3 {
+          font-size: 16px;
+        }
+
+        .success-content h3,
+        .error-content h3,
+        .duplicate-content h3 {
+          font-size: 16px;
+        }
+      }
     `,
   ],
 })

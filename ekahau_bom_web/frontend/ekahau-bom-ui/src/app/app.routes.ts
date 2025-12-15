@@ -20,6 +20,13 @@ export const routes: Routes = [
       import('./features/auth/logout/logout.component').then((m) => m.LogoutComponent),
   },
   {
+    path: 'auth/callback',
+    loadComponent: () =>
+      import('./features/auth/auth-callback/auth-callback.component').then(
+        (m) => m.AuthCallbackComponent
+      ),
+  },
+  {
     path: 'forbidden',
     loadComponent: () =>
       import('./features/auth/forbidden/forbidden.component').then(

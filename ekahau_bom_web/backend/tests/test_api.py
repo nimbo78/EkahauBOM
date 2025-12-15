@@ -15,6 +15,11 @@ from app.main import app
 from app.models import ProcessingStatus, ProjectMetadata
 from app.services.index import index_service
 from app.services.storage_service import StorageService
+from app.config import settings
+
+# Get credentials from settings
+ADMIN_USERNAME = settings.admin_username
+ADMIN_PASSWORD = settings.admin_password
 
 client = TestClient(app)
 
@@ -49,7 +54,7 @@ def admin_headers():
     """Get admin authentication headers."""
     response = client.post(
         "/api/auth/login",
-        json={"username": "admin", "password": "change_me_in_production"},
+        json={"username": ADMIN_USERNAME, "password": ADMIN_PASSWORD},
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

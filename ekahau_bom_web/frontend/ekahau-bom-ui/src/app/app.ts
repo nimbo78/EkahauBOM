@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, OnInit, inject, HostListener } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { TuiRoot, TuiIcon } from '@taiga-ui/core';
 import { CommonModule } from '@angular/common';
@@ -29,66 +29,97 @@ import { NotificationService } from './core/services/notification.service';
               <img src="logo.svg" alt="Ekahau BOM" class="logo-icon" width="40" height="40">
               <h1 class="app-title">Ekahau BOM Registry</h1>
             </div>
-            <nav class="nav-menu">
-              <a
-                routerLink="/projects"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+
+            <!-- Desktop Navigation -->
+            <nav class="nav-menu desktop-nav">
+              <a routerLink="/projects" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.folder"></tui-icon>
                 Projects
               </a>
-              <a
-                routerLink="/admin/upload"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+              <a routerLink="/admin/upload" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.upload"></tui-icon>
                 Upload
               </a>
-              <a
-                routerLink="/admin/batch-upload"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+              <a routerLink="/admin/batch-upload" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.upload-cloud"></tui-icon>
-                Batch Upload
+                Batch
               </a>
-              <a
-                routerLink="/admin/batches"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+              <a routerLink="/admin/batches" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.layers"></tui-icon>
                 Batches
               </a>
-              <a
-                routerLink="/admin/templates"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+              <a routerLink="/admin/templates" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.layout"></tui-icon>
                 Templates
               </a>
-              <a
-                routerLink="/admin/watch-mode"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+              <a routerLink="/admin/watch-mode" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.eye"></tui-icon>
-                Watch Mode
+                Watch
               </a>
-              <a
-                routerLink="/admin/reports"
-                routerLinkActive="active"
-                class="nav-link"
-              >
+              <a routerLink="/admin/reports" routerLinkActive="active" class="nav-link">
                 <tui-icon icon="@tui.bar-chart"></tui-icon>
                 Reports
               </a>
             </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button
+              class="mobile-menu-btn"
+              (click)="toggleMobileMenu()"
+              [attr.aria-expanded]="mobileMenuOpen()"
+              aria-label="Toggle menu"
+            >
+              <tui-icon [icon]="mobileMenuOpen() ? '@tui.x' : '@tui.menu'"></tui-icon>
+            </button>
           </div>
         </header>
+
+        <!-- Mobile Navigation Overlay -->
+        <div
+          *ngIf="mobileMenuOpen()"
+          class="mobile-nav-overlay"
+          (click)="closeMobileMenu()"
+        ></div>
+
+        <!-- Mobile Navigation Menu -->
+        <nav
+          class="mobile-nav"
+          [class.open]="mobileMenuOpen()"
+          *ngIf="shouldShowHeader()"
+        >
+          <a routerLink="/projects" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.folder"></tui-icon>
+            Projects
+          </a>
+          <a routerLink="/admin/upload" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.upload"></tui-icon>
+            Upload
+          </a>
+          <a routerLink="/admin/batch-upload" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.upload-cloud"></tui-icon>
+            Batch Upload
+          </a>
+          <a routerLink="/admin/batches" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.layers"></tui-icon>
+            Batches
+          </a>
+          <a routerLink="/admin/templates" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.layout"></tui-icon>
+            Templates
+          </a>
+          <a routerLink="/admin/watch-mode" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.eye"></tui-icon>
+            Watch Mode
+          </a>
+          <a routerLink="/admin/reports" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.bar-chart"></tui-icon>
+            Reports
+          </a>
+          <a routerLink="/admin/schedules" routerLinkActive="active" class="mobile-nav-link" (click)="closeMobileMenu()">
+            <tui-icon icon="@tui.clock"></tui-icon>
+            Schedules
+          </a>
+        </nav>
 
         <!-- Notification Permission Banner -->
         <div *ngIf="showNotificationBanner()" class="notification-banner">
@@ -126,12 +157,29 @@ export class App implements OnInit {
   title = 'Ekahau BOM Registry';
   isShortLinkMode = signal(false);
   showNotificationBanner = signal(false);
+  mobileMenuOpen = signal(false);
 
   private router = inject(Router);
   private routerLoadingService = inject(RouterLoadingService);
   private performanceService = inject(PerformanceService);
   private keyboardService = inject(KeyboardService); // Initialize global keyboard shortcuts
   private notificationService = inject(NotificationService);
+
+  // Close mobile menu on window resize to desktop
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth > 768 && this.mobileMenuOpen()) {
+      this.mobileMenuOpen.set(false);
+    }
+  }
+
+  // Close mobile menu on Escape key
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    if (this.mobileMenuOpen()) {
+      this.mobileMenuOpen.set(false);
+    }
+  }
 
   ngOnInit(): void {
     // Measure initial page load performance
@@ -211,5 +259,13 @@ export class App implements OnInit {
     }
 
     return true;
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update(open => !open);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
   }
 }

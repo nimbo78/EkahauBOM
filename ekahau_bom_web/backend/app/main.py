@@ -8,6 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, batches, notes, projects, reports, schedules, templates, upload, websocket
 from app.config import settings
 from app.services.index import index_service
+from app.services.scheduler_service import scheduler_service
+from app.services.batch_service import batch_service
+from app.services.storage_service import storage_service
+from app.services.notification_service import notification_service
 
 
 @asynccontextmanager
@@ -20,11 +24,22 @@ async def lifespan(app: FastAPI):
     index_service.load_from_disk()
     print(f"Loaded {index_service.count()} projects from index")
 
+    # Inject services into scheduler for batch processing
+    scheduler_service.set_services(
+        batch_service=batch_service,
+        storage_service=storage_service,
+        notification_service=notification_service,
+    )
+    # Start scheduler (now that event loop is running)
+    scheduler_service.start()
+    print("Scheduler services injected and started")
+
     yield
 
-    # Shutdown: Save index to disk
+    # Shutdown: Save index to disk and stop scheduler
+    scheduler_service.shutdown()
     index_service.save_to_disk()
-    print("Index saved to disk")
+    print("Index saved to disk, scheduler stopped")
 
 
 app = FastAPI(

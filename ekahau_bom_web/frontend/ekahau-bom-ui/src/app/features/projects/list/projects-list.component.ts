@@ -618,6 +618,165 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
         flex: 0 0 300px;
       }
     }
+
+    // ==========================================
+    // RESPONSIVE STYLES
+    // ==========================================
+
+    // Tablet
+    @media (max-width: 1024px) {
+      .projects-container {
+        padding: 1.5rem;
+      }
+
+      .stats-cards {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .projects-table-header th:nth-child(6),
+      .projects-table td:nth-child(6) { display: none; } // Hide Short Link
+
+      .keyboard-shortcuts-hint {
+        display: none;
+      }
+    }
+
+    // Mobile
+    @media (max-width: 768px) {
+      .projects-container {
+        padding: 1rem;
+      }
+
+      .page-title {
+        font-size: 1.5rem;
+      }
+
+      .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+      }
+
+      .search-row {
+        flex-direction: column;
+        align-items: stretch;
+
+        .search-input {
+          flex: 1;
+          max-width: 100%;
+        }
+      }
+
+      .keyboard-shortcuts-hint {
+        display: none;
+      }
+
+      // Hide table header on mobile
+      .projects-table-header {
+        display: none;
+      }
+
+      // Convert table to card layout
+      .table-container {
+        height: auto;
+        max-height: none;
+      }
+
+      .virtual-scroll-viewport {
+        height: auto !important;
+        max-height: calc(100vh - 400px);
+      }
+
+      .projects-table {
+        display: block;
+
+        tbody {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        tr {
+          display: block !important;
+          background: var(--tui-base-02);
+          border-radius: 0.5rem;
+          padding: 1rem;
+          height: auto !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        td {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid var(--tui-base-03);
+
+          &:last-child {
+            border-bottom: none;
+            padding-top: 0.75rem;
+            justify-content: flex-end;
+          }
+
+          &:before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--tui-text-02);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+          }
+        }
+
+        // Hide columns that don't work well on mobile
+        td:nth-child(2), // File Name
+        td:nth-child(6) { // Short Link
+          display: none;
+        }
+      }
+
+      .actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .empty-state {
+        padding: 2rem 1rem;
+
+        tui-icon {
+          font-size: 2.5rem;
+        }
+
+        h3 {
+          font-size: 1.125rem;
+        }
+      }
+    }
+
+    // Very small screens
+    @media (max-width: 480px) {
+      .stats-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat-card.failed {
+        grid-column: span 2;
+      }
+
+      .stat-value {
+        font-size: 1.25rem;
+      }
+    }
   `]
 })
 export class ProjectsListComponent implements OnInit, OnDestroy {

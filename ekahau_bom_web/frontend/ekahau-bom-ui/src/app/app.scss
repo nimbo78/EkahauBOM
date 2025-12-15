@@ -78,6 +78,96 @@
   }
 }
 
+// Mobile menu button (hamburger)
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--tui-text-01);
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: var(--tui-base-03);
+  }
+
+  tui-icon {
+    font-size: 24px;
+  }
+}
+
+// Mobile navigation overlay (backdrop)
+.mobile-nav-overlay {
+  display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+// Mobile navigation slide-out menu
+.mobile-nav {
+  display: none;
+  position: fixed;
+  top: 64px;
+  right: -280px;
+  width: 280px;
+  height: calc(100vh - 64px);
+  background: var(--tui-base-02);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  padding: 16px 0;
+  overflow-y: auto;
+  transition: right 0.3s ease;
+
+  &.open {
+    right: 0;
+  }
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  text-decoration: none;
+  color: var(--tui-text-02);
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-height: 48px; // Touch-friendly
+
+  &:hover,
+  &:active {
+    background: var(--tui-base-03);
+    color: var(--tui-text-01);
+  }
+
+  &.active {
+    background: var(--tui-primary-hover);
+    color: var(--tui-primary);
+    border-left: 3px solid var(--tui-primary);
+  }
+
+  tui-icon {
+    font-size: 20px;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .app-content {
   flex: 1;
   overflow-y: auto;
@@ -88,27 +178,68 @@
   box-sizing: border-box;
 }
 
-// Responsive design
+// Responsive design - Tablet
+@media (max-width: 1024px) {
+  .nav-link {
+    padding: 8px 10px;
+    font-size: 13px;
+    gap: 6px;
+
+    tui-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+// Responsive design - Mobile
 @media (max-width: 768px) {
   .header-content {
     padding: 0 16px;
   }
 
   .app-title {
-    font-size: 18px;
+    font-size: 16px;
   }
 
-  .nav-link {
-    padding: 8px 12px;
-    font-size: 13px;
+  // Hide desktop nav, show hamburger
+  .desktop-nav {
+    display: none;
+  }
 
-    tui-icon {
-      font-size: 16px;
-    }
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .mobile-nav-overlay {
+    display: block;
+  }
+
+  .mobile-nav {
+    display: block;
   }
 
   .app-content {
     padding: 16px;
+  }
+}
+
+// Very small screens
+@media (max-width: 480px) {
+  .header-content {
+    padding: 0 12px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .app-title {
+    font-size: 14px;
+  }
+
+  .app-content {
+    padding: 12px;
   }
 }
 

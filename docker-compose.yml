@@ -1,0 +1,72 @@
+# EkahauBOM Web Application - Docker Compose
+# Usage: docker-compose up --build
+
+services:
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: ekahau_bom_web/backend/Dockerfile
+    container_name: ekahau-bom-backend
+    restart: unless-stopped
+    environment:
+      # Authentication backend: "simple" (default) or "oauth2"
+      - AUTH_BACKEND=${AUTH_BACKEND:-simple}
+      # Simple auth credentials (only used when AUTH_BACKEND=simple)
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-me-in-production}
+      # OAuth2 settings (only used when AUTH_BACKEND=oauth2)
+      - OAUTH2_ISSUER=${OAUTH2_ISSUER:-}
+      - OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID:-}
+      - OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET:-}
+      - OAUTH2_REDIRECT_URI=${OAUTH2_REDIRECT_URI:-}
+      - OAUTH2_ADMIN_ROLE=${OAUTH2_ADMIN_ROLE:-ekahau-admin}
+      - OAUTH2_USER_ROLE=${OAUTH2_USER_ROLE:-ekahau-user}
+      # Storage settings
+      - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
+      - STORAGE_BASE_PATH=/data
+      # AWS S3 settings (only used when STORAGE_BACKEND=s3)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+    volumes:
+      - ekahau-data:/data
+    networks:
+      - ekahau-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Angular Frontend with Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: ekahau_bom_web/frontend/ekahau-bom-ui/Dockerfile
+    container_name: ekahau-bom-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ekahau-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  ekahau-network:
+    driver: bridge
+
+volumes:
+  ekahau-data:
+    driver: local

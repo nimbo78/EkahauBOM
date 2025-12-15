@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -37,8 +37,8 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
-  private authService = inject(AuthService);
+export class LoginComponent implements OnInit {
+  protected authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -49,6 +49,26 @@ export class LoginComponent {
 
   error = signal<string | null>(null);
   loading = signal<boolean>(false);
+  authInfoLoading = signal<boolean>(true);
+
+  ngOnInit(): void {
+    // Check if already authenticated
+    if (this.authService.isAuthenticated()) {
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/projects';
+      this.router.navigate([returnUrl]);
+      return;
+    }
+
+    // Load auth backend info
+    this.authService.getAuthInfo().subscribe({
+      next: () => {
+        this.authInfoLoading.set(false);
+      },
+      error: () => {
+        this.authInfoLoading.set(false);
+      }
+    });
+  }
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
@@ -78,5 +98,12 @@ export class LoginComponent {
         }
       },
     });
+  }
+
+  loginWithSSO(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/projects';
+    this.authService.redirectToOAuth2Login(returnUrl);
   }
 }

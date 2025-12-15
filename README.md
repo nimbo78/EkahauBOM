@@ -26,40 +26,59 @@ The ultimate toolkit for **Wi-Fi engineers** to generate equipment lists, visual
 
 ---
 
-## 🌟 What's New in v3.4.0
+## 🌟 What's New in v3.5.0
 
-### 🤖 Automated Workflows - "Set It and Forget It"
+### 🐳 Docker Containerization (NEW!)
 
-**Schedule batch processing** with cron expressions and get notified when complete:
-
-```
-⏰ "Process //fileserver/ekahau/*.esx at 02:00 daily"
-📧 → Email report to team
-💬 → Slack notification to #wifi-team
-🔗 → Webhook to Jira/ServiceNow
+**One-command deployment:**
+```bash
+docker-compose up --build
+# Open http://localhost:8080
 ```
 
-**80% reduction in manual work** - No more clicking "Upload" every day!
+**With Keycloak SSO:**
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up --build
+```
 
-### ⚡ Real-Time Everything
+### 🔐 OAuth2/SSO Authentication (NEW!)
 
-- **WebSocket updates** - See processing status instantly (90% less polling)
-- **Live dashboard** - Charts update as batches complete
-- **Instant notifications** - Know immediately when processing finishes
+**Supported providers:**
+- Keycloak (recommended)
+- Azure AD / Entra ID
+- Okta, Google Workspace
+- Any OIDC-compliant provider
 
-### 📋 One-Click Templates
+**Features:**
+- Single Sign-On (SSO)
+- Role-based access (admin, user)
+- Multi-factor authentication (via IdP)
 
-Save your favorite processing configurations and apply with one click:
-- 🏃 **Quick**: CSV only, fastest processing
-- 📊 **Standard**: CSV + Excel + Floor plans
-- 📑 **Detailed**: All formats + analytics + azimuth arrows
+### 📱 Mobile-Friendly UI (NEW!)
 
-### 💾 Enterprise Storage
+**Responsive design:**
+- Hamburger menu on mobile devices
+- Card-based views instead of tables
+- Touch-friendly elements (min. 44px)
+- Breakpoints: 1024px, 768px, 480px
 
-**S3-compatible storage** for unlimited scalability:
-- AWS S3, MinIO, Wasabi, DigitalOcean Spaces
-- Zero egress fees with Cloudflare R2
-- Automatic redundancy and backup
+### 🤖 Automation (v3.4.0)
+
+**Scheduled batch processing** with cron and notifications:
+- 📧 Email reports to team
+- 💬 Slack notifications
+- 🔗 Webhooks to Jira/ServiceNow
+
+### ⚡ Real-Time Updates
+
+- WebSocket processing status
+- Live dashboard with charts
+- Instant notifications
+
+### 💾 S3 Storage
+
+- AWS S3, MinIO, Wasabi, Cloudflare R2
+- Automatic redundancy
 
 ---
 
@@ -424,7 +443,7 @@ pytest tests/ --cov=ekahau_bom --cov-report=html
 pytest tests/ -m "not slow"
 ```
 
-**Current stats**: 587 tests | 86% coverage | 3 OS × 5 Python versions
+**Current stats**: 600+ tests | 86% coverage | 3 OS × 5 Python versions
 
 ---
 
@@ -442,8 +461,11 @@ pytest tests/ -m "not slow"
 
 ## 🗺️ Roadmap
 
-### ✅ Recently Completed (v3.4.0)
+### ✅ Recently Completed (v3.5.0)
 
+- [x] 🐳 Docker containerization
+- [x] 🔐 OAuth2/Keycloak SSO authentication
+- [x] 📱 Mobile-friendly UI
 - [x] 🤖 Scheduled batch processing with cron
 - [x] 📧 Email/Slack/Webhook notifications
 - [x] ⚡ WebSocket real-time updates
@@ -454,10 +476,9 @@ pytest tests/ -m "not slow"
 
 ### 🔜 Coming Soon
 
-- [ ] 🐳 Docker containerization
-- [ ] 🔐 LDAP/SSO authentication
-- [ ] 📱 Mobile-friendly UI
 - [ ] 🔄 Ekahau Cloud integration
+- [ ] 📊 Project version comparison
+- [ ] 📈 Advanced analytics
 
 ---
 
