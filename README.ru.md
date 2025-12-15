@@ -30,6 +30,12 @@
 
 ### 🐳 Docker контейнеризация (НОВОЕ!)
 
+**Готовые образы из GitHub Container Registry:**
+```bash
+docker pull ghcr.io/nimbo78/ekahau-bom-backend:latest
+docker pull ghcr.io/nimbo78/ekahau-bom-frontend:latest
+```
+
 **Запуск одной командой:**
 ```bash
 docker-compose up --build

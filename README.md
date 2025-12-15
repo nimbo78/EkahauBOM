@@ -30,6 +30,12 @@ The ultimate toolkit for **Wi-Fi engineers** to generate equipment lists, visual
 
 ### 🐳 Docker Containerization (NEW!)
 
+**Pre-built images from GitHub Container Registry:**
+```bash
+docker pull ghcr.io/nimbo78/ekahau-bom-backend:latest
+docker pull ghcr.io/nimbo78/ekahau-bom-frontend:latest
+```
+
 **One-command deployment:**
 ```bash
 docker-compose up --build
