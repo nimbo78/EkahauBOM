@@ -4,6 +4,8 @@ Generates PNG images showing changes between two project versions
 with colored markers and movement arrows.
 """
 
+from __future__ import annotations
+
 import logging
 import math
 import zipfile
