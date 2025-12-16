@@ -165,13 +165,25 @@ import { NotesData } from '../../../core/models/notes.model';
               <tui-icon icon="@tui.message-circle" class="tab-icon"></tui-icon>
               <span class="tab-label">Notes</span>
             </div>
+            <div
+              class="tab-card"
+              [class.active]="activeTab() === 'comparison'"
+              [class.disabled]="!comparisonSummary()?.has_comparison"
+              (click)="comparisonSummary()?.has_comparison && setActiveTab('comparison')"
+            >
+              <tui-icon icon="@tui.git-compare" class="tab-icon"></tui-icon>
+              <span class="tab-label">Comparison</span>
+              <tui-badge *ngIf="comparisonSummary()?.has_comparison && comparisonSummary()?.total_changes > 0" appearance="warning" style="position: absolute; top: 0.5rem; right: 0.5rem;">
+                {{ comparisonSummary()?.total_changes }}
+              </tui-badge>
+            </div>
           </div>
 
           <!-- Keyboard shortcuts hint -->
           <div class="keyboard-shortcuts-hint">
             <tui-icon icon="@tui.command" style="font-size: 14px; margin-right: 0.25rem;"></tui-icon>
             <span class="hint-text">
-              Use <kbd>←</kbd> <kbd>→</kbd> or <kbd>1</kbd>-<kbd>4</kbd> to switch tabs
+              Use <kbd>←</kbd> <kbd>→</kbd> or <kbd>1</kbd>-<kbd>5</kbd> to switch tabs
             </span>
           </div>
 
@@ -588,6 +600,160 @@ import { NotesData } from '../../../core/models/notes.model';
                   <tui-icon icon="@tui.message-circle"></tui-icon>
                   <p>No notes found in this project</p>
                 </div>
+              </div>
+            </div>
+
+            <!-- Comparison Tab -->
+            <div *ngIf="activeTab() === 'comparison'" class="comparison-tab">
+              <div *ngIf="loadingComparison()" class="loading-state">
+                <tui-loader size="m"></tui-loader>
+                <p>Loading comparison data...</p>
+              </div>
+
+              <div *ngIf="!loadingComparison() && comparisonData()">
+                <!-- Comparison Header -->
+                <div class="comparison-header">
+                  <h3>
+                    <tui-icon icon="@tui.git-compare"></tui-icon>
+                    Version Comparison
+                  </h3>
+                  <div class="comparison-meta">
+                    <span>{{ comparisonData()?.project_a_filename }} → {{ comparisonData()?.project_b_filename }}</span>
+                    <span>•</span>
+                    <span>{{ formatDate(comparisonData()?.comparison_timestamp) }}</span>
+                  </div>
+                </div>
+
+                <!-- Change Summary Cards -->
+                <div class="comparison-summary">
+                  <div class="change-card added">
+                    <tui-icon icon="@tui.plus-circle" class="change-icon"></tui-icon>
+                    <div class="change-info">
+                      <span class="change-count">{{ comparisonData()?.inventory?.aps_added || 0 }}</span>
+                      <span class="change-label">Added</span>
+                    </div>
+                  </div>
+                  <div class="change-card removed">
+                    <tui-icon icon="@tui.minus-circle" class="change-icon"></tui-icon>
+                    <div class="change-info">
+                      <span class="change-count">{{ comparisonData()?.inventory?.aps_removed || 0 }}</span>
+                      <span class="change-label">Removed</span>
+                    </div>
+                  </div>
+                  <div class="change-card modified">
+                    <tui-icon icon="@tui.edit" class="change-icon"></tui-icon>
+                    <div class="change-info">
+                      <span class="change-count">{{ comparisonData()?.inventory?.aps_modified || 0 }}</span>
+                      <span class="change-label">Modified</span>
+                    </div>
+                  </div>
+                  <div class="change-card moved">
+                    <tui-icon icon="@tui.move" class="change-icon"></tui-icon>
+                    <div class="change-info">
+                      <span class="change-count">{{ comparisonData()?.inventory?.aps_moved || 0 }}</span>
+                      <span class="change-label">Moved</span>
+                    </div>
+                  </div>
+                  <div class="change-card renamed">
+                    <tui-icon icon="@tui.type" class="change-icon"></tui-icon>
+                    <div class="change-info">
+                      <span class="change-count">{{ comparisonData()?.inventory?.aps_renamed || 0 }}</span>
+                      <span class="change-label">Renamed</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Inventory Summary -->
+                <div class="inventory-summary">
+                  <div class="inventory-card">
+                    <span class="inventory-label">Previous Version</span>
+                    <span class="inventory-value">{{ comparisonData()?.inventory?.old_total_aps || 0 }} APs</span>
+                  </div>
+                  <tui-icon icon="@tui.arrow-right" class="inventory-arrow"></tui-icon>
+                  <div class="inventory-card">
+                    <span class="inventory-label">Current Version</span>
+                    <span class="inventory-value">{{ comparisonData()?.inventory?.new_total_aps || 0 }} APs</span>
+                  </div>
+                </div>
+
+                <!-- Visual Diff Images -->
+                <div *ngIf="Object.keys(comparisonDiffImages()).length > 0" class="diff-images-section">
+                  <h4>
+                    <tui-icon icon="@tui.image"></tui-icon>
+                    Floor Plan Diffs
+                  </h4>
+                  <div class="diff-images-grid">
+                    <div *ngFor="let floor of Object.keys(comparisonDiffImages())" class="diff-image-item">
+                      <div class="diff-image-preview" (click)="openDiffLightbox(floor)">
+                        <img [src]="getDiffImageUrl(floor)" [alt]="'Diff: ' + floor" loading="lazy" />
+                        <div class="viz-overlay">
+                          <tui-icon icon="@tui.eye"></tui-icon>
+                        </div>
+                      </div>
+                      <div class="diff-image-info">
+                        <span class="diff-floor-name">{{ floor }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Changes List by Floor -->
+                <div *ngIf="comparisonData()?.ap_changes?.length > 0" class="changes-section">
+                  <h4>
+                    <tui-icon icon="@tui.list"></tui-icon>
+                    Detailed Changes ({{ comparisonData()?.ap_changes?.length }})
+                  </h4>
+                  <div class="changes-list">
+                    <div *ngFor="let change of comparisonData()?.ap_changes" class="change-item" [class]="'change-' + change.status">
+                      <div class="change-header">
+                        <tui-badge [appearance]="getChangeAppearance(change.status)">
+                          {{ change.status }}
+                        </tui-badge>
+                        <span class="change-ap-name">{{ change.ap_name }}</span>
+                        <span class="change-floor">
+                          <tui-icon icon="@tui.map-pin"></tui-icon>
+                          {{ change.floor_name }}
+                        </span>
+                      </div>
+                      <div *ngIf="change.status === 'renamed'" class="change-details">
+                        <span>{{ change.old_name }} → {{ change.new_name }}</span>
+                      </div>
+                      <div *ngIf="change.status === 'moved' && change.distance_moved" class="change-details">
+                        <span>Moved {{ change.distance_moved | number:'1.2-2' }}m</span>
+                      </div>
+                      <div *ngIf="change.changes?.length > 0" class="change-details">
+                        <div *ngFor="let field of change.changes" class="field-change">
+                          <span class="field-name">{{ formatFieldName(field.field_name) }}:</span>
+                          <span class="field-old">{{ field.old_value }}</span>
+                          <tui-icon icon="@tui.arrow-right"></tui-icon>
+                          <span class="field-new">{{ field.new_value }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Download Reports -->
+                <div class="comparison-actions">
+                  <button tuiButton appearance="secondary" size="s" (click)="downloadComparisonReport('csv')">
+                    <tui-icon icon="@tui.download"></tui-icon>
+                    Download CSV
+                  </button>
+                  <button tuiButton appearance="secondary" size="s" (click)="downloadComparisonReport('html')">
+                    <tui-icon icon="@tui.download"></tui-icon>
+                    Download HTML
+                  </button>
+                  <button tuiButton appearance="secondary" size="s" (click)="downloadComparisonReport('json')">
+                    <tui-icon icon="@tui.download"></tui-icon>
+                    Download JSON
+                  </button>
+                </div>
+              </div>
+
+              <div *ngIf="!loadingComparison() && !comparisonData()" class="empty-state">
+                <tui-icon icon="@tui.git-compare"></tui-icon>
+                <p>No comparison data available</p>
+                <p class="hint">Upload a new version to generate comparison</p>
               </div>
             </div>
           </div>
@@ -1728,6 +1894,329 @@ import { NotesData } from '../../../core/models/notes.model';
       }
     }
 
+    /* Comparison tab styles */
+    .comparison-tab {
+      padding: 1rem 0;
+    }
+
+    .comparison-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .comparison-header h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0 0 0.5rem;
+    }
+
+    .comparison-header h3 tui-icon {
+      color: var(--tui-primary);
+    }
+
+    .comparison-meta {
+      display: flex;
+      gap: 0.5rem;
+      color: var(--tui-text-02);
+      font-size: 0.875rem;
+    }
+
+    .comparison-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .change-card {
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-left: 4px solid var(--tui-base-03);
+      transition: transform 0.2s ease;
+    }
+
+    .change-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .change-card.added {
+      border-left-color: #28a745;
+    }
+
+    .change-card.added .change-icon {
+      color: #28a745;
+    }
+
+    .change-card.removed {
+      border-left-color: #dc3545;
+    }
+
+    .change-card.removed .change-icon {
+      color: #dc3545;
+    }
+
+    .change-card.modified {
+      border-left-color: #ffc107;
+    }
+
+    .change-card.modified .change-icon {
+      color: #ffc107;
+    }
+
+    .change-card.moved {
+      border-left-color: #17a2b8;
+    }
+
+    .change-card.moved .change-icon {
+      color: #17a2b8;
+    }
+
+    .change-card.renamed {
+      border-left-color: #6f42c1;
+    }
+
+    .change-card.renamed .change-icon {
+      color: #6f42c1;
+    }
+
+    .change-icon {
+      font-size: 2rem;
+    }
+
+    .change-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .change-count {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--tui-text-01);
+    }
+
+    .change-label {
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .inventory-summary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+    }
+
+    .inventory-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .inventory-label {
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .inventory-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--tui-text-01);
+    }
+
+    .inventory-arrow {
+      font-size: 1.5rem;
+      color: var(--tui-primary);
+    }
+
+    .diff-images-section,
+    .changes-section {
+      margin-bottom: 2rem;
+    }
+
+    .diff-images-section h4,
+    .changes-section h4 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .diff-images-section h4 tui-icon,
+    .changes-section h4 tui-icon {
+      color: var(--tui-primary);
+    }
+
+    .diff-images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .diff-image-item {
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .diff-image-preview {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      background: var(--tui-base-03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .diff-image-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .diff-image-preview .viz-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .diff-image-preview:hover .viz-overlay {
+      opacity: 1;
+    }
+
+    .diff-image-preview .viz-overlay tui-icon {
+      color: white;
+      font-size: 2rem;
+    }
+
+    .diff-image-info {
+      padding: 1rem;
+    }
+
+    .diff-floor-name {
+      font-weight: 500;
+    }
+
+    .changes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .change-item {
+      background: var(--tui-base-02);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      border-left: 4px solid var(--tui-base-03);
+    }
+
+    .change-item.change-added {
+      border-left-color: #28a745;
+    }
+
+    .change-item.change-removed {
+      border-left-color: #dc3545;
+    }
+
+    .change-item.change-modified {
+      border-left-color: #ffc107;
+    }
+
+    .change-item.change-moved {
+      border-left-color: #17a2b8;
+    }
+
+    .change-item.change-renamed {
+      border-left-color: #6f42c1;
+    }
+
+    .change-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .change-ap-name {
+      font-weight: 500;
+      color: var(--tui-text-01);
+    }
+
+    .change-floor {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .change-details {
+      padding-left: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--tui-text-02);
+    }
+
+    .field-change {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+    }
+
+    .field-name {
+      font-weight: 500;
+      color: var(--tui-text-01);
+    }
+
+    .field-old {
+      text-decoration: line-through;
+      color: #dc3545;
+    }
+
+    .field-new {
+      color: #28a745;
+    }
+
+    .comparison-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .comparison-actions button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-card {
+      position: relative;
+    }
+
     /* Very small screens */
     @media (max-width: 480px) {
       .project-detail-container {
@@ -1813,7 +2302,7 @@ export class ProjectDetailComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   project = signal<ProjectDetails | null>(null);
-  activeTab = signal<'overview' | 'reports' | 'visualizations' | 'notes'>('overview');
+  activeTab = signal<'overview' | 'reports' | 'visualizations' | 'notes' | 'comparison'>('overview');
 
   loadingReports = signal(false);
   reports = signal<ReportFile[]>([]);
@@ -1824,6 +2313,12 @@ export class ProjectDetailComponent implements OnInit {
   loadingNotes = signal(false);
   notes = signal<NotesData | null>(null);
   notesFilter = signal<'all' | 'text' | 'picture' | 'cable'>('all');
+
+  // Comparison state
+  loadingComparison = signal(false);
+  comparisonSummary = signal<any | null>(null);
+  comparisonData = signal<any | null>(null);
+  comparisonDiffImages = signal<{ [floor: string]: string }>({});
 
   // Lightbox state
   lightboxOpen = signal(false);
@@ -1848,8 +2343,9 @@ export class ProjectDetailComponent implements OnInit {
 
   projectId: string | null = null;
 
-  // Make ProcessingStatus available in template
+  // Make ProcessingStatus and Object available in template
   ProcessingStatus = ProcessingStatus;
+  Object = Object;
 
   ngOnInit(): void {
     // Get project ID from route params or query params (for short links)
@@ -1876,7 +2372,7 @@ export class ProjectDetailComponent implements OnInit {
       return;
     }
 
-    const tabs: Array<'overview' | 'reports' | 'visualizations' | 'notes'> = ['overview', 'reports', 'visualizations', 'notes'];
+    const tabs: Array<'overview' | 'reports' | 'visualizations' | 'notes' | 'comparison'> = ['overview', 'reports', 'visualizations', 'notes', 'comparison'];
     const currentIndex = tabs.indexOf(this.activeTab());
 
     // Arrow keys for tab navigation
@@ -1888,7 +2384,7 @@ export class ProjectDetailComponent implements OnInit {
       this.setActiveTab(tabs[currentIndex + 1]);
     }
 
-    // Number keys (1-4) for direct tab jumping
+    // Number keys (1-5) for direct tab jumping
     else if (event.key === '1') {
       event.preventDefault();
       this.setActiveTab('overview');
@@ -1901,6 +2397,11 @@ export class ProjectDetailComponent implements OnInit {
     } else if (event.key === '4') {
       event.preventDefault();
       this.setActiveTab('notes');
+    } else if (event.key === '5') {
+      event.preventDefault();
+      if (this.comparisonSummary()?.has_comparison) {
+        this.setActiveTab('comparison');
+      }
     }
   }
 
@@ -1920,6 +2421,7 @@ export class ProjectDetailComponent implements OnInit {
         if (project.processing_status === ProcessingStatus.COMPLETED) {
           this.loadReports();
           this.loadVisualizations();
+          this.loadComparisonSummary();
         }
       },
       error: (err) => {
@@ -1947,6 +2449,7 @@ export class ProjectDetailComponent implements OnInit {
         if (project.processing_status === ProcessingStatus.COMPLETED) {
           this.loadReports();
           this.loadVisualizations();
+          this.loadComparisonSummary();
         }
       },
       error: (err) => {
@@ -2014,13 +2517,104 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
+  loadComparisonSummary(): void {
+    if (!this.projectId) {
+      return;
+    }
+
+    this.apiService.getComparisonSummary(this.projectId).subscribe({
+      next: (summary) => {
+        this.comparisonSummary.set(summary);
+      },
+      error: (err) => {
+        console.error('Error loading comparison summary:', err);
+        this.comparisonSummary.set(null);
+      }
+    });
+  }
+
+  loadComparison(): void {
+    if (!this.projectId) {
+      return;
+    }
+
+    this.loadingComparison.set(true);
+
+    this.apiService.getComparison(this.projectId).subscribe({
+      next: (data) => {
+        this.comparisonData.set(data);
+        this.comparisonDiffImages.set(data.diff_images || {});
+        this.loadingComparison.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading comparison:', err);
+        this.comparisonData.set(null);
+        this.loadingComparison.set(false);
+      }
+    });
+  }
+
+  getDiffImageUrl(floorName: string): string {
+    if (!this.projectId) {
+      return '';
+    }
+    return this.apiService.getDiffImageUrl(this.projectId, floorName);
+  }
+
+  openDiffLightbox(floorName: string): void {
+    const url = this.getDiffImageUrl(floorName);
+    if (!url) return;
+
+    this.lightboxImageUrl.set(url);
+    this.lightboxImageName.set(`Diff: ${floorName}`);
+    this.lightboxOpen.set(true);
+    this.resetZoom();
+  }
+
+  formatFieldName(fieldName: string): string {
+    if (!fieldName) return '';
+    // Convert snake_case to human-readable format
+    // e.g., "5GHz_tx_power" -> "5GHz TX Power"
+    return fieldName
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .replace(/ghz/gi, 'GHz')
+      .replace(/tx/gi, 'TX')
+      .replace(/rx/gi, 'RX');
+  }
+
+  downloadComparisonReport(format: 'csv' | 'json' | 'html'): void {
+    if (!this.projectId) {
+      return;
+    }
+    const url = this.apiService.getComparisonReportUrl(this.projectId, format);
+    window.open(url, '_blank');
+  }
+
+  getChangeAppearance(status: string): string {
+    switch (status) {
+      case 'added':
+        return 'success';
+      case 'removed':
+        return 'error';
+      case 'modified':
+        return 'warning';
+      case 'moved':
+        return 'info';
+      case 'renamed':
+        return 'primary';
+      default:
+        return 'neutral';
+    }
+  }
+
   toggleNotesFilter(type: 'text' | 'picture' | 'cable'): void {
     const currentFilter = this.notesFilter();
     // Toggle: if same type clicked, reset to 'all', otherwise set to type
     this.notesFilter.set(currentFilter === type ? 'all' : type);
   }
 
-  setActiveTab(tab: 'overview' | 'reports' | 'visualizations' | 'notes'): void {
+  setActiveTab(tab: 'overview' | 'reports' | 'visualizations' | 'notes' | 'comparison'): void {
     this.activeTab.set(tab);
 
     // Reset notes filter when leaving notes tab
@@ -2031,6 +2625,11 @@ export class ProjectDetailComponent implements OnInit {
     // Load data when switching to specific tabs
     if (tab === 'notes' && !this.notes() && this.project()?.processing_status === ProcessingStatus.COMPLETED) {
       this.loadNotes();
+    }
+
+    // Load comparison data when switching to comparison tab
+    if (tab === 'comparison' && !this.comparisonData() && this.comparisonSummary()?.has_comparison) {
+      this.loadComparison();
     }
   }
 

@@ -14,6 +14,7 @@ Complete command-line reference for EkahauBOM.
 - [Pricing Options](#pricing-options)
 - [Batch Processing](#batch-processing)
 - [Visualization Options](#visualization-options)
+- [Project Comparison](#project-comparison)
 - [Examples](#examples)
 
 ---
@@ -803,6 +804,119 @@ ekahau-bom project.esx --visualize-floor-plans \
 
 ---
 
+## Project Comparison
+
+Compare two versions of an Ekahau project to identify changes in AP inventory, placement, and configuration.
+
+### `--compare FILE`
+
+Compare current project with another .esx file.
+
+- **Type**: Path (to .esx file)
+- **Output**: Comparison reports in `comparison/` subdirectory
+- **Use case**: Track changes between design iterations
+
+**Basic comparison:**
+```bash
+# Compare old version with new version
+ekahau-bom old_design.esx --compare new_design.esx
+
+# With specific output directory
+ekahau-bom old.esx --compare new.esx --output-dir reports/comparison/
+```
+
+### `--match-strategy {name,coordinates,combined}`
+
+Strategy for matching APs between projects.
+
+- **Type**: Choice
+- **Default**: `combined`
+- **Options**:
+  - `name` - Match APs by name only
+  - `coordinates` - Match APs by location coordinates
+  - `combined` - Use name first, then coordinates for unmatched (recommended)
+
+**Examples:**
+```bash
+# Match by name only (strict matching)
+ekahau-bom old.esx --compare new.esx --match-strategy name
+
+# Match by coordinates (useful when APs are renamed)
+ekahau-bom old.esx --compare new.esx --match-strategy coordinates
+
+# Combined matching (default - best results)
+ekahau-bom old.esx --compare new.esx --match-strategy combined
+```
+
+### `--move-threshold METERS`
+
+Distance threshold for detecting AP movement.
+
+- **Type**: Float (meters)
+- **Default**: `0.5`
+- **Use case**: Tune sensitivity of movement detection
+
+**Examples:**
+```bash
+# Default threshold (0.5m)
+ekahau-bom old.esx --compare new.esx
+
+# Stricter threshold (0.1m = 10cm)
+ekahau-bom old.esx --compare new.esx --move-threshold 0.1
+
+# Looser threshold (1m)
+ekahau-bom old.esx --compare new.esx --move-threshold 1.0
+```
+
+### Comparison Output
+
+Comparison generates the following files:
+
+**Reports:**
+- `comparison_changes.csv` - Detailed changes list
+- `comparison_report.xlsx` - Excel report with summary
+- `comparison_report.html` - Interactive HTML report
+
+**Visual Diff:**
+- `comparison/visualizations/diff_{floor_name}.png` - Floor plan with change markers
+
+**Change markers on visual diff:**
+| Change Type | Marker | Description |
+|-------------|--------|-------------|
+| Added | 🟢 Green circle | New AP in project |
+| Removed | 🔴 Red circle | AP was deleted |
+| Modified | 🟡 Yellow circle | Configuration changed |
+| Moved | 🔵→🟣 Arrow | AP moved to new position |
+| Renamed | 🟠 Orange circle | Same position, new name |
+
+### Complete Comparison Example
+
+```bash
+# Full comparison with all options
+ekahau-bom original_design.esx \
+  --compare updated_design.esx \
+  --match-strategy combined \
+  --move-threshold 0.3 \
+  --format csv,excel,html \
+  --visualize-floor-plans \
+  --output-dir reports/design_comparison/
+```
+
+**Output structure:**
+```
+reports/design_comparison/
+├── comparison_changes.csv
+├── comparison_report.xlsx
+├── comparison_report.html
+└── comparison/
+    └── visualizations/
+        ├── diff_Floor_1.png
+        ├── diff_Floor_2.png
+        └── diff_Floor_3.png
+```
+
+---
+
 ## Examples
 
 ### Basic Operations
@@ -934,6 +1048,27 @@ ekahau-bom project.esx \
   --no-ap-names \
   --ap-circle-radius 20 \
   --ap-opacity 0.75
+```
+
+### Project Comparison
+
+**Compare design iterations:**
+```bash
+# Compare original with updated design
+ekahau-bom original.esx --compare updated.esx --format excel,html
+
+# With visual diff
+ekahau-bom v1.esx --compare v2.esx \
+  --visualize-floor-plans \
+  --output-dir comparison_report/
+```
+
+**Track changes with strict matching:**
+```bash
+# Only match by AP name
+ekahau-bom before.esx --compare after.esx \
+  --match-strategy name \
+  --format csv
 ```
 
 ### Advanced Workflows
@@ -1079,5 +1214,5 @@ Check the log file for detailed error messages.
 
 ---
 
-**Version**: 3.2.0
-**Last Updated**: 2025-11-07
+**Version**: 3.6.0
+**Last Updated**: 2025-12-16

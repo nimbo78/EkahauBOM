@@ -30,7 +30,7 @@ def temp_batch_service(tmp_path):
     storage = StorageService()
     temp_backend = LocalStorage(base_dir=tmp_path / "projects")
     storage.backend = temp_backend
-    storage.base_dir = tmp_path / "projects"
+    storage.projects_dir = tmp_path / "projects"  # Critical: list_batches uses this
 
     batch_service = BatchService(storage_service=storage)
     yield batch_service

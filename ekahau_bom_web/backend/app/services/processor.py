@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import shutil
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -140,6 +142,11 @@ class ProcessorService:
                 # Generate thumbnails for floor plan visualizations
                 if visualize_floor_plans:
                     await self._generate_thumbnails(project_id, visualizations_dir)
+
+                # Run comparison if previous.esx exists
+                previous_file = project_dir / "previous.esx"
+                if previous_file.exists():
+                    await self._run_comparison(project_id, previous_file, original_file)
 
                 # Update metadata
                 metadata.processing_status = ProcessingStatus.COMPLETED
@@ -388,3 +395,186 @@ class ProcessorService:
             self.storage.save_metadata(project_id, metadata)
             index_service.add(metadata)
             index_service.save_to_disk()
+
+    async def _run_comparison(self, project_id: UUID, old_file: Path, new_file: Path) -> None:
+        """Run comparison between two .esx files and save results.
+
+        Args:
+            project_id: Project UUID
+            old_file: Path to previous .esx file
+            new_file: Path to current .esx file
+        """
+        try:
+            logger.info(f"Running comparison for project {project_id}")
+
+            # Import comparison engine
+            from ekahau_bom.comparison.engine import ComparisonEngine
+            from ekahau_bom.comparison.visual_diff import VisualDiffGenerator
+
+            # Run comparison in thread pool
+            def run_comparison():
+                engine = ComparisonEngine()
+                return engine.compare_files(old_file, new_file)
+
+            result = await asyncio.to_thread(run_comparison)
+
+            # Create comparison directory
+            project_dir = self.storage.get_project_dir(project_id)
+            comparison_dir = project_dir / "comparison"
+            comparison_dir.mkdir(parents=True, exist_ok=True)
+
+            # Convert result to JSON-serializable format
+            comparison_data = {
+                "project_a_name": result.project_a_name,
+                "project_b_name": result.project_b_name,
+                "project_a_filename": result.project_a_filename,
+                "project_b_filename": result.project_b_filename,
+                "comparison_timestamp": result.comparison_timestamp.isoformat(),
+                "total_changes": result.total_changes,
+                "has_changes": result.total_changes > 0,
+                "inventory": {
+                    "old_total_aps": result.inventory_change.old_total_aps,
+                    "new_total_aps": result.inventory_change.new_total_aps,
+                    "aps_added": result.inventory_change.aps_added,
+                    "aps_removed": result.inventory_change.aps_removed,
+                    "aps_modified": result.inventory_change.aps_modified,
+                    "aps_moved": result.inventory_change.aps_moved,
+                    "aps_renamed": result.inventory_change.aps_renamed,
+                    "aps_unchanged": result.inventory_change.aps_unchanged,
+                },
+                "metadata_change": None,
+                "ap_changes": [],
+                "changes_by_floor": {},
+                "floors": result.floors,
+                "diff_images": {},
+            }
+
+            # Convert metadata change if present
+            if result.metadata_change:
+                comparison_data["metadata_change"] = {
+                    "old_name": result.metadata_change.old_name,
+                    "new_name": result.metadata_change.new_name,
+                    "old_customer": result.metadata_change.old_customer,
+                    "new_customer": result.metadata_change.new_customer,
+                    "old_location": result.metadata_change.old_location,
+                    "new_location": result.metadata_change.new_location,
+                    "changes": [
+                        {
+                            "field_name": c.field_name,
+                            "category": c.category,
+                            "old_value": c.old_value,
+                            "new_value": c.new_value,
+                        }
+                        for c in result.metadata_change.changed_fields
+                    ],
+                }
+
+            # Convert AP changes
+            for ap_change in result.ap_changes:
+                change_dict = {
+                    "status": ap_change.status.value,
+                    "ap_name": ap_change.ap_name,
+                    "floor_name": ap_change.floor_name,
+                    "old_name": ap_change.old_name,
+                    "new_name": ap_change.new_name,
+                    "distance_moved": ap_change.distance_moved,
+                    "old_coords": ap_change.old_coords,
+                    "new_coords": ap_change.new_coords,
+                    "changes": [
+                        {
+                            "field_name": c.field_name,
+                            "category": c.category,
+                            "old_value": str(c.old_value) if c.old_value is not None else None,
+                            "new_value": str(c.new_value) if c.new_value is not None else None,
+                        }
+                        for c in (ap_change.changes or [])
+                    ],
+                }
+                comparison_data["ap_changes"].append(change_dict)
+
+            # Group changes by floor
+            for floor, changes in result.changes_by_floor.items():
+                comparison_data["changes_by_floor"][floor] = [
+                    {
+                        "status": c.status.value,
+                        "ap_name": c.ap_name,
+                        "floor_name": c.floor_name,
+                        "old_name": c.old_name,
+                        "new_name": c.new_name,
+                        "distance_moved": c.distance_moved,
+                        "old_coords": c.old_coords,
+                        "new_coords": c.new_coords,
+                        "changes": [
+                            {
+                                "field_name": fc.field_name,
+                                "category": fc.category,
+                                "old_value": (
+                                    str(fc.old_value) if fc.old_value is not None else None
+                                ),
+                                "new_value": (
+                                    str(fc.new_value) if fc.new_value is not None else None
+                                ),
+                            }
+                            for fc in (c.changes or [])
+                        ],
+                    }
+                    for c in changes
+                ]
+
+            # Generate visual diff images
+            visualizations_dir = comparison_dir / "visualizations"
+            visualizations_dir.mkdir(parents=True, exist_ok=True)
+
+            def generate_visual_diffs():
+                diff_images = {}
+                try:
+                    with VisualDiffGenerator(old_file, new_file) as diff_generator:
+                        generated = diff_generator.generate_all_diffs(result, visualizations_dir)
+                        # Convert Path to string for JSON serialization
+                        diff_images = {floor: path.name for floor, path in generated.items()}
+                except Exception as e:
+                    logger.warning(f"Failed to generate visual diffs: {e}")
+                return diff_images
+
+            diff_images = await asyncio.to_thread(generate_visual_diffs)
+            comparison_data["diff_images"] = diff_images
+
+            # Save comparison data
+            comparison_file = comparison_dir / "comparison_data.json"
+            with open(comparison_file, "w", encoding="utf-8") as f:
+                json.dump(comparison_data, f, indent=2, ensure_ascii=False)
+
+            # Generate comparison reports (CSV, HTML, JSON)
+            def generate_reports():
+                from ekahau_bom.comparison.exporters import export_comparison
+
+                # Build diff_images dict with full paths for embedding in HTML
+                diff_images_paths = {}
+                if diff_images:
+                    for floor_name, filename in diff_images.items():
+                        img_path = visualizations_dir / filename
+                        if img_path.exists():
+                            diff_images_paths[floor_name] = img_path
+
+                return export_comparison(
+                    comparison=result,
+                    output_dir=comparison_dir,
+                    formats=["csv", "html", "json"],
+                    project_name=result.project_b_name or "comparison",
+                    diff_images=diff_images_paths if diff_images_paths else None,
+                )
+
+            try:
+                report_paths = await asyncio.to_thread(generate_reports)
+                logger.info(f"Generated comparison reports: {list(report_paths.keys())}")
+            except Exception as report_err:
+                logger.warning(f"Failed to generate comparison reports: {report_err}")
+
+            logger.info(
+                f"Comparison completed for {project_id}: "
+                f"{result.total_changes} changes detected"
+            )
+
+        except Exception as e:
+            logger.error(f"Error running comparison for {project_id}: {e}")
+            # Don't fail processing if comparison fails

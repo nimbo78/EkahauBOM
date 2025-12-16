@@ -12,6 +12,7 @@ Complete guide for using EkahauBOM to generate Bill of Materials from Ekahau pro
 - [Grouping & Analytics](#grouping--analytics)
 - [Export Formats](#export-formats)
 - [Cost Calculation](#cost-calculation)
+- [Project Comparison](#project-comparison) _(New in v3.6.0)_
 - [Advanced Usage](#advanced-usage)
   - [Configuration File](#configuration-file)
   - [Custom Colors Configuration](#custom-colors-configuration)
@@ -305,6 +306,103 @@ volume_discounts:
 
 ---
 
+## Project Comparison
+
+_(New in v3.6.0)_
+
+Compare two versions of an Ekahau project to track changes in AP inventory, placement, and configuration. This is useful for:
+
+- Comparing project versions (before/after redesign)
+- Tracking changes over time
+- Identifying BOM differences between designs
+- Visual "before-after" on floor plans with movement arrows
+
+### Basic Comparison
+
+```bash
+# Compare old version with new version
+ekahau-bom old_design.esx --compare new_design.esx
+
+# Generate comparison reports in multiple formats
+ekahau-bom original.esx --compare updated.esx --format csv,excel,html
+```
+
+### Matching Strategies
+
+Control how APs are matched between two projects:
+
+```bash
+# By name only (strict matching)
+ekahau-bom old.esx --compare new.esx --match-strategy name
+
+# By coordinates (useful when APs are renamed)
+ekahau-bom old.esx --compare new.esx --match-strategy coordinates
+
+# Combined - name first, then coordinates (default, recommended)
+ekahau-bom old.esx --compare new.esx --match-strategy combined
+```
+
+### Visual Diff
+
+Generate floor plan images showing exactly what changed:
+
+```bash
+ekahau-bom old.esx --compare new.esx --visualize-floor-plans
+```
+
+The visual diff shows:
+- **Green circles** - Added APs
+- **Red circles** - Removed APs
+- **Yellow circles** - Modified APs (config changed)
+- **Blue→Purple arrows** - Moved APs
+- **Orange circles** - Renamed APs
+
+### Movement Detection
+
+Customize the sensitivity of movement detection:
+
+```bash
+# Default threshold (0.5 meters)
+ekahau-bom old.esx --compare new.esx
+
+# Stricter threshold (10 cm)
+ekahau-bom old.esx --compare new.esx --move-threshold 0.1
+
+# Looser threshold (1 meter)
+ekahau-bom old.esx --compare new.esx --move-threshold 1.0
+```
+
+### Comparison Reports
+
+The comparison generates dedicated reports:
+
+**CSV** (`comparison_changes.csv`):
+```csv
+AP Name,Status,Floor,Details
+AP-101,moved,Floor 1,"Moved 5.2m: (10,20) → (15,25)"
+AP-102,modified,Floor 1,"Channel: 36 → 44"
+AP-103,removed,Floor 2,""
+AP-104,added,Floor 2,""
+```
+
+**Excel** - Includes summary sheet with change counts and detailed changes table
+
+**HTML** - Interactive report with embedded floor diff images
+
+### Complete Example
+
+```bash
+ekahau-bom original_design.esx \
+  --compare updated_design.esx \
+  --match-strategy combined \
+  --move-threshold 0.3 \
+  --format csv,excel,html \
+  --visualize-floor-plans \
+  --output-dir reports/comparison/
+```
+
+---
+
 ## Advanced Usage
 
 ### Configuration File
@@ -541,5 +639,5 @@ ekahau-bom project.esx \
 
 ---
 
-**Version**: 2.4.0
-**Last Updated**: 2024
+**Version**: 3.6.0
+**Last Updated**: 2025-12-16

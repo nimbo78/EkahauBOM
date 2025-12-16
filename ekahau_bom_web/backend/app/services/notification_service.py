@@ -188,19 +188,8 @@ class NotificationService:
         ):
             return
 
-        # Prepare context
-        context = {
-            "schedule_name": schedule.name,
-            "schedule_description": schedule.description,
-            "status": run.status.value,
-            "executed_at": run.executed_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "duration": f"{run.duration_seconds:.2f}s",
-            "projects_processed": run.projects_processed,
-            "projects_succeeded": run.projects_succeeded,
-            "projects_failed": run.projects_failed,
-            "error_message": run.error_message,
-            "batch_id": str(run.batch_id) if run.batch_id else None,
-        }
+        # Prepare context using helper method
+        context = self._build_email_context(schedule, run, batch)
 
         # Email notification
         if schedule.notification_config.email:
@@ -243,6 +232,43 @@ class NotificationService:
             blocks = self._format_slack_blocks(schedule.name, run)
 
             await self.send_slack(schedule.notification_config.slack_webhook, message, blocks)
+
+    def _build_email_context(
+        self,
+        schedule: Schedule,
+        run: ScheduleRun,
+        batch: Optional[BatchMetadata] = None,
+    ) -> dict:
+        """
+        Build email context from schedule and run data.
+
+        Args:
+            schedule: Schedule that was executed
+            run: Schedule run details
+            batch: Batch metadata (if batch was created)
+
+        Returns:
+            Dictionary with email template context
+        """
+        context = {
+            "schedule_name": schedule.name,
+            "schedule_description": schedule.description,
+            "status": run.status.value,
+            "executed_at": run.executed_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "duration": f"{run.duration_seconds:.2f}s",
+            "projects_processed": run.projects_processed,
+            "projects_succeeded": run.projects_succeeded,
+            "projects_failed": run.projects_failed,
+            "error_message": run.error_message,
+            "batch_id": str(run.batch_id) if run.batch_id else None,
+        }
+
+        # Add batch info if available
+        if batch:
+            context["batch_name"] = batch.batch_name
+            context["batch_status"] = batch.status.value
+
+        return context
 
     def _get_email_template(self, status: ScheduleStatus) -> str:
         """Get email template name based on status."""

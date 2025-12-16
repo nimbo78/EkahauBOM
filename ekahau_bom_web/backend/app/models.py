@@ -424,3 +424,113 @@ class ScheduleUpdateRequest(BaseModel):
     trigger_type: Optional[TriggerType] = None
     trigger_config: Optional[TriggerConfig] = None
     notification_config: Optional[NotificationConfig] = None
+
+
+# ============================================================================
+# Project Comparison Models
+# ============================================================================
+
+
+class ComparisonChangeStatus(str, Enum):
+    """Change status for AP comparison."""
+
+    ADDED = "added"
+    REMOVED = "removed"
+    MODIFIED = "modified"
+    MOVED = "moved"
+    RENAMED = "renamed"
+    UNCHANGED = "unchanged"
+
+
+class FieldChangeDTO(BaseModel):
+    """Individual field change in a comparison."""
+
+    field_name: str
+    category: str  # "placement", "configuration", "radio", "metadata"
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+
+
+class APChangeDTO(BaseModel):
+    """Individual AP change in a comparison."""
+
+    status: ComparisonChangeStatus
+    ap_name: str
+    floor_name: str
+    old_name: Optional[str] = None  # For renamed APs
+    new_name: Optional[str] = None  # For renamed APs
+    distance_moved: Optional[float] = None  # For moved APs, in meters
+    old_coords: Optional[tuple[float, float]] = None  # (x, y) for moved APs
+    new_coords: Optional[tuple[float, float]] = None  # (x, y) for moved APs
+    changes: list[FieldChangeDTO] = Field(default_factory=list)  # Detailed field changes
+
+
+class ComparisonInventory(BaseModel):
+    """Inventory summary for comparison."""
+
+    old_total_aps: int = 0
+    new_total_aps: int = 0
+    aps_added: int = 0
+    aps_removed: int = 0
+    aps_modified: int = 0
+    aps_moved: int = 0
+    aps_renamed: int = 0
+    aps_unchanged: int = 0
+
+
+class ComparisonMetadata(BaseModel):
+    """Metadata changes in comparison."""
+
+    old_name: Optional[str] = None
+    new_name: Optional[str] = None
+    old_customer: Optional[str] = None
+    new_customer: Optional[str] = None
+    old_location: Optional[str] = None
+    new_location: Optional[str] = None
+    changed_fields: list[FieldChangeDTO] = Field(default_factory=list)
+
+
+class ComparisonData(BaseModel):
+    """Complete comparison data for storage and API response."""
+
+    # Project identification
+    project_a_name: str  # Old/previous project name
+    project_b_name: str  # New/current project name
+    project_a_filename: str
+    project_b_filename: str
+    comparison_timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # Summary
+    total_changes: int = 0
+    has_changes: bool = False
+
+    # Inventory summary
+    inventory: ComparisonInventory = Field(default_factory=ComparisonInventory)
+
+    # Metadata changes
+    metadata_change: Optional[ComparisonMetadata] = None
+
+    # Detailed AP changes
+    ap_changes: list[APChangeDTO] = Field(default_factory=list)
+
+    # Changes grouped by floor (floor_name -> list of changes)
+    changes_by_floor: dict[str, list[APChangeDTO]] = Field(default_factory=dict)
+
+    # List of floors with changes
+    floors: list[str] = Field(default_factory=list)
+
+    # Visual diff images (floor_name -> relative path)
+    diff_images: dict[str, str] = Field(default_factory=dict)
+
+
+class ComparisonSummaryDTO(BaseModel):
+    """Summary of comparison for project list."""
+
+    has_comparison: bool = False
+    comparison_timestamp: Optional[datetime] = None
+    total_changes: int = 0
+    aps_added: int = 0
+    aps_removed: int = 0
+    aps_modified: int = 0
+    aps_moved: int = 0
+    aps_renamed: int = 0

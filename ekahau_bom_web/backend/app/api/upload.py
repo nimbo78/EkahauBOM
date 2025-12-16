@@ -202,6 +202,16 @@ async def update_project(
     # Extract project name from new file
     project_name = extract_project_name(file_content)
 
+    # Save current original.esx as previous.esx for comparison
+    import shutil
+
+    project_dir = storage_service.get_project_dir(project_uuid)
+    if isinstance(project_dir, Path):
+        original_file = project_dir / "original.esx"
+        previous_file = project_dir / "previous.esx"
+        if original_file.exists():
+            shutil.copy2(original_file, previous_file)
+
     # Save new file (overwrites old one)
     file_path = await storage_service.save_uploaded_file(project_uuid, file.filename, file_content)
 

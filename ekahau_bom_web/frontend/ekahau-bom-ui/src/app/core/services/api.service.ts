@@ -181,6 +181,31 @@ export class ApiService {
     return this.http.get<NotesData>(`${this.apiUrl}/notes/${projectId}`);
   }
 
+  // Comparison endpoints
+  getComparison(projectId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comparison/${projectId}`);
+  }
+
+  getComparisonSummary(projectId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comparison/${projectId}/summary`);
+  }
+
+  getComparisonDiffImages(projectId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/comparison/${projectId}/diff-images`);
+  }
+
+  getDiffImageUrl(projectId: string, floorName: string): string {
+    return `${this.apiUrl}/comparison/${projectId}/diff/${encodeURIComponent(floorName)}`;
+  }
+
+  getComparisonReportUrl(projectId: string, format: 'csv' | 'json' | 'html'): string {
+    return `${this.apiUrl}/comparison/${projectId}/report/${format}`;
+  }
+
+  deleteComparison(projectId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/comparison/${projectId}`);
+  }
+
   // Health check
   checkHealth(): Observable<any> {
     return this.http.get('/health');

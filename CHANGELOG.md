@@ -5,11 +5,104 @@ All notable changes to EkahauBOM will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.0] - 2025-12-17
+
+### Summary
+🔄 **KILLER FEATURE - Project Version Comparison**: Track every change between Wi-Fi design revisions with visual floor plan diffs, precise movement tracking in meters, and comprehensive change reports. Perfect for design reviews, change management, and client communication.
+
+**Total Impact**: Complete comparison workflow from CLI to Web UI, 35+ engine tests, 27 API tests, accurate distance calculations using Ekahau project scale.
 
 ### Added
 
-- Nothing yet! All features shipped in v3.5.0 🎉
+#### 🔄 Project Version Comparison (CLI + Web)
+**Compare two Ekahau project versions to identify changes - THE feature Wi-Fi engineers have been waiting for!**
+
+- **CLI Comparison Module** (`ekahau_bom/comparison/`):
+  - `models.py`: ComparisonResult, APChange, FieldChange, ChangeStatus dataclasses
+  - `engine.py`: ComparisonEngine with AP matching by name and coordinates
+  - `visual_diff.py`: Generate floor plan diff PNG images with movement arrows
+  - `exporters.py`: Export comparison to CSV, Excel, HTML, JSON, PDF
+
+- **Change Detection**:
+  - **Added**: New APs that appear in new version (🟢 green marker)
+  - **Removed**: APs that were deleted (🔴 red marker)
+  - **Modified**: Configuration changes without position change (🟡 yellow marker)
+  - **Moved**: Position changed more than threshold (🔵→🟣 arrow)
+  - **Renamed**: Same location, different name (🟠 orange marker)
+  - Configurable move threshold (default 0.5m)
+
+- **Visual Diff Generator**:
+  - Floor plan PNG with colored markers per change type
+  - Movement arrows showing old→new position for moved APs
+  - Auto-legend showing change counts
+  - Adaptive marker sizing based on image dimensions
+
+- **Export Formats**:
+  - CSV: Simple table with AP Name, Status, Floor, Details
+  - Excel: Summary sheet + Changes sheet with color-coded status
+  - HTML: Modern styled report with embedded floor diff images
+  - JSON: Full structured data for programmatic use
+  - PDF: Print-ready report (requires WeasyPrint)
+
+- **Web Backend** (`backend/app/api/comparison.py`):
+  - `GET /api/projects/{id}/comparison` - Get comparison data
+  - `GET /api/projects/{id}/comparison/diff/{floor}` - Get floor diff image
+  - `GET /api/projects/{id}/comparison/export/{format}` - Download report
+  - `POST /api/projects/{id}/compare` - Trigger manual comparison
+
+- **Web Frontend**:
+  - New "Comparison" tab in project details (shown when comparison data exists)
+  - Summary cards showing change counts by status
+  - Filterable changes table by status and floor
+  - Floor diff image gallery with zoom
+
+- **Test Coverage**:
+  - `tests/test_comparison_engine.py`: 35 tests for core logic
+  - `tests/test_comparison_visual_diff.py`: 24 tests for image generation
+  - `tests/test_comparison_exporters.py`: 36 tests for export formats
+  - `backend/tests/test_comparison_api.py`: 27 tests for API endpoints
+
+**CLI Usage**:
+```bash
+# Compare two project files
+python -m ekahau_bom old.esx --compare new.esx
+
+# With visual diff and export
+python -m ekahau_bom old.esx --compare new.esx --visual-diff --format html,excel
+
+# Custom move threshold
+python -m ekahau_bom old.esx --compare new.esx --move-threshold 1.0
+```
+
+### Changed
+
+- **Version**: 3.5.0 → 3.6.0
+- **Floor Model**: Extended with `meters_per_unit`, `width`, `height` attributes
+- **Documentation**: New dedicated comparison docs in both English and Russian
+
+### Technical Details
+
+**Accurate Distance Calculation**:
+- Uses `metersPerUnit` scale factor from Ekahau project (floorPlans.json)
+- Formula: `distance_meters = distance_units × metersPerUnit`
+- Typical scale: 0.0215 m/unit (≈46.5 pixels per meter)
+- Result: Precise real-world distances (e.g., "Moved 3.2m" instead of "149 units")
+
+**New Files**:
+- `ekahau_bom/comparison/__init__.py` - Module init
+- `ekahau_bom/comparison/models.py` - Data models
+- `ekahau_bom/comparison/engine.py` - Core comparison logic
+- `ekahau_bom/comparison/matchers.py` - AP matching strategies
+- `ekahau_bom/comparison/visual_diff.py` - Floor plan diff generation
+- `ekahau_bom/comparison/exporters.py` - Report export
+- `backend/app/api/comparison.py` - REST API endpoints
+- `docs/PROJECT_COMPARISON.md` - English documentation
+- `docs/PROJECT_COMPARISON.ru.md` - Russian documentation
+
+**Test Coverage**:
+- 35 comparison engine tests (AP matching, change detection, distance calculation)
+- 27 API tests (endpoints, data validation, exports)
+- All tests passing ✅
 
 ## [3.5.0] - 2025-12-15
 
@@ -1489,6 +1582,7 @@ Major release with comprehensive documentation overhaul, testing improvements (8
 
 | Version | Date | Key Features |
 |---------|------|-------------|
+| **3.6.0** | 2025-12-17 | **Project Version Comparison** - Visual diffs, movement tracking, change reports |
 | **3.5.0** | 2025-12-15 | Docker, OAuth2/SSO, Mobile UI - All Planned Features Complete |
 | **3.4.0** | 2025-11-09 | Scheduled Processing, WebSocket, Templates, S3 Storage |
 | **3.3.0** | 2025-11-09 | Batch Processing CLI + Web UI, 595 tests |

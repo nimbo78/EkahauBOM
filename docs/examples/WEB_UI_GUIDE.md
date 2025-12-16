@@ -6,7 +6,7 @@
 
 Ekahau BOM Web UI provides a modern interface for managing and analyzing Ekahau project files.
 
-**Key Features**: Upload projects • Process data • View reports • Interactive visualizations • Share with short links
+**Key Features**: Upload projects • Process data • View reports • Interactive visualizations • Share with short links • Compare project versions
 
 ---
 
@@ -92,6 +92,32 @@ Full-screen visualization with zoom and download.
 
 ---
 
+## 🔄 Comparison Tab _(New in v3.6.0)_
+
+Compare project versions when you update an existing project.
+
+**When visible**: The Comparison tab appears when you select "Update existing project" during upload and the comparison data is available.
+
+**What you see**:
+- **Summary Cards**: Change counts by category
+  - Added (green) • Removed (red) • Modified (yellow) • Moved (blue) • Renamed (orange)
+- **Changes Table**: Filterable by status and floor
+  - Columns: AP Name, Status, Floor, Details
+- **Visual Diff Gallery**: Floor plan images showing changes
+  - Click thumbnails for full-size view
+- **Download Reports**: CSV, Excel, HTML comparison reports
+
+**Visual Diff Legend**:
+| Marker | Meaning |
+|--------|---------|
+| 🟢 Green circle | Added AP |
+| 🔴 Red circle | Removed AP |
+| 🟡 Yellow circle | Modified AP |
+| 🔵→🟣 Arrow | Moved AP |
+| 🟠 Orange circle | Renamed AP |
+
+---
+
 ## 🚀 Getting Started
 
 ### 1. Start Backend (Terminal 1)
@@ -115,9 +141,10 @@ Navigate to: **http://localhost:4200**
 
 ## 📦 Technology Stack
 
-- **Frontend**: Angular 19+ • Taiga UI v4.60.0 • TypeScript
+- **Frontend**: Angular 20 • Taiga UI v4.60.0 • TypeScript
 - **Backend**: FastAPI • Python 3.11+ • EkahauBOM CLI
 - **Storage**: JSON metadata • File system • In-memory indexing
+- **Version**: 3.6.0
 
 ---
 

@@ -23,12 +23,38 @@ The ultimate toolkit for **Wi-Fi engineers** to generate equipment lists, visual
 | 🖼️ Screenshot floor plans | 🗺️ High-res PNG with AP overlays |
 | ⏰ Hours of repetitive work | ⚡ Seconds of automation |
 | 🔄 Re-process changed designs manually | 🤖 Scheduled automatic processing |
+| 🔍 Manually compare design versions | 🔀 **Visual diff with movement arrows** |
 
 ---
 
-## 🌟 What's New in v3.5.0
+## 🌟 What's New in v3.6.0
 
-### 🐳 Docker Containerization (NEW!)
+### 🔀 Project Version Comparison (NEW!)
+
+**The killer feature for Wi-Fi design reviews!** Compare any two project versions with:
+
+- **Visual floor plan diffs** - Color-coded markers with movement arrows
+- **Accurate distances in meters** - Using project scale, not pixels
+- **Complete change tracking** - Added, removed, modified, moved, renamed APs
+- **Detailed field changes** - TX power, channel, azimuth, and more
+- **Export reports** - CSV, HTML, JSON for documentation
+
+![Visual Diff Example](docs/examples/comparison_output/diff_maga-flat.png)
+
+*Example: 3 APs moved (blue→purple arrows show 1.4m, 2.0m, 3.1m movements)*
+
+**CLI:**
+```bash
+python -m ekahau_bom old_design.esx --compare new_design.esx
+```
+
+**Web UI:** Auto-comparison on project update with dedicated Comparison tab
+
+📖 [Full documentation](docs/PROJECT_COMPARISON.md) | [Example outputs](docs/examples/comparison_output/)
+
+---
+
+### 🐳 Docker Containerization (v3.5.0)
 
 **Pre-built images from GitHub Container Registry:**
 ```bash
@@ -42,36 +68,22 @@ docker-compose up --build
 # Open http://localhost:8080
 ```
 
-**With Keycloak SSO:**
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up --build
-```
+### 🔐 OAuth2/SSO Authentication (v3.5.0)
 
-### 🔐 OAuth2/SSO Authentication (NEW!)
-
-**Supported providers:**
-- Keycloak (recommended)
-- Azure AD / Entra ID
-- Okta, Google Workspace
-- Any OIDC-compliant provider
-
-**Features:**
+- Keycloak, Azure AD, Okta, Google Workspace
 - Single Sign-On (SSO)
-- Role-based access (admin, user)
-- Multi-factor authentication (via IdP)
+- Role-based access control
 
-### 📱 Mobile-Friendly UI (NEW!)
+### 📱 Mobile-Friendly UI (v3.5.0)
 
-**Responsive design:**
-- Hamburger menu on mobile devices
-- Card-based views instead of tables
-- Touch-friendly elements (min. 44px)
-- Breakpoints: 1024px, 768px, 480px
+- Responsive hamburger menu
+- Card-based views on mobile
+- Touch-friendly elements
 
 ### 🤖 Automation (v3.4.0)
 
-**Scheduled batch processing** with cron and notifications:
-- 📧 Email reports to team
+**Scheduled batch processing** with notifications:
+- 📧 Email reports
 - 💬 Slack notifications
 - 🔗 Webhooks to Jira/ServiceNow
 
@@ -79,12 +91,10 @@ docker-compose -f docker-compose.yml -f docker-compose.keycloak.yml up --build
 
 - WebSocket processing status
 - Live dashboard with charts
-- Instant notifications
 
 ### 💾 S3 Storage
 
 - AWS S3, MinIO, Wasabi, Cloudflare R2
-- Automatic redundancy
 
 ---
 

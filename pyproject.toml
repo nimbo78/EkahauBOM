@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ekahau-bom"
-version = "3.3.0"
+version = "3.6.0"
 description = "Bill of Materials (BOM) generator for Ekahau AI project files"
 readme = "README.md"
 requires-python = ">=3.7"

@@ -82,6 +82,9 @@ output/test_*/
 ekahau_bom_web/backend/data/
 ekahau_bom_web/backend/venv/
 
+# Root data directory (created by tests or running backend from root)
+/data/
+
 # Web UI - Frontend build artifacts and dependencies
 ekahau_bom_web/frontend/ekahau-bom-ui/node_modules/
 ekahau_bom_web/frontend/ekahau-bom-ui/.angular/

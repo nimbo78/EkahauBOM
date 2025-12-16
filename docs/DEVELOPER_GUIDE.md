@@ -65,12 +65,20 @@ ekahau_bom/
 │   ├── antennas.py
 │   ├── radios.py
 │   └── tags.py
-└── exporters/          # Export formats
-    ├── base.py         # Base exporter class
-    ├── csv_exporter.py
-    ├── excel_exporter.py
-    ├── html_exporter.py
-    └── json_exporter.py
+├── exporters/          # Export formats
+│   ├── base.py         # Base exporter class
+│   ├── csv_exporter.py
+│   ├── excel_exporter.py
+│   ├── html_exporter.py
+│   └── json_exporter.py
+├── visualizers/        # Floor plan generation
+│   └── floor_plan_visualizer.py
+└── comparison/         # Project comparison (v3.6.0+)
+    ├── models.py       # ComparisonResult, APChange, FieldChange
+    ├── engine.py       # ComparisonEngine - core logic
+    ├── matchers.py     # NameMatcher, CoordinateMatcher, CombinedMatcher
+    ├── visual_diff.py  # Floor plan diff visualization
+    └── exporters.py    # Comparison-specific exporters
 ```
 
 ### Key Components
@@ -99,6 +107,58 @@ ekahau_bom/
 - Grouping functions
 - Statistical calculations
 - Multi-dimensional analysis
+
+**Comparison** (`comparison/`) _(New in v3.6.0)_
+- Compare two .esx project files
+- Detect AP changes: added, removed, modified, moved, renamed
+- Multiple matching strategies (name, coordinates, combined)
+- Visual diff generation on floor plans
+- Specialized exporters for comparison reports
+
+---
+
+### Comparison Module Architecture
+
+The comparison module compares two Ekahau projects and identifies changes:
+
+```
+                         ┌─────────────────────────────────────┐
+                         │  "Update existing" processing       │
+                         └─────────────────────────────────────┘
+                                          │
+Previous version (.esx) → Parser ─────────┤
+                                          ├→ ComparisonEngine → ComparisonResult
+New version (.esx) → Parser ──────────────┘                          │
+                                                    ┌────────────────┼────────────────┐
+                                                    ▼                ▼                ▼
+                                              Exporters        Visual Diff      Comparison Tab
+                                           (CSV/Excel/HTML)   (PNG + arrows)    (Web UI)
+```
+
+**Key Classes:**
+
+| Class | Purpose |
+|-------|---------|
+| `ComparisonEngine` | Main entry point, orchestrates comparison |
+| `ComparisonResult` | Result container with all changes |
+| `APChange` | Single AP change (added/removed/modified/moved/renamed) |
+| `FieldChange` | Individual field change within an AP |
+| `NameMatcher` | Match APs by name |
+| `CoordinateMatcher` | Match APs by coordinates |
+| `CombinedMatcher` | Name first, then coordinates fallback |
+| `VisualDiffGenerator` | Generate floor plan diff images |
+
+**Change Detection Logic:**
+
+1. Parse both .esx files
+2. Match APs using selected strategy
+3. Classify each AP:
+   - **added**: Only in new project
+   - **removed**: Only in old project
+   - **modified**: Same position, config changed
+   - **moved**: Position changed > threshold
+   - **renamed**: Same position, different name
+   - **unchanged**: No differences
 
 ---
 
@@ -420,5 +480,5 @@ Closes #42
 
 ---
 
-**Version**: 2.4.0
-**Last Updated**: 2024
+**Version**: 3.6.0
+**Last Updated**: 2025-12-16

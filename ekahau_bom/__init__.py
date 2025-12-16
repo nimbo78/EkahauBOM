@@ -3,5 +3,5 @@
 from __future__ import annotations
 
 
-__version__ = "3.3.0"
+__version__ = "3.6.0"
 __author__ = "EkahauBOM Contributors"

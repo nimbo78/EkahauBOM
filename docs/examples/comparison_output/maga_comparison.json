@@ -1,0 +1,119 @@
+{
+  "project_a_name": "maga",
+  "project_b_name": "maga",
+  "project_a_filename": "previous.esx",
+  "project_b_filename": "original.esx",
+  "comparison_timestamp": "2025-12-17T00:29:04.076148",
+  "summary": {
+    "old_total_aps": 11,
+    "new_total_aps": 11,
+    "ap_count_diff": 0,
+    "total_changes": 3,
+    "added": 0,
+    "removed": 0,
+    "modified": 0,
+    "moved": 3,
+    "renamed": 0,
+    "unchanged": 8
+  },
+  "metadata_change": null,
+  "floors": [
+    "maga-flat"
+  ],
+  "changes": [
+    {
+      "status": "moved",
+      "ap_name": "maga-ap01-04",
+      "floor": "maga-flat",
+      "old_name": null,
+      "new_name": null,
+      "distance_moved": 1.9801262634457582,
+      "old_coords": [
+        833.7960057458394,
+        109.2865869543721
+      ],
+      "new_coords": [
+        741.7263602992931,
+        107.17004338088827
+      ],
+      "details": "Moved 2.0m: (833.8,109.3) → (741.7,107.2)",
+      "field_changes": [
+        {
+          "field": "azimuth",
+          "category": "placement",
+          "old": 228.31778116833488,
+          "new": 180.0
+        }
+      ]
+    },
+    {
+      "status": "moved",
+      "ap_name": "maga-ap01-05",
+      "floor": "maga-flat",
+      "old_name": null,
+      "new_name": null,
+      "distance_moved": 3.050487100376846,
+      "old_coords": [
+        960.7886201548687,
+        470.1572662333639
+      ],
+      "new_coords": [
+        868.7189747083224,
+        362.21354398568894
+      ],
+      "details": "Moved 3.1m: (960.8,470.2) → (868.7,362.2)",
+      "field_changes": [
+        {
+          "field": "azimuth",
+          "category": "placement",
+          "old": 343.53998518796004,
+          "new": 89.18154453831141
+        }
+      ]
+    },
+    {
+      "status": "moved",
+      "ap_name": "maga-ap01-01",
+      "floor": "maga-flat",
+      "old_name": null,
+      "new_name": null,
+      "distance_moved": 1.3690307119935377,
+      "old_coords": [
+        215.76528228856307,
+        224.63821170924044
+      ],
+      "new_coords": [
+        154.3855186575322,
+        207.70586312136984
+      ],
+      "details": "Moved 1.4m: (215.8,224.6) → (154.4,207.7)",
+      "field_changes": [
+        {
+          "field": "azimuth",
+          "category": "placement",
+          "old": 359.76088282307296,
+          "new": 90.0
+        }
+      ]
+    }
+  ],
+  "changes_by_floor": {
+    "maga-flat": [
+      {
+        "status": "moved",
+        "ap_name": "maga-ap01-04",
+        "details": "Moved 2.0m: (833.8,109.3) → (741.7,107.2)"
+      },
+      {
+        "status": "moved",
+        "ap_name": "maga-ap01-05",
+        "details": "Moved 3.1m: (960.8,470.2) → (868.7,362.2)"
+      },
+      {
+        "status": "moved",
+        "ap_name": "maga-ap01-01",
+        "details": "Moved 1.4m: (215.8,224.6) → (154.4,207.7)"
+      }
+    ]
+  }
+}

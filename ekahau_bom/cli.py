@@ -302,6 +302,35 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="Include cable note paths on floor plan visualizations (requires --visualize-floor-plans)",
     )
 
+    # Comparison options
+    compare_group = parser.add_argument_group("comparison options")
+
+    compare_group.add_argument(
+        "--compare",
+        type=Path,
+        metavar="SECOND_FILE",
+        help="Compare the input file with SECOND_FILE and generate comparison report",
+    )
+
+    compare_group.add_argument(
+        "--compare-output",
+        type=Path,
+        help="Output directory for comparison reports (default: output/comparison/)",
+    )
+
+    compare_group.add_argument(
+        "--compare-visual",
+        action="store_true",
+        help="Generate visual diff images for floor plans (requires --compare)",
+    )
+
+    compare_group.add_argument(
+        "--move-threshold",
+        type=float,
+        default=0.5,
+        help="Distance threshold (meters) for detecting moved APs (default: 0.5)",
+    )
+
     # Project naming options
     naming_group = parser.add_argument_group("project naming options")
 
@@ -425,6 +454,166 @@ def _print_bom_summary(
         print()
 
     print("=" * 60)
+
+
+def _run_comparison(parsed_args, merged_config: dict, export_formats: list[str]) -> int:
+    """Run project comparison mode.
+
+    Args:
+        parsed_args: Parsed command-line arguments
+        merged_config: Merged configuration dictionary
+        export_formats: List of export format names
+
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
+    from .comparison import ComparisonEngine, VisualDiffGenerator, export_comparison
+
+    # Validate input files
+    old_file = parsed_args.esx_file
+    new_file = parsed_args.compare
+
+    if not old_file:
+        logger.error("First project file is required for comparison")
+        if RICH_AVAILABLE and console:
+            console.print("[bold red]✗ Error:[/bold red] First project file is required")
+        return 1
+
+    if not old_file.exists():
+        logger.error(f"First project file not found: {old_file}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] File not found: {old_file}")
+        return 1
+
+    if not new_file.exists():
+        logger.error(f"Second project file not found: {new_file}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] File not found: {new_file}")
+        return 1
+
+    # Determine output directory
+    compare_output = parsed_args.compare_output
+    if not compare_output:
+        compare_output = Path("output") / "comparison"
+
+    compare_output.mkdir(parents=True, exist_ok=True)
+
+    # Get move threshold
+    move_threshold = parsed_args.move_threshold
+
+    if RICH_AVAILABLE and console:
+        console.print(
+            Panel.fit(
+                "[bold blue]Project Comparison[/bold blue]\n"
+                f"[dim]Comparing {old_file.name} → {new_file.name}[/dim]",
+                border_style="blue",
+            )
+        )
+        console.print(f"Move threshold: [cyan]{move_threshold}[/cyan] meters")
+    else:
+        logger.info(f"Comparing {old_file.name} with {new_file.name}")
+        logger.info(f"Move threshold: {move_threshold} meters")
+
+    try:
+        # Run comparison
+        engine = ComparisonEngine(move_threshold=move_threshold)
+
+        if RICH_AVAILABLE and console:
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+            ) as progress:
+                task = progress.add_task("[cyan]Analyzing project differences...", total=None)
+                result = engine.compare_files(old_file, new_file)
+                progress.update(task, completed=True)
+        else:
+            result = engine.compare_files(old_file, new_file)
+
+        # Print comparison summary
+        inv = result.inventory_change
+        if RICH_AVAILABLE and console:
+            console.print("\n[bold]Comparison Results:[/bold]")
+            console.print(f"  Total APs (before): [cyan]{inv.old_total_aps}[/cyan]")
+            console.print(f"  Total APs (after):  [cyan]{inv.new_total_aps}[/cyan]")
+            console.print(f"  [green]Added:[/green]      {inv.aps_added}")
+            console.print(f"  [red]Removed:[/red]    {inv.aps_removed}")
+            console.print(f"  [yellow]Modified:[/yellow]   {inv.aps_modified}")
+            console.print(f"  [blue]Moved:[/blue]      {inv.aps_moved}")
+            console.print(f"  [magenta]Renamed:[/magenta]    {inv.aps_renamed}")
+            console.print(f"  Unchanged:    {inv.aps_unchanged}")
+        else:
+            logger.info(f"Comparison complete: {result.total_changes} changes detected")
+            logger.info(f"  Added: {inv.aps_added}, Removed: {inv.aps_removed}")
+            logger.info(f"  Modified: {inv.aps_modified}, Moved: {inv.aps_moved}")
+            logger.info(f"  Renamed: {inv.aps_renamed}, Unchanged: {inv.aps_unchanged}")
+
+        # Generate visual diffs if requested
+        diff_images = {}
+        if parsed_args.compare_visual:
+            if RICH_AVAILABLE and console:
+                console.print("\n[cyan]Generating visual diffs...[/cyan]")
+
+            try:
+                viz_generator = VisualDiffGenerator(old_file, new_file)
+                diff_images = viz_generator.generate_all_diffs(result, compare_output)
+
+                if diff_images:
+                    if RICH_AVAILABLE and console:
+                        console.print(
+                            f"[green]✓[/green] Generated {len(diff_images)} visual diff image(s)"
+                        )
+                    else:
+                        logger.info(f"Generated {len(diff_images)} visual diff images")
+
+                    for floor_name, path in diff_images.items():
+                        logger.debug(f"  {floor_name}: {path}")
+            except Exception as e:
+                logger.warning(f"Could not generate visual diffs: {e}")
+                if RICH_AVAILABLE and console:
+                    console.print(f"[yellow]⚠[/yellow] Visual diff generation failed: {e}")
+
+        # Export comparison reports
+        if RICH_AVAILABLE and console:
+            console.print("\n[cyan]Exporting comparison reports...[/cyan]")
+
+        exported_files_dict = export_comparison(
+            comparison=result,
+            output_dir=compare_output,
+            formats=export_formats,
+            project_name=f"{old_file.stem}_vs_{new_file.stem}",
+            diff_images=diff_images,
+        )
+        exported_files = list(exported_files_dict.values())
+
+        # Print export summary
+        if RICH_AVAILABLE and console:
+            console.print("\n[bold green]✓ Comparison completed successfully![/bold green]")
+            console.print(f"\nGenerated files in: [cyan]{compare_output}[/cyan]")
+            for file_path in exported_files:
+                fp = Path(file_path) if isinstance(file_path, str) else file_path
+                size_kb = fp.stat().st_size / 1024 if fp.exists() else 0
+                console.print(f"  [cyan]•[/cyan] {fp.name} ({size_kb:.1f} KB)")
+        else:
+            logger.info(f"Comparison reports saved to: {compare_output}")
+            for file_path in exported_files:
+                fp = Path(file_path) if isinstance(file_path, str) else file_path
+                logger.info(f"  - {fp.name}")
+
+        return 0
+
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        return 1
+    except Exception as e:
+        logger.error(f"Comparison failed: {e}", exc_info=True)
+        if RICH_AVAILABLE and console:
+            console.print(f"[bold red]✗ Error:[/bold red] {e}")
+            if logger.level == logging.DEBUG:
+                console.print_exception()
+        return 1
 
 
 def print_header():
@@ -719,6 +908,9 @@ def process_project(
                     id=floor["id"],
                     name=floor["name"],
                     floor_number=floor_number_map.get(floor["id"], 0),
+                    meters_per_unit=floor.get("metersPerUnit", 1.0),
+                    width=floor.get("width", 0.0),
+                    height=floor.get("height", 0.0),
                 )
                 for floor in floor_plans_data.get("floorPlans", [])
             }
@@ -1262,6 +1454,11 @@ def main(args: list[str] | None = None) -> int:
 
     # Export formats from merged config
     export_formats = merged_config.get("export_formats", ["csv"])
+
+    # Check for comparison mode
+    compare_file = parsed_args.compare
+    if compare_file:
+        return _run_comparison(parsed_args, merged_config, export_formats)
 
     # Determine files to process
     batch_dir = merged_config.get("batch")

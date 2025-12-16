@@ -191,11 +191,17 @@ class Floor:
         id: Unique identifier for the floor
         name: Human-readable name of the floor
         floor_number: Numeric floor number (0=ground, -1=basement, 1=first floor above ground, etc.)
+        meters_per_unit: Scale factor to convert coordinates to meters (from floorPlans.json)
+        width: Floor plan width in units
+        height: Floor plan height in units
     """
 
     id: str
     name: str
     floor_number: int = 0  # Default to ground floor
+    meters_per_unit: float = 1.0  # Default to 1:1 if not available
+    width: float = 0.0
+    height: float = 0.0
 
 
 @dataclass

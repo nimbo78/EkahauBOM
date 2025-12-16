@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models import ProcessingStatus, ProjectMetadata
+from app.services.cache import cache_service
 from app.services.index import index_service
 from app.services.storage_service import StorageService
 from app.config import settings
@@ -40,13 +41,19 @@ def temp_storage(tmp_path, monkeypatch):
     monkeypatch.setattr("app.api.projects.storage_service", storage)
     monkeypatch.setattr("app.api.reports.storage_service", storage)
 
-    # Clear index
+    # Clear index completely (projects and short_links)
     index_service._projects = {}
+    index_service._short_links = {}
+
+    # Clear cache to prevent stale data
+    cache_service.invalidate_all()
 
     yield storage
 
     # Cleanup
     index_service._projects = {}
+    index_service._short_links = {}
+    cache_service.invalidate_all()
 
 
 @pytest.fixture

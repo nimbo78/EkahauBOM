@@ -155,11 +155,11 @@ class TestEmailContextBuilder:
 
         assert context["schedule_name"] == sample_schedule.name
         assert context["schedule_description"] == sample_schedule.description
-        assert context["status"] == "Success"
+        assert context["status"] == "success"  # ScheduleStatus enum value is lowercase
         assert context["projects_processed"] == 10
         assert context["projects_succeeded"] == 10
         assert context["projects_failed"] == 0
-        assert "2:00" in context["duration"]  # 120.5 seconds = 2 minutes
+        assert "120.50s" in context["duration"]  # Formatted as seconds
         assert context["executed_at"] is not None
 
     def test_build_context_with_batch(
@@ -168,20 +168,20 @@ class TestEmailContextBuilder:
         """Test building context with batch metadata."""
         from app.models import BatchMetadata, BatchStatus
 
+        batch_id = uuid4()
         batch = BatchMetadata(
-            batch_id=uuid4(),
+            batch_id=batch_id,
             batch_name="Test Batch",
             status=BatchStatus.COMPLETED,
-            total_projects=10,
-            processed_projects=10,
-            created_at=datetime.now(UTC),
+            batch_dir=f"batches/{batch_id}",
         )
 
         context = notification_service._build_email_context(
             sample_schedule, sample_schedule_run_success, batch
         )
 
-        assert context["batch_id"] == str(batch.batch_id)
+        assert context["batch_name"] == "Test Batch"
+        assert context["batch_status"] == "completed"
 
 
 class TestEmailSending:
@@ -284,8 +284,14 @@ class TestWebhookSending:
     @patch("httpx.AsyncClient.post")
     async def test_send_webhook_http_error(self, mock_post, notification_service):
         """Test webhook sending with HTTP error."""
+        import httpx
+
         mock_response = MagicMock()
         mock_response.status_code = 500
+        # Make raise_for_status() raise an exception for 500 status
+        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "Server error", request=MagicMock(), response=mock_response
+        )
         mock_post.return_value = mock_response
 
         success = await notification_service.send_webhook(
