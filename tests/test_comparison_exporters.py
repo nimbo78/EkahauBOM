@@ -401,8 +401,9 @@ class TestPDFComparisonExporter:
         """Test PDF export with WeasyPrint (slow)."""
         try:
             from weasyprint import HTML
-        except ImportError:
-            pytest.skip("WeasyPrint not available")
+        except (ImportError, OSError):
+            # OSError can occur on macOS/Windows when native libs (libgobject) are missing
+            pytest.skip("WeasyPrint not available or native libraries missing")
 
         exporter = PDFComparisonExporter(tmp_path, "test")
         output_path = exporter.export(sample_comparison)
